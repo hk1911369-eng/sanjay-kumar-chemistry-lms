@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import { updatePassword } from '@/app/actions/auth';
+export default async function ResetPassword({searchParams}:{searchParams:Promise<{error?:string}>}){const p=await searchParams;return <main className="auth-shell"><section className="auth-card"><Link href="/login" className="back-link">← Login</Link><span className="auth-kicker">ACCOUNT RECOVERY</span><h1>Choose a new password</h1>{p.error&&<p className="form-error">The reset session may have expired. Request a new reset link.</p>}<form action={updatePassword} className="auth-form"><label>New password<input name="password" type="password" minLength={8} required autoComplete="new-password"/></label><button className="auth-submit">Update password</button></form></section></main>}

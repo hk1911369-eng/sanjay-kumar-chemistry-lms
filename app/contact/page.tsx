@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Contact(){return <main className="portal-shell"><header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link></header><section className="portal-content"><h1>Contact and support</h1><p>Support contact details have not yet been configured. Please use the platform after the owner adds a verified phone number or email address.</p></section></main>}

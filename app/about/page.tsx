@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function About(){return <main className="portal-shell"><header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link></header><section className="portal-content"><h1>About Sanjay Kumar Chemistry</h1><p>A focused online learning platform for HSC Chemistry and university admission preparation in Bangladesh.</p><p>Instructor biography, qualifications and experience have not yet been supplied and will be editable by the site owner.</p></section></main>}

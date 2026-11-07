@@ -6,6 +6,10 @@ alter table public.courses
   add column if not exists admission_fee_bdt integer not null default 1500;
 update public.courses set monthly_fee_bdt = 700, admission_fee_bdt = 1500
 where slug in ('hsc-2027-chemistry','hsc-2028-chemistry','admission-chemistry');
+alter table public.courses drop constraint if exists courses_monthly_fee_bdt_check;
+alter table public.courses add constraint courses_monthly_fee_bdt_check check (monthly_fee_bdt = 700);
+alter table public.courses drop constraint if exists courses_admission_fee_bdt_check;
+alter table public.courses add constraint courses_admission_fee_bdt_check check (admission_fee_bdt = 1500);
 
 alter table public.enrollments
   add column if not exists admission_fee_paid boolean not null default false,
@@ -105,6 +109,11 @@ begin
   return new;
 end;
 $$;
+
+drop trigger if exists validate_manual_payment_submission on public.manual_payment_submissions;
+create trigger validate_manual_payment_submission
+before insert on public.manual_payment_submissions
+for each row execute function public.validate_manual_payment_submission();
 
 create or replace function public.approve_manual_payment_submission(p_submission_id uuid, p_admin_note text default null)
 returns void

@@ -118,6 +118,23 @@ export async function saveChapter(formData: FormData) {
 }
 
 
+
+export async function getLessonResourceUrl(resourceId: string, mode: 'preview' | 'download') {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !resourceId || !['preview','download'].includes(mode)) return { url: null, error: 'unauthorized' as const };
+  const { data: resource } = await supabase.from('lesson_resources')
+    .select('id,storage_path,file_name,downloadable').eq('id', resourceId).maybeSingle();
+  if (!resource || (mode === 'download' && !resource.downloadable)) return { url: null, error: 'unavailable' as const };
+  const downloadName = 'JMT-Academy-' + resource.file_name
+    .replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT-Academy')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-');
+  const result = await supabase.storage.from('lesson-materials').createSignedUrl(
+    resource.storage_path, 300, mode === 'download' ? { download: downloadName } : undefined
+  );
+  return result.error ? { url: null, error: 'unavailable' as const } : { url: result.data.signedUrl, error: null };
+}
+
 export async function postLessonDiscussion(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

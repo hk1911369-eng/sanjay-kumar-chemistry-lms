@@ -94,8 +94,8 @@ export async function setCoursePublication(formData: FormData) {
   if (profile?.role !== 'admin') redirect('/portal');
   const courseId = String(formData.get('course_id') ?? '');
   const publish = formData.get('published') === 'on';
-  const { data: course } = await supabase.from('courses').select('slug,price_bdt').eq('id', courseId).maybeSingle();
-  if (!course || !['hsc-2027-chemistry','hsc-2028-chemistry','admission-chemistry'].includes(course.slug) || course.price_bdt !== 700) redirect('/admin?course_error=invalid');
+  const { data: course } = await supabase.from('courses').select('id').eq('id', courseId).maybeSingle();
+  if (!course) redirect('/admin?course_error=invalid');
   const { error } = await supabase.from('courses').update({ is_published: publish }).eq('id', courseId);
   redirect(error ? '/admin?course_error=save' : '/admin?course_success=1');
 }

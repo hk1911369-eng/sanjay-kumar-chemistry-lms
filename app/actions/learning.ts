@@ -127,19 +127,40 @@ export async function postLessonDiscussion(formData: FormData) {
   const parentId = String(formData.get('parent_id') ?? '').trim() || null;
   const body = String(formData.get('body') ?? '').trim();
   if (!lessonId || !courseId || body.length < 2 || body.length > 3000) redirect('/student');
-  const [{ data: lesson }, { data: profile }] = await Promise.all([
-    supabase.from('lessons').select('id,course_id').eq('id', lessonId).eq('course_id', courseId).maybeSingle(),
-    supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
-  ]);
+  const { data: allowed } = await supabase.rpc('consume_app_rate_limit', { p_action: 'lesson_discussion' });
+  if (!allowed) redirect('/learn/' + courseId + '?discussion_error=rate_limit#discussion-' + lessonId);
+  const { data: lesson } = await supabase.from('lessons').select('id,course_id').eq('id', lessonId).eq('course_id', courseId).maybeSingle();
   if (!lesson) redirect('/student');
-  const authorName = (profile?.full_name || user.email || 'Student').slice(0, 100);
   const { error } = await supabase.from('lesson_discussions').insert({
     lesson_id: lessonId, course_id: courseId, parent_id: parentId,
-    author_id: user.id, author_name: authorName, body,
+    author_id: user.id, body,
   });
   if (error) redirect('/learn/' + courseId + '?discussion_error=1#discussion-' + lessonId);
   revalidatePath('/learn/' + courseId);
   redirect('/learn/' + courseId + '#discussion-' + lessonId);
+}
+
+
+export async function pinLessonDiscussion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const discussionId = String(formData.get('discussion_id') ?? '').trim();
+  const courseId = String(formData.get('course_id') ?? '').trim();
+  const pinned = String(formData.get('pinned') ?? '') === 'true';
+  if (!discussionId || !courseId) redirect('/student');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'admin') {
+    if (!['teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
+    const { data: assignment } = await supabase.from('course_assignments').select('id')
+      .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
+    if (!assignment) redirect('/portal');
+  }
+  const { error } = await supabase.from('lesson_discussions').update({ is_pinned: pinned })
+    .eq('id', discussionId).eq('course_id', courseId);
+  if (error) redirect('/learn/' + courseId + '?discussion_error=1');
+  revalidatePath('/learn/' + courseId);
+  redirect('/learn/' + courseId);
 }
 
 export async function toggleLessonReaction(formData: FormData) {

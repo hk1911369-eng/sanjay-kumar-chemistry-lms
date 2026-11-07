@@ -411,3 +411,39 @@ drop policy if exists "admins update any profile" on public.profiles;
 create policy "admins update any profile" on public.profiles for update to authenticated
 using (public.current_role() = 'admin')
 with check (public.current_role() = 'admin');
+
+
+-- Include prospective students who have submitted an admission/payment reference,
+-- even before an enrollment row exists, in assigned staff search results.
+create or replace function public.can_staff_access_student(p_student_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select auth.uid() is not null
+    and public.current_role()::text in ('teacher','staff')
+    and (
+      exists (
+        select 1 from public.enrollments e
+        join public.course_assignments a on a.course_id=e.course_id
+        where e.student_id=p_student_id and a.teacher_id=auth.uid()
+      )
+      or exists (
+        select 1 from public.manual_payment_submissions m
+        join public.course_assignments a on a.course_id=m.course_id
+        where m.student_id=p_student_id and a.teacher_id=auth.uid()
+      )
+    );
+$$;
+revoke all on function public.can_staff_access_student(uuid) from public, anon;
+grant execute on function public.can_staff_access_student(uuid) to authenticated;
+
+drop policy if exists "profiles own admin or assigned staff read" on public.profiles;
+create policy "profiles own admin or assigned staff read" on public.profiles for select
+using (
+  id = auth.uid()
+  or public.current_role() = 'admin'
+  or public.can_staff_access_student(id)
+);

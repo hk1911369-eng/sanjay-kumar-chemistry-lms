@@ -27,7 +27,7 @@ export async function signIn(formData: FormData) {
   if (!email || password.length < 8) redirect('/login?error=invalid');
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect(\`/login?error=\${encodeURIComponent(safeMessage(error.message))}\`);
+  if (error) redirect('/login?error=' + encodeURIComponent(safeMessage(error.message)));
   redirect('/portal');
 }
 
@@ -42,11 +42,11 @@ export async function signUp(formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email, password,
     options: {
-      emailRedirectTo: \`\${getAppUrl()}/auth/confirm\`,
+      emailRedirectTo: getAppUrl() + '/auth/confirm',
       data: { full_name: fullName, phone },
     },
   });
-  if (error) redirect(\`/register?error=\${encodeURIComponent(safeMessage(error.message))}\`);
+  if (error) redirect('/register?error=' + encodeURIComponent(safeMessage(error.message)));
   redirect('/register?message=Check your email for the confirmation link.');
 }
 
@@ -60,7 +60,7 @@ export async function requestPasswordReset(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (!email) redirect('/forgot-password?error=invalid');
   const supabase = await createClient();
-  const redirectTo = \`\${getAppUrl()}/auth/confirm?next=/reset-password\`;
+  const redirectTo = getAppUrl() + '/auth/confirm?next=/reset-password';
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) redirect('/forgot-password?error=failed');
   redirect('/forgot-password?sent=1');

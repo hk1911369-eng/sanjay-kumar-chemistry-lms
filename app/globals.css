@@ -202,3 +202,20 @@ button:disabled{cursor:not-allowed}
 .video-brand>small{margin-left:auto;color:#b9cce5;font-size:9px;letter-spacing:.8px}
 .jmt-video-player video,.jmt-video-player .resource-video{width:100%;margin:0;border-radius:8px;background:#000}
 .resource-video-shell{margin-top:14px}
+
+
+/* JMT Academy payment receipt */
+.receipt-shell{padding-bottom:48px}
+.receipt-card{width:min(900px,calc(100% - 32px));margin:34px auto;padding:36px;background:#fff;border:1px solid #dce4ef;border-radius:18px;box-shadow:0 12px 36px rgba(12,35,68,.08);color:#14243b}
+.receipt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;border-bottom:1px solid #e4eaf2;padding-bottom:22px}
+.receipt-top h1{margin:8px 0 4px;font-size:28px}
+.receipt-amount{margin:24px 0;padding:22px;border-radius:14px;background:#f1f6fd;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.receipt-amount span,.receipt-grid span{display:block;color:#63728a;font-size:12px}
+.receipt-amount strong{font-size:30px;color:#153c72}
+.receipt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 28px;padding:10px 0 24px}
+.receipt-grid b{display:block;margin-top:5px;overflow-wrap:anywhere;font-size:14px}
+.receipt-note{padding:14px;border-left:3px solid #7999c4;background:#f7f9fc;color:#52627a;font-size:13px;line-height:1.6}
+.receipt-actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.receipt-card footer{border-top:1px solid #e4eaf2;padding-top:14px;color:#718097;font-size:11px;text-align:center}
+@media(max-width:600px){.receipt-card{padding:22px 16px;margin:18px auto}.receipt-top{flex-direction:column}.receipt-grid{grid-template-columns:1fr 1fr;gap:14px 12px}.receipt-amount strong{font-size:24px}}
+@media print{body{background:#fff!important}.no-print,.portal-header{display:none!important}.receipt-shell{padding:0!important}.receipt-card{width:100%;margin:0;padding:12mm;border:0;border-radius:0;box-shadow:none}.receipt-card footer{margin-top:20px}}

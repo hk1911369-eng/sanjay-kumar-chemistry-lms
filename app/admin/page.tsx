@@ -62,7 +62,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         <PaymentReviewForm submissionId={p.id}/>
       </article>)}</div>}
       <h2 id="payment-settings">Payment receiving settings</h2>
-      <p className="muted small-note">These receiving numbers accept the first payment of ৳2,200 (৳1,500 admission + ৳700 first month) or monthly tuition of ৳700. Verify each wallet transaction independently before approval.</p>
+      <p className="muted small-note">These receiving numbers accept the course-specific admission and monthly fees shown for each selected learning format. Verify the amount, sender and transaction in the merchant wallet before approval.</p>
       <div className="portal-grid">{(paymentSettings ?? []).map(setting => <article className="portal-card" key={setting.provider}>
         <h3>{setting.provider.toUpperCase()}</h3>
         <form action={updatePaymentSettings} className="auth-form payment-form">

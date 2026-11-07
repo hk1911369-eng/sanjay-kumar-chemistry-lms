@@ -113,3 +113,10 @@ test('lesson file signed URLs are created only after an explicit resource reques
   assert.match(component, /getLessonResourceUrl/);
   assert.match(component, /onClick=\{\(\) => open\('preview'\)\}/);
 });
+
+test('authentication throttling uses the visitor IP rather than a proxy IP', async () => {
+  const limiter = await read('lib/auth-rate-limit.ts');
+  assert.match(limiter, /get\('cf-connecting-ip'\)/);
+  assert.match(limiter, /filter\(Boolean\)\[0\]/);
+  assert.doesNotMatch(limiter, /filter\(Boolean\)\.at\(-1\)/);
+});

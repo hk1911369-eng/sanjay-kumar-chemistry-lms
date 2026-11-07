@@ -13,7 +13,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   if (!user) redirect('/login');
   const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user.id).single();
   if (profile?.role !== 'admin') redirect('/portal');
-  const [studentsResult,pendingResult,enrollmentResult,coursesResult,submissionResult,settingsResult,teachersResult,assignmentsResult,noticesResult] = await Promise.all([
+  const [studentsResult,pendingResult,enrollmentResult,coursesResult,submissionResult,settingsResult,teachersResult,assignmentsResult,noticesResult,auditResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
     supabase.from('manual_payment_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
     supabase.from('enrollments').select('*',{count:'exact',head:true}).eq('status','active'),
@@ -23,10 +23,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     supabase.from('profiles').select('id,full_name,role').in('role',['teacher','staff']).order('full_name'),
     supabase.from('course_assignments').select('id,course_id,teacher_id'),
     supabase.from('notices').select('id,title,body,published_at,created_at').order('created_at',{ascending:false}).limit(20),
+    supabase.from('audit_logs').select('id,actor_id,action,target_type,target_id,metadata,created_at').order('created_at',{ascending:false}).limit(30),
   ]);
   const {count:students}=studentsResult;const {count:pending}=pendingResult;const {count:enrollments}=enrollmentResult;
   const {data:courses}=coursesResult;const {data:paymentSettings}=settingsResult;const {data:teachers}=teachersResult;
-  const {data:assignments}=assignmentsResult;const {data:notices}=noticesResult;
+  const {data:assignments}=assignmentsResult;const {data:notices}=noticesResult;const {data:auditLogs}=auditResult;
   let submissions: any[] | null = submissionResult.data;
   if(submissionResult.error){
     const fallback=await supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,sender_phone,sender_phone_last4,status,created_at').eq('status','pending_review').order('created_at',{ascending:true}).limit(100);
@@ -34,12 +35,15 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   }
   const studentIds = [...new Set((submissions ?? []).map(p => p.student_id))];
   const courseIds = [...new Set((submissions ?? []).map(p => p.course_id))];
-  const [{ data: studentsData }, { data: courseData }] = await Promise.all([
+  const auditActorIds=[...new Set((auditLogs??[]).map(row=>row.actor_id).filter((id):id is string=>Boolean(id)))];
+  const [{ data: studentsData }, { data: courseData }, {data:auditActors}] = await Promise.all([
     studentIds.length ? supabase.from('profiles').select('id,full_name').in('id', studentIds) : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
     courseIds.length ? supabase.from('courses').select('id,title').in('id', courseIds) : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+    auditActorIds.length ? supabase.from('profiles').select('id,full_name').in('id',auditActorIds) : Promise.resolve({data:[] as {id:string;full_name:string|null}[]}),
   ]);
   const studentNames = new Map((studentsData ?? []).map(s => [s.id, s.full_name] as const));
   const courseNames = new Map((courseData ?? []).map(c => [c.id, c.title] as const));
+  const auditActorNames = new Map((auditActors??[]).map(actor=>[actor.id,actor.full_name] as const));
 
   return <PortalLayout role="admin" active="overview" title="Admin dashboard" returnTo="/admin">
     <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>JMT Academy administration</h1><p><Link className="btn" href="/admin/courses">Open Course Studio · Create courses, prices, photos and teacher teams</Link></p><p><Link className="btn" href="/admin/applications">Review course applications · Online and offline admissions</Link></p><p><Link className="btn" href="/students/manage">Open student management · Search, dues, attendance</Link></p><p><a className="btn" href="/api/admin/student-export">Download student register · Excel/CSV</a></p><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
@@ -48,6 +52,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       {params.settings_success && <p className="form-success">Payment receiving settings updated.</p>}
       {params.settings_error && <p className="form-error">Payment settings could not be saved. Check the Bangladesh mobile number format.</p>}
       <div className="portal-stats"><article><b>{students ?? 0}</b><span>Student accounts</span></article><article><b>{pending ?? 0}</b><span>Pending payment reviews</span></article><article><b>{enrollments ?? 0}</b><span>Active enrollments</span></article><article><b>{courses?.length ?? 0}</b><span>Configured courses</span></article></div>
+      <h2 id="audit-log">Recent admin audit log</h2>
+      {(auditLogs??[]).length===0?<p className="muted">No recorded admin actions yet.</p>:<div className="table-scroll"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Record</th><th>Details</th></tr></thead><tbody>{(auditLogs??[]).map(row=><tr key={row.id}><td>{new Date(row.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{auditActorNames.get(row.actor_id)||'System'}</td><td>{row.action.replaceAll('_',' ')}</td><td>{row.target_type} · {row.target_id||'—'}</td><td>{row.metadata?.amount_bdt?('৳'+Number(row.metadata.amount_bdt).toLocaleString('en-BD')):row.metadata?.course_id?courseNames.get(row.metadata.course_id)||'Course action':'—'}</td></tr>)}</tbody></table></div>}
+      <p className="muted small-note">Financial and payment actions are recorded for administrator review. This log is read-only.</p>
       <h2 id="payment-reviews">Pending payment reviews</h2>
       {(submissions ?? []).length === 0 ? <p className="muted">No pending payment submissions.</p> : <div className="portal-grid review-grid">{submissions!.map(p => <article className="portal-card" key={p.id}>
         <span className="auth-kicker">{p.provider.toUpperCase()} · {p.payment_kind === 'initial' ? 'ADMISSION + FIRST MONTH' : p.payment_kind === 'monthly' ? 'MONTHLY TUITION' : 'PREVIOUS PAYMENT'} · PENDING REVIEW</span><h3>{courseNames.get(p.course_id) ?? 'JMT Academy course'}</h3>

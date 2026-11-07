@@ -34,7 +34,7 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
 
   const startIso = new Date(start.getTime() - 6 * 60 * 60 * 1000).toISOString();
   const endIso = new Date(end.getTime() - 6 * 60 * 60 * 1000).toISOString();
-  const [{ data: payments }, { count: pendingCount }, { data: enrollments }, { data: courses }, { data: entries }, { data: students }] = await Promise.all([
+  const [paymentResult,pendingResult,enrollmentResult,courseResult,entryResult,studentResult] = await Promise.all([
     db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,amount_bdt,transaction_id,status,created_at,reviewed_at').eq('status', 'approved').gte('reviewed_at', startIso).lt('reviewed_at', endIso).order('reviewed_at', { ascending: false }).limit(10000),
     db.from('manual_payment_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
     db.from('enrollments').select('id,student_id,course_id,status,admission_fee_paid,paid_through').eq('status', 'active').limit(10000),
@@ -42,6 +42,14 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
     db.from('finance_entries').select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id,created_at').gte('entry_date', startDate).lt('entry_date', endDate).order('entry_date', { ascending: false }).limit(10000),
     db.from('profiles').select('id,full_name,student_code').eq('role','student').order('full_name').limit(1000),
   ]);
+  let payments: any[] | null = paymentResult.data;
+  if(paymentResult.error){
+    const fallback=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,status,created_at,reviewed_at').eq('status','approved').gte('reviewed_at',startIso).lt('reviewed_at',endIso).order('reviewed_at',{ascending:false}).limit(10000);
+    payments=fallback.data;
+  }
+  const {count:pendingCount}=pendingResult;const {data:enrollments}=enrollmentResult;
+  const {data:courses}=courseResult;const {data:students}=studentResult;
+  const entries: any[] | null = entryResult.error ? [] : entryResult.data;
   const received = payments ?? [];
   const manualEntries = entries ?? [];
   const totalIncome = received.reduce((sum, row) => sum + Number(row.amount_bdt || 0), 0);

@@ -67,7 +67,8 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
   };
   for (const row of received) addCourseAmount(row.course_id,Number(row.amount_bdt||0));
   for (const row of manualEntries) if (row.course_id && row.entry_type !== 'expense') addCourseAmount(row.course_id,row.entry_type==='refund'?-Number(row.amount_bdt||0):Number(row.amount_bdt||0));
-  const dueStudents = (enrollments ?? []).filter(enrollment => !enrollment.paid_through || enrollment.paid_through < endDate).length;
+  const lastDayOfMonth = new Date(end.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0,10);
+  const dueStudents = (enrollments ?? []).filter(enrollment => !enrollment.paid_through || enrollment.paid_through < lastDayOfMonth).length;
   const studentIds = [...new Set([...received.map(row => row.student_id),...manualEntries.map(row=>row.student_id).filter((id):id is string=>Boolean(id))])];
   const linkedCourseIds = [...new Set([...received.map(row=>row.course_id),...manualEntries.map(row=>row.course_id).filter((id):id is string=>Boolean(id))])];
   const [{ data: paymentStudents }, { data: paymentCourses }] = await Promise.all([

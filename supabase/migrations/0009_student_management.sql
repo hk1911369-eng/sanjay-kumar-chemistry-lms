@@ -55,7 +55,7 @@ using (
   id = auth.uid()
   or public.current_role() = 'admin'
   or (
-    public.current_role() in ('teacher','staff')
+    public.current_role()::text in ('teacher','staff')
     and exists (
       select 1 from public.enrollments e
       join public.course_assignments a on a.course_id = e.course_id
@@ -94,7 +94,7 @@ as $$
 begin
   if not exists (
     select 1 from public.profiles p
-    where p.id = new.teacher_id and p.role in ('teacher','staff')
+    where p.id = new.teacher_id and p.role::text in ('teacher','staff')
   ) then
     raise exception 'Course assignments must target an existing Teacher or Staff account';
   end if;
@@ -129,7 +129,7 @@ using (
   public.current_role() = 'admin'
   or (student_id = auth.uid() and visible_to_student)
   or (
-    public.current_role() in ('teacher','staff')
+    public.current_role()::text in ('teacher','staff')
     and exists (
       select 1 from public.course_assignments a
       join public.enrollments e on e.course_id = a.course_id
@@ -146,7 +146,7 @@ with check (
   and (
     public.current_role() = 'admin'
     or (
-      public.current_role() in ('teacher','staff')
+      public.current_role()::text in ('teacher','staff')
       and exists (
         select 1 from public.course_assignments a
         join public.enrollments e on e.course_id = a.course_id
@@ -161,11 +161,11 @@ drop policy if exists "assigned staff update student followups" on public.studen
 create policy "assigned staff update student followups" on public.student_followups for update to authenticated
 using (
   public.current_role() = 'admin'
-  or (created_by = auth.uid() and public.current_role() in ('teacher','staff'))
+  or (created_by = auth.uid() and public.current_role()::text in ('teacher','staff'))
 )
 with check (
   public.current_role() = 'admin'
-  or (created_by = auth.uid() and public.current_role() in ('teacher','staff'))
+  or (created_by = auth.uid() and public.current_role()::text in ('teacher','staff'))
 );
 
 create table if not exists public.student_attendance (
@@ -189,7 +189,7 @@ using (
   public.current_role() = 'admin'
   or student_id = auth.uid()
   or (
-    public.current_role() in ('teacher','staff')
+    public.current_role()::text in ('teacher','staff')
     and exists (select 1 from public.course_assignments a
       where a.course_id = student_attendance.course_id and a.teacher_id = auth.uid())
   )
@@ -198,7 +198,7 @@ drop policy if exists "assigned staff mark attendance" on public.student_attenda
 create policy "assigned staff mark attendance" on public.student_attendance for all to authenticated
 using (
   public.current_role() = 'admin'
-  or (public.current_role() in ('teacher','staff') and exists (
+  or (public.current_role()::text in ('teacher','staff') and exists (
     select 1 from public.course_assignments a
     where a.course_id = student_attendance.course_id and a.teacher_id = auth.uid()
   ))
@@ -207,7 +207,7 @@ with check (
   marked_by = auth.uid()
   and (
     public.current_role() = 'admin'
-    or (public.current_role() in ('teacher','staff') and exists (
+    or (public.current_role()::text in ('teacher','staff') and exists (
       select 1 from public.course_assignments a
       where a.course_id = student_attendance.course_id and a.teacher_id = auth.uid()
     ))
@@ -235,7 +235,7 @@ using (
     (storage.foldername(name))[1]=(select auth.uid())::text
     or public.current_role()='admin'
     or (
-      public.current_role() in ('teacher','staff')
+      public.current_role()::text in ('teacher','staff')
       and exists (
         select 1 from public.course_assignments a
         join public.enrollments e on e.course_id=a.course_id
@@ -251,3 +251,15 @@ create policy "student avatar owner delete" on storage.objects for delete to aut
 using (bucket_id='student-avatars' and (storage.foldername(name))[1]=(select auth.uid())::text);
 
 grant select, insert, update, delete on public.student_followups, public.student_attendance to authenticated;
+
+-- Assigned teaching/support staff can see enrollment dates and paid-through month,
+-- but payment submissions and wallet transaction references remain Admin-only.
+drop policy if exists "assigned staff read enrolled students" on public.enrollments;
+create policy "assigned staff read enrolled students" on public.enrollments for select to authenticated
+using (
+  public.current_role()::text in ('teacher','staff')
+  and exists (
+    select 1 from public.course_assignments a
+    where a.course_id = enrollments.course_id and a.teacher_id = auth.uid()
+  )
+);

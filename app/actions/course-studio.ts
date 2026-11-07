@@ -11,10 +11,10 @@ export async function saveAcademyCourse(fd:FormData){
  const id=String(fd.get('course_id')??'');const title=String(fd.get('title')??'').trim();const group=String(fd.get('programme_group')??'');
  const subjects=String(fd.get('subjects')??'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);
  const selected=fd.getAll('delivery_modes').map(String).filter(x=>modes.includes(x));
- const live=money(fd.get('live_price_bdt')),recorded=money(fd.get('recorded_price_bdt')),offline=money(fd.get('offline_price_bdt'));
+ const live=money(fd.get('live_price_bdt')),recorded=money(fd.get('recorded_price_bdt')),offline=money(fd.get('offline_price_bdt')),admission=money(fd.get('admission_fee_bdt'));
  const capacityText=String(fd.get('capacity')??'').trim();const capacity=capacityText?Number(capacityText):null;
  const teachers=[...new Set(fd.getAll('teacher_ids').map(String).filter(Boolean))];
- if(title.length<3||title.length>140||!groups.includes(group)||!subjects.length||!selected.length||[live,recorded,offline].includes(-1)||(capacity!==null&&(!Number.isSafeInteger(capacity)||capacity<1))||(selected.includes('live_recorded')&&live===null)||(selected.includes('recorded_only')&&recorded===null)||(selected.includes('offline')&&offline===null))redirect('/admin/courses?error=invalid');
+ if(title.length<3||title.length>140||!groups.includes(group)||!subjects.length||!selected.length||[live,recorded,offline,admission].includes(-1)||(capacity!==null&&(!Number.isSafeInteger(capacity)||capacity<1))||(selected.includes('live_recorded')&&live===null)||(selected.includes('recorded_only')&&recorded===null)||(selected.includes('offline')&&offline===null))redirect('/admin/courses?error=invalid');
  let imagePath:string|undefined;const image=fd.get('cover_image');
  if(image instanceof File&&image.size){if(!['image/jpeg','image/png','image/webp'].includes(image.type)||image.size>5242880)redirect('/admin/courses?error=image');
  const ext=image.type==='image/png'?'png':image.type==='image/webp'?'webp':'jpg';imagePath=user.id+'/'+crypto.randomUUID()+'.'+ext;
@@ -24,7 +24,7 @@ export async function saveAcademyCourse(fd:FormData){
  const slug=existingCourse?.slug??(title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,65)+'-'+crypto.randomUUID().slice(0,8));
  const payload={title,slug,level:group==='Admission Batch'?'ADMISSION':'HSC',description:String(fd.get('description')??'').trim(),programme_group:group,subjects,
  teaching_method:String(fd.get('teaching_method')??'').trim(),schedule_text:String(fd.get('schedule_text')??'').trim(),delivery_modes:selected,
- live_price_bdt:live,recorded_price_bdt:recorded,offline_price_bdt:offline,monthly_fee_bdt:live??recorded??offline??0,admission_fee_bdt:0,price_bdt:live??recorded??offline??0,
+ live_price_bdt:live,recorded_price_bdt:recorded,offline_price_bdt:offline,monthly_fee_bdt:live??recorded??offline??0,admission_fee_bdt:admission??0,price_bdt:live??recorded??offline??0,
  capacity,enrollment_open:fd.get('enrollment_open')==='on',is_published:fd.get('is_published')==='on',...(imagePath?{cover_image_path:imagePath}:{})};
  const saved=id?await db.from('courses').update(payload).eq('id',id).select('id').maybeSingle():await db.from('courses').insert(payload).select('id').single();
  if(saved.error||!saved.data)redirect('/admin/courses?error=save');

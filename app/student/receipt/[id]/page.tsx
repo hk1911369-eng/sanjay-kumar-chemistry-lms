@@ -3,6 +3,8 @@ import {notFound,redirect} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';
 import {PrintButton} from '@/components/print-button';
 
+export const metadata={title:'Payment receipt | JMT Academy',robots:{index:false,follow:false}};
+
 function money(amount:number){return '৳'+amount.toLocaleString('en-BD');}
 export default async function PaymentReceipt({params}:{params:Promise<{id:string}>}){
  const {id}=await params;

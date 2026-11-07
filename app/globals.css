@@ -56,3 +56,16 @@ button:disabled,.auth-submit:disabled{opacity:.55;cursor:not-allowed;transform:n
  html{scroll-behavior:auto}
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+
+/* Touch-device focus cleanup: keep keyboard accessibility without sticky tap boxes */
+html,body{ -webkit-tap-highlight-color:transparent!important; }
+a,button,[role="button"],summary{ -webkit-tap-highlight-color:transparent!important; }
+a:focus:not(:focus-visible),button:focus:not(:focus-visible),[role="button"]:focus:not(:focus-visible),summary:focus:not(:focus-visible){outline:none!important;box-shadow:none!important}
+a:focus-visible,button:focus-visible,[role="button"]:focus-visible,summary:focus-visible{outline:2px solid #1769d2!important;outline-offset:3px;box-shadow:0 0 0 4px rgba(23,105,210,.12)!important}
+button{appearance:none;-webkit-appearance:none;cursor:pointer}
+button:not(:disabled){touch-action:manipulation}
+button:active:not(:disabled),a.btn:active{transform:translateY(1px);filter:brightness(.97)}
+button:disabled{cursor:not-allowed}
+.auth-submit,.portal-content button,.portal-header button,.review-actions button,.payment-form button{border-radius:10px;font-weight:750;transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .12s ease}
+.auth-submit:active:not(:disabled),.portal-content button:active:not(:disabled),.portal-header button:active:not(:disabled),.review-actions button:active:not(:disabled),.payment-form button:active:not(:disabled){transform:translateY(1px) scale(.995)}

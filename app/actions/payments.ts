@@ -29,11 +29,14 @@ export async function submitManualPayment(formData: FormData) {
     redirect('/student?payment_error=invalid');
   }
 
-  const [{ data: course }, { data: settings }, { data: existingEnrollment }] = await Promise.all([
+  const [courseResult, settingsResult, enrollmentResult] = await Promise.all([
     supabase.from('courses').select('id,monthly_fee_bdt,admission_fee_bdt,is_published,enrollment_open,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('id', courseId).single(),
     supabase.from('private_payment_settings').select('provider,is_enabled').eq('provider', provider).maybeSingle(),
     supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
+  const {data:course}=courseResult;const {data:settings}=settingsResult;
+  let existingEnrollment:any=enrollmentResult.data;
+  if(enrollmentResult.error){const fallback=await supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through').eq('student_id',user.id).eq('course_id',courseId).maybeSingle();existingEnrollment=fallback.data;}
 
   if (!course?.is_published || !settings?.is_enabled) redirect('/student?payment_error=unavailable');
   if (!deliveryMode && paymentKind === 'monthly' && existingEnrollment?.delivery_mode) {
@@ -82,23 +85,27 @@ export async function submitManualPayment(formData: FormData) {
 
   if (!Number.isSafeInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
 
-  const { error } = await supabase.from('manual_payment_submissions').insert({
+  const submission: Record<string, unknown> = {
     student_id: user.id,
     course_id: courseId,
     provider,
     amount_bdt: amount,
     payment_kind: paymentKind,
     billing_period: billingPeriod,
-    delivery_mode: deliveryMode || null,
-    fee_monthly_bdt: feeMonthly,
-    fee_admission_bdt: feeAdmission,
     transaction_id: transactionId,
     sender_phone_last4: senderPhone.slice(-4),
     sender_phone: senderPhone,
     status: 'pending_review',
-  });
+  };
+  if (deliveryMode) {
+    submission.delivery_mode = deliveryMode;
+    submission.fee_monthly_bdt = feeMonthly;
+    submission.fee_admission_bdt = feeAdmission;
+  }
+  const { error } = await supabase.from('manual_payment_submissions').insert(submission);
 
   if (error) {
+    if (deliveryMode && (error.code === '42703' || /delivery_mode|fee_monthly_bdt|fee_admission_bdt/i.test(error.message))) redirect('/student?payment_error=migration_required');
     const duplicate = error.code === '23505' || /duplicate|unique/i.test(error.message);
     redirect(`/student?payment_error=${duplicate ? 'duplicate' : 'submit_failed'}`);
   }

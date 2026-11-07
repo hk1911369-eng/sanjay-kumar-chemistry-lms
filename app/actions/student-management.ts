@@ -105,3 +105,28 @@ export async function markStudentAttendance(formData: FormData) {
   }, { onConflict: 'student_id,course_id,attendance_date' });
   redirect(error ? '/students/manage?error=attendance' : '/students/manage?saved=attendance');
 }
+
+
+export async function updateStudentFollowupStatus(formData: FormData) {
+  const { supabase, user, role } = await getActor();
+  const id = String(formData.get('followup_id') ?? '');
+  const status = String(formData.get('follow_up_status') ?? '');
+  if (!id || !['open','in_progress','resolved'].includes(status)) redirect('/students/manage?error=followup');
+  const { error } = await supabase.from('student_followups')
+    .update({ follow_up_status: status, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  redirect(error ? '/students/manage?error=followup' : '/students/manage?saved=followup');
+}
+
+export async function updateAccountRole(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (actor?.role !== 'admin') redirect('/portal');
+  const studentId = String(formData.get('profile_id') ?? '');
+  const nextRole = String(formData.get('role') ?? '');
+  if (!studentId || !['student','teacher','staff'].includes(nextRole)) redirect('/students/manage?error=role');
+  const { error } = await supabase.from('profiles').update({ role: nextRole }).eq('id', studentId);
+  redirect(error ? '/students/manage?error=role' : '/students/manage?saved=role');
+}

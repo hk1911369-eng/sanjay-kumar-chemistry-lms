@@ -219,3 +219,12 @@ button:disabled{cursor:not-allowed}
 .receipt-card footer{border-top:1px solid #e4eaf2;padding-top:14px;color:#718097;font-size:11px;text-align:center}
 @media(max-width:600px){.receipt-card{padding:22px 16px;margin:18px auto}.receipt-top{flex-direction:column}.receipt-grid{grid-template-columns:1fr 1fr;gap:14px 12px}.receipt-amount strong{font-size:24px}}
 @media print{body{background:#fff!important}.no-print,.portal-header{display:none!important}.receipt-shell{padding:0!important}.receipt-card{width:100%;margin:0;padding:12mm;border:0;border-radius:0;box-shadow:none}.receipt-card footer{margin-top:20px}}
+
+
+/* JMT course discovery */
+.course-filter-panel{display:grid;grid-template-columns:minmax(220px,2fr) minmax(150px,1fr) minmax(170px,1fr) auto;gap:14px;align-items:end;margin:26px 0 12px;padding:20px;border:1px solid var(--line,#dce4ef);border-radius:16px;background:var(--surface,#fff)}
+.course-filter-panel label{display:grid;gap:7px;font-size:13px;font-weight:650;color:var(--ink,#17304f)}
+.course-filter-panel input,.course-filter-panel select{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line,#dce4ef);border-radius:9px;background:#fff;color:#172b46;font:inherit}
+.course-result-count{margin:12px 0 22px}
+@media(max-width:760px){.course-filter-panel{grid-template-columns:1fr 1fr}.course-filter-panel label:first-child{grid-column:1/-1}.course-filter-panel button{grid-column:1/-1}}
+@media(max-width:420px){.course-filter-panel{grid-template-columns:1fr}.course-filter-panel label:first-child,.course-filter-panel button{grid-column:auto}}

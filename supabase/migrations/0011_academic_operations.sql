@@ -219,3 +219,15 @@ end;
 $$;
 revoke all on function public.submit_quiz_attempt(uuid,jsonb) from public,anon;
 grant execute on function public.submit_quiz_attempt(uuid,jsonb) to authenticated;
+
+-- Only assigned teaching staff or Admin may grade student work.
+drop policy if exists "assigned teachers grade submissions" on public.assignment_submissions;
+create policy "assigned teachers grade submissions" on public.assignment_submissions for update to authenticated
+using (
+ public.current_role()='admin'
+ or exists(select 1 from public.assignments x join public.course_assignments a on a.course_id=x.course_id where x.id=assignment_submissions.assignment_id and a.teacher_id=auth.uid() and public.current_role()::text in ('teacher','staff'))
+)
+with check (
+ public.current_role()='admin'
+ or exists(select 1 from public.assignments x join public.course_assignments a on a.course_id=x.course_id where x.id=assignment_submissions.assignment_id and a.teacher_id=auth.uid() and public.current_role()::text in ('teacher','staff'))
+);

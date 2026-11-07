@@ -21,7 +21,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     supabase.from('courses').select('id,title,slug,monthly_fee_bdt,admission_fee_bdt,is_published').in('slug',['hsc-2027-chemistry','hsc-2028-chemistry','admission-chemistry']).order('title'),
     supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,sender_phone,sender_phone_last4,status,created_at').eq('status', 'pending_review').order('created_at', { ascending: true }).limit(100),
     supabase.from('private_payment_settings').select('provider,receiving_number,is_enabled').order('provider'),
-    supabase.from('profiles').select('id,full_name').eq('role','teacher').order('full_name'),
+    supabase.from('profiles').select('id,full_name,role').in('role',['teacher','staff']).order('full_name'),
     supabase.from('course_assignments').select('id,course_id,teacher_id'),
     supabase.from('notices').select('id,title,body,published_at,created_at').order('created_at',{ascending:false}).limit(20),
   ]);
@@ -35,7 +35,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const courseNames = new Map((courseData ?? []).map(c => [c.id, c.title] as const));
 
   return <main className="portal-shell"><header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link><LocaleSwitcher returnTo="/admin"/><form action={signOut}><button className="quiet-button">Sign out</button></form></header>
-    <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>Admin dashboard</h1><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
+    <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>Admin dashboard</h1><p><Link className="btn" href="/students/manage">Open student management · Search, dues, attendance</Link></p><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
       {params.review_success && <p className="form-success">Review decision saved. Enrollment and tuition access are updated only after approval.</p>}
       {params.review_error && <p className="form-error">Review failed: {params.review_error}</p>}
       {params.settings_success && <p className="form-success">Payment receiving settings updated.</p>}
@@ -60,7 +60,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       </article>)}</div>
       <h2>Teacher course assignments</h2>
       {params.assignment_success && <p className="form-success">Teacher assignment saved.</p>}{params.assignment_error && <p className="form-error">Teacher assignment could not be saved.</p>}
-      <div className="portal-grid">{(courses ?? []).map(c=><article className="portal-card" key={c.id}><h3>{c.title}</h3><p>Admission: ৳{c.admission_fee_bdt} once · Monthly: ৳{c.monthly_fee_bdt}</p><p>First payment: ৳{c.admission_fee_bdt+c.monthly_fee_bdt}</p><p>{(assignments??[]).filter(a=>a.course_id===c.id).length} assigned teacher(s)</p><form action={assignTeacher} className="auth-form payment-form"><input type="hidden" name="course_id" value={c.id}/><label>Assign teacher<select name="teacher_id" required defaultValue=""><option value="" disabled>Select teacher</option>{(teachers??[]).map(t=><option key={t.id} value={t.id}>{t.full_name||t.id.slice(0,8)}</option>)}</select></label><button className="auth-submit">Assign teacher</button></form></article>)}</div>
+      <div className="portal-grid">{(courses ?? []).map(c=><article className="portal-card" key={c.id}><h3>{c.title}</h3><p>Admission: ৳{c.admission_fee_bdt} once · Monthly: ৳{c.monthly_fee_bdt}</p><p>First payment: ৳{c.admission_fee_bdt+c.monthly_fee_bdt}</p><p>{(assignments??[]).filter(a=>a.course_id===c.id).length} assigned teacher(s)</p><form action={assignTeacher} className="auth-form payment-form"><input type="hidden" name="course_id" value={c.id}/><label>Assign teacher<select name="teacher_id" required defaultValue=""><option value="" disabled>Select teacher</option>{(teachers??[]).map(t=><option key={t.id} value={t.id}>{t.full_name||t.id.slice(0,8)} · {t.role}</option>)}</select></label><button className="auth-submit">Assign teacher</button></form></article>)}</div>
       <h2>Announcements</h2>
       {params.announcement_success && <p className="form-success">Announcement saved.</p>}{params.announcement_error && <p className="form-error">Announcement could not be saved.</p>}
       <form action={publishAnnouncement} className="auth-form portal-card"><label>Title<input name="title" required maxLength={180}/></label><label>Message<textarea name="body" required rows={4} maxLength={10000}/></label><label className="toggle-label"><input type="checkbox" name="published"/> Publish now</label><button className="auth-submit">Save announcement</button></form>

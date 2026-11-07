@@ -24,7 +24,8 @@ drop policy if exists "users mark own notifications read" on public.notification
 create policy "users mark own notifications read" on public.notifications
  for update to authenticated using(recipient_id=auth.uid())
  with check(recipient_id=auth.uid());
-grant select,update on public.notifications to authenticated;
+revoke update on public.notifications from authenticated;
+grant select,update(read_at) on public.notifications to authenticated;
 revoke insert,delete on public.notifications from anon,authenticated;
 
 -- Trigger-only helper: notify active learners and assigned teaching staff.
@@ -72,12 +73,14 @@ create or replace function public.notify_assignment_published()
 returns trigger language plpgsql security definer set search_path=public
 as $$
 begin
- if new.published and (tg_op='INSERT' or not old.published) then
-  perform public.notify_course_audience(
-   new.course_id,'assignment','New assignment: '||new.title,
-   'A new assignment is available. Check the instructions and due date.',
-   '/academic#assignments',new.created_by
-  );
+ if tg_op='INSERT' then
+  if new.published then
+   perform public.notify_course_audience(new.course_id,'assignment','New assignment: '||new.title,
+    'A new assignment is available. Check the instructions and due date.','/academic#assignments',new.created_by);
+  end if;
+ elsif new.published and not old.published then
+  perform public.notify_course_audience(new.course_id,'assignment','New assignment: '||new.title,
+   'A new assignment is available. Check the instructions and due date.','/academic#assignments',new.created_by);
  end if;
  return new;
 end;
@@ -91,12 +94,14 @@ create or replace function public.notify_quiz_published()
 returns trigger language plpgsql security definer set search_path=public
 as $$
 begin
- if new.published and (tg_op='INSERT' or not old.published) then
-  perform public.notify_course_audience(
-   new.course_id,'quiz','New test: '||new.title,
-   'A new quiz or model test is available in the academic centre.',
-   '/academic#exams',new.created_by
-  );
+ if tg_op='INSERT' then
+  if new.published then
+   perform public.notify_course_audience(new.course_id,'quiz','New test: '||new.title,
+    'A new quiz or model test is available in the academic centre.','/academic#exams',new.created_by);
+  end if;
+ elsif new.published and not old.published then
+  perform public.notify_course_audience(new.course_id,'quiz','New test: '||new.title,
+   'A new quiz or model test is available in the academic centre.','/academic#exams',new.created_by);
  end if;
  return new;
 end;
@@ -111,12 +116,13 @@ returns trigger language plpgsql security definer set search_path=public
 as $$
 declare v_title text;
 begin
- if new.marks is not null and (tg_op='INSERT' or old.marks is distinct from new.marks or old.graded_at is distinct from new.graded_at) then
+ if new.marks is not null and (
+   tg_op='INSERT' or old.marks is distinct from new.marks or old.graded_at is distinct from new.graded_at
+ ) then
   select a.title into v_title from public.assignments a where a.id=new.assignment_id;
   insert into public.notifications(recipient_id,category,title,body,href)
   values(new.student_id,'grade','Assignment graded: '||coalesce(v_title,'Your assignment'),
-   'Your marks and teacher feedback are ready. Open the academic centre to review them.',
-   '/academic#results');
+   'Your marks and teacher feedback are ready. Open the academic centre to review them.','/academic#results');
  end if;
  return new;
 end;

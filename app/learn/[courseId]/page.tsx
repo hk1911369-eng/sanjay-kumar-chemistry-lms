@@ -77,7 +77,7 @@ export default async function LearningPage({
   return (
     <PortalLayout role={portalRole} active="learning" title={course.title} returnTo={isStaff ? '/teacher' : '/student'}>
       <section className="portal-content">
-        <span className="auth-kicker">LEARNING SPACE</span>
+        <span className="auth-kicker">JMT ACADEMY · LEARNING SPACE</span>
         <h1>{course.title}</h1>
         <p className="muted">{course.description}</p>
         {query.progress_saved && <p className="form-success">Lesson progress saved.</p>}
@@ -108,7 +108,7 @@ export default async function LearningPage({
                 <h2>{l.title}</h2>
                 {l.description && <p>{l.description}</p>}
                 {l.content && <div className="lesson-content">{l.content.split('\n').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
-                {l.video_url && <div className="lesson-video"><video controls playsInline preload="metadata" src={l.video_url}>Your browser does not support video playback.</video></div>}
+                {l.video_url && <div className="lesson-video jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video controls playsInline preload="metadata" src={l.video_url}>Your browser does not support video playback.</video></div>}
 
                 {!!lessonResources.length && <section className="lesson-materials">
                   <h3>Class videos, slides and files</h3>
@@ -118,7 +118,7 @@ export default async function LearningPage({
                       <span>{r.resource_type.toUpperCase()} · {(Number(r.file_size) / 1024 / 1024).toFixed(1)} MB</span>
                       {r.caption && <small>{r.caption}</small>}
                     </div>
-                    {r.resource_type === 'video' && r.previewUrl && <video className="resource-video" controls playsInline preload="metadata" src={r.previewUrl}>Your browser does not support video playback.</video>}
+                    {r.resource_type === 'video' && r.previewUrl && <div className="resource-video-shell jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video className="resource-video" controls playsInline preload="metadata" src={r.previewUrl}>Your browser does not support video playback.</video></div>}
                     {r.resource_type === 'pdf' && r.previewUrl && <iframe className="pdf-preview" src={r.previewUrl} title={r.file_name}/>}
                     {r.resource_type === 'image' && r.previewUrl && <a href={r.previewUrl} target="_blank" rel="noreferrer"><img className="resource-image" src={r.previewUrl} alt={r.file_name}/></a>}
                     {r.previewUrl && r.resource_type !== 'video' && <div className="resource-links">
@@ -145,7 +145,7 @@ export default async function LearningPage({
 
                 <section className="lesson-discussion" id={'discussion-' + l.id}>
                   <h3>Class discussion & questions</h3>
-                  <p className="muted">Ask a doubt, discuss this lesson or reply to your classmates. Keep comments respectful and related to Chemistry.</p>
+                  <p className="muted">Ask a doubt, discuss this lesson or reply to your classmates. Keep comments respectful and related to your course.</p>
                   {roots.map(d => {
                     const replies = lessonDiscussions.filter(reply => reply.parent_id === d.id);
                     const like = reactionSummary(d.id, 'like');

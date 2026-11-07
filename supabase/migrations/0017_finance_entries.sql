@@ -44,3 +44,36 @@ create policy "admins create finance entries"
 
 -- Financial entries are intentionally append-only. Correct mistakes with a
 -- reversing refund/adjustment entry instead of silently editing the audit trail.
+
+create or replace function public.audit_finance_entry_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.audit_logs(actor_id, action, target_type, target_id, metadata)
+  values (
+    new.recorded_by,
+    'finance_entry_created',
+    'finance_entry',
+    new.id::text,
+    jsonb_build_object(
+      'entry_type', new.entry_type,
+      'category', new.category,
+      'amount_bdt', new.amount_bdt,
+      'payment_method', new.payment_method,
+      'entry_date', new.entry_date,
+      'course_id', new.course_id,
+      'student_id', new.student_id,
+      'reference', new.reference
+    )
+  );
+  return new;
+end;
+$$;
+revoke all on function public.audit_finance_entry_insert() from public, anon, authenticated;
+drop trigger if exists finance_entry_audit_insert on public.finance_entries;
+create trigger finance_entry_audit_insert
+after insert on public.finance_entries
+for each row execute function public.audit_finance_entry_insert();

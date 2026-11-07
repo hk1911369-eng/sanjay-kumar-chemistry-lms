@@ -70,21 +70,21 @@ drop policy if exists "authors and assigned teachers update discussion body or p
 create policy "authors and assigned teachers update discussion body or pin"
 on public.lesson_discussions for update to authenticated
 using (
-  author_id = auth.uid()
-  or public.current_role() = 'admin'
+  author_id = (select auth.uid())
+  or (select public.current_role()) = 'admin'
   or (
-    public.current_role()::text in ('teacher','staff')
+    (select public.current_role())::text in ('teacher','staff')
     and exists (select 1 from public.course_assignments a
-      where a.course_id = lesson_discussions.course_id and a.teacher_id = auth.uid())
+      where a.course_id = lesson_discussions.course_id and a.teacher_id = (select auth.uid()))
   )
 )
 with check (
-  author_id = auth.uid()
-  or public.current_role() = 'admin'
+  author_id = (select auth.uid())
+  or (select public.current_role()) = 'admin'
   or (
-    public.current_role()::text in ('teacher','staff')
+    (select public.current_role())::text in ('teacher','staff')
     and exists (select 1 from public.course_assignments a
-      where a.course_id = lesson_discussions.course_id and a.teacher_id = auth.uid())
+      where a.course_id = lesson_discussions.course_id and a.teacher_id = (select auth.uid()))
   )
 );
 
@@ -184,7 +184,7 @@ begin
     perform pg_advisory_xact_lock(hashtextextended(v_bucket, 0));
     select count(*) into v_count from public.auth_rate_limit_events
       where action = p_action and bucket_key = v_bucket and created_at > now() - v_window;
-    if v_count >= case when v_bucket like '%:email:%' then v_email_limit else v_ip_limit end then
+    if v_count >= (case when v_bucket like '%:email:%' then v_email_limit else v_ip_limit end) then
       return false;
     end if;
   end loop;

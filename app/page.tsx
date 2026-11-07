@@ -1,29 +1,19 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { translations, type Locale } from '@/lib/i18n';
-import { setLanguage } from '@/app/actions/language';
-import { ADMISSION_FEE_BDT, MONTHLY_FEE_BDT } from '@/lib/pricing';
+import {createClient} from '@/lib/supabase/server';
 
-const courses = [
-  { slug: 'hsc-2027-chemistry', key: 'hsc27' as const, title: 'HSC 2027 Chemistry', detail: 'A dedicated Chemistry learning path for HSC 2027.' },
-  { slug: 'hsc-2028-chemistry', key: 'hsc28' as const, title: 'HSC 2028 Chemistry', detail: 'A dedicated Chemistry learning path for HSC 2028.' },
-  { slug: 'admission-chemistry', key: 'admission' as const, title: 'Admission Chemistry', detail: 'Chemistry preparation for university admission candidates.' },
-];
-export default async function Home() {
-  const jar = await cookies();
-  const locale: Locale = jar.get('skc_locale')?.value === 'en' ? 'en' : 'bn';
-  const t = translations[locale];
-  return <main>
-    <div className="top">CHEMISTRY LEARNING · HSC · ADMISSION</div>
-    <nav><Link className="brand" href="/"><span className="logo">⚗</span><span>{t.brand}<small>{t.tagline}</small></span></Link>
-      <div className="navlinks"><Link href="/">{t.home}</Link><Link href="/courses">{t.courses}</Link><Link href="/about">{t.about}</Link><Link href="/contact">{t.contact}</Link>
-        <form action={setLanguage} className="language-form"><input type="hidden" name="return_to" value="/"/><button name="locale" value={locale === 'bn' ? 'en' : 'bn'} className="language-button">{locale === 'bn' ? 'English' : 'বাংলা'}</button></form>
-        <Link className="btn" href="/login">{t.login} ↗</Link></div></nav>
-    <section className="hero" id="home"><div><span className="eyebrow">YOUR CHEMISTRY LEARNING SPACE</span><h1>{t.heroTitle}</h1><p>{t.heroText}</p><Link className="btn" href="/courses">{t.explore} →</Link>
-      <div className="stats"><b>3 courses <small>Only HSC and Admission</small></b><b>৳{MONTHLY_FEE_BDT} <small>Monthly tuition · ৳{ADMISSION_FEE_BDT} one-time admission</small></b><b>Manual review <small>Verified by Admin</small></b></div></div>
-      <div className="portrait"><div className="avatar">⚗</div><h2>Sanjay Kumar</h2><p>Chemistry Instructor</p><small>Instructor biography and photograph can be added by Admin.</small></div></section>
-    <section className="section" id="courses"><h2>{t.courses}</h2><p className="muted">{t.heroText}</p><div className="grid three">{courses.map(c=><article className="course" key={c.slug}><span>CHEMISTRY PROGRAM</span><h3>{t[c.key]}</h3><p>{c.detail}</p><b>৳{MONTHLY_FEE_BDT} / month</b><p>Admission fee: ৳{ADMISSION_FEE_BDT} once</p><Link href={`/courses/${c.slug}`}>{t.explore} →</Link></article>)}</div></section>
-    <section className="section alt"><h2>{t.how}</h2><div className="grid">{[t.step1,t.step2,t.step3,t.step4].map((s,i)=><article className="card" key={i}><div className="symbol">{i+1}</div><p>{s}</p></article>)}</div></section>
-    <footer>{t.footer} · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link> · <Link href="/help">Help / FAQ</Link></footer>
-  </main>;
+export default async function Home(){
+ const db=await createClient();
+ const {data:courses}=await db.from('courses').select('id,title,slug,description,programme_group,subjects,cover_image_path,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt,enrollment_open').eq('is_published',true).is('archived_at',null).order('sort_order').order('title').limit(6);
+ const featured=courses?.[0];
+ const heroImage=featured?.cover_image_path?db.storage.from('jmt-course-media').getPublicUrl(featured.cover_image_path).data.publicUrl:null;
+ return <main className="jmt-home">
+  <div className="top">JMT ACADEMY · ONLINE & OFFLINE LEARNING</div>
+  <nav><Link className="brand" href="/"><span className="logo">J</span><span>JMT ACADEMY<small>LEARN · PRACTISE · ACHIEVE</small></span></Link><div className="navlinks"><Link href="/courses">Courses</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link><Link className="btn" href="/login">Student login ↗</Link></div></nav>
+  <section className="jmt-hero"><div className="jmt-hero-copy"><span className="eyebrow">A BETTER WAY TO LEARN</span><h1>Learn your way.<br/><em>Achieve more.</em></h1><p>Join JMT Academy for structured online and offline learning, expert teaching, recorded lessons and academic support that keeps you moving forward.</p><div className="jmt-hero-actions"><Link className="btn" href="/courses">Explore courses →</Link><Link className="jmt-secondary" href="/register">Start your enrolment</Link></div><div className="jmt-benefits"><span>✓ Live teacher-led classes</span><span>✓ Recorded lesson library</span><span>✓ Offline academy support</span></div></div><div className="jmt-hero-visual">{heroImage?<img src={heroImage} alt="JMT Academy featured course"/>:<div className="jmt-visual-placeholder"><span>JMT</span><b>YOUR LEARNING JOURNEY STARTS HERE</b></div>}<div className="jmt-floating-note"><b>Flexible learning</b><span>Live · Recorded · Offline</span></div></div></section>
+  <section className="jmt-program-strip"><div><b>HSC 2027</b><span>Focused preparation</span></div><div><b>HSC 2028</b><span>Build strong foundations</span></div><div><b>Admission Batch</b><span>Prepare for your next step</span></div></section>
+  <section className="section jmt-courses"><div className="jmt-section-heading"><div><span className="auth-kicker">CHOOSE YOUR PATH</span><h2>Explore our courses</h2><p className="muted">Select the programme and learning format that suits you.</p></div><Link href="/courses">View all courses →</Link></div><div className="catalogue-grid">{(courses??[]).map(c=>{const image=c.cover_image_path?db.storage.from('jmt-course-media').getPublicUrl(c.cover_image_path).data.publicUrl:null;return <article className="catalogue-card" key={c.id}>{image?<img src={image} alt={c.title} className="catalogue-cover"/>:<div className="catalogue-placeholder"><span>JMT</span><b>{c.programme_group}</b></div>}<div className="catalogue-card-body"><span className="catalogue-kicker">{c.programme_group}</span><h3>{c.title}</h3><p>{c.description}</p><p className="catalogue-subjects">{(c.subjects??[]).join(' · ')}</p><div className="catalogue-prices">{c.delivery_modes?.includes('live_recorded')&&<span>Live + recorded <b>৳{c.live_price_bdt??'Contact us'}</b></span>}{c.delivery_modes?.includes('recorded_only')&&<span>Recorded only <b>৳{c.recorded_price_bdt??'Contact us'}</b></span>}{c.delivery_modes?.includes('offline')&&<span>Offline <b>৳{c.offline_price_bdt??'Contact us'}</b></span>}</div><Link className="btn" href={'/courses/'+c.slug}>Explore course →</Link></div></article>})}</div>{!courses?.length&&<p className="muted">Our new courses are being prepared. Please check back soon.</p>}</section>
+  <section className="jmt-formats"><div><span className="auth-kicker">LEARN THE WAY THAT WORKS FOR YOU</span><h2>One academy. Three ways to learn.</h2></div><div className="jmt-format-grid"><article><span>01</span><h3>Live + recorded</h3><p>Attend live classes, ask your teacher questions and replay recordings whenever you miss a session.</p></article><article><span>02</span><h3>Recorded-only</h3><p>A lower-priced option for independent learners who prefer recorded lessons without live teacher interaction.</p></article><article><span>03</span><h3>Offline academy</h3><p>Learn in person at JMT Academy. Active offline students also receive recorded lessons free as make-up support.</p></article></div></section>
+  <section className="jmt-cta"><span className="auth-kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to get started?</h2><p>Explore the available programmes and choose your learning format.</p><Link className="btn" href="/courses">Find your course →</Link></section>
+  <footer>© {new Date().getFullYear()} JMT Academy · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link> · <Link href="/help">Help centre</Link></footer>
+ </main>;
 }

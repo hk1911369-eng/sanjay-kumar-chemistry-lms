@@ -15,6 +15,7 @@ const paymentErrors: Record<string, string> = {
   duplicate: 'এই Transaction ID আগে জমা দেওয়া হয়েছে।',
   submit_failed: 'Payment reference জমা দেওয়া যায়নি। আবার চেষ্টা করুন।',
   application_required: 'Your application must be accepted before you can submit the admission payment.',
+  migration_required: 'The academy is preparing the new learning-format payment system. Please try again after the database update is complete.',
 };
 
 export default async function StudentDashboard({ searchParams }: { searchParams: Promise<{ payment_error?: string; payment_success?: string; profile_error?: string; profile_success?: string; learning_error?: string; application_submitted?: string }> }) {
@@ -27,7 +28,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
   const avatarUrl = avatarData?.signedUrl ?? null;
 
-  const [{ data: courses }, { data: enrollments }, { data: payments }, { data: settings }, { data: notices }, { data: studentNotes }, { data: applications }] = await Promise.all([
+  const [courseResult, enrollmentResult, paymentResult, settingsResult, noticeResult, noteResult, applicationResult] = await Promise.all([
     supabase.from('courses').select('id,title,slug,description,monthly_fee_bdt,admission_fee_bdt,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('is_published', true).is('archived_at',null).order('title'),
     supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id),
     supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,delivery_mode,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
@@ -36,6 +37,21 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     supabase.from('student_followups').select('id,category,severity,details,follow_up_status,created_at').eq('student_id',user.id).eq('visible_to_student',true).order('created_at',{ascending:false}).limit(10),
     supabase.from('course_applications').select('id,course_id,delivery_mode,status,admin_note,created_at').eq('student_id',user.id).order('created_at',{ascending:false}).limit(50),
   ]);
+  const {data:courses}=courseResult;
+  let enrollments: any[] | null = enrollmentResult.data;
+  if(enrollmentResult.error){
+    const fallback=await supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through').eq('student_id',user.id);
+    enrollments=fallback.data;
+  }
+  let payments: any[] | null = paymentResult.data;
+  if(paymentResult.error){
+    const fallback=await supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,admin_note').eq('student_id',user.id).order('created_at',{ascending:false}).limit(30);
+    payments=fallback.data;
+  }
+  const {data:settings}=settingsResult;
+  const {data:notices}=noticeResult;
+  const {data:studentNotes}=noteResult;
+  const {data:applications}=applicationResult;
   const enrollmentByCourse = new Map((enrollments ?? []).map(e => [e.course_id, e]));
   const latestApplicationByCourse = new Map<string, any>();
   for (const application of applications ?? []) if (!latestApplicationByCourse.has(application.course_id)) latestApplicationByCourse.set(application.course_id, application);

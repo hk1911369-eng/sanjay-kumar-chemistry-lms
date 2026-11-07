@@ -19,12 +19,14 @@ export async function GET(request: Request) {
   const month = /^\d{4}-\d{2}$/.test(requestedMonth) ? requestedMonth : new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit'}).format(new Date());
   const [year,monthNumber]=month.split('-').map(Number);
   if(monthNumber<1||monthNumber>12) return NextResponse.json({error:'Invalid month'},{status:400});
-  const start = new Date(Date.UTC(year,monthNumber-1,1)).toISOString();
-  const end = new Date(Date.UTC(year,monthNumber,1)).toISOString();
+  const start = new Date(Date.UTC(year,monthNumber-1,1)-6*60*60*1000).toISOString();
+  const end = new Date(Date.UTC(year,monthNumber,1)-6*60*60*1000).toISOString();
+  const startDate = `${month}-01`;
+  const nextMonth = new Date(Date.UTC(year,monthNumber,1)).toISOString().slice(0,10);
 
   const [{ data: payments, error: paymentError }, { data: entries, error: entryError }] = await Promise.all([
     db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,delivery_mode,amount_bdt,transaction_id,reviewed_at').eq('status','approved').gte('reviewed_at',start).lt('reviewed_at',end).order('reviewed_at'),
-    db.from('finance_entries').select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id').gte('entry_date',start.slice(0,10)).lt('entry_date',end.slice(0,10)).order('entry_date'),
+    db.from('finance_entries').select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id').gte('entry_date',startDate).lt('entry_date',nextMonth).order('entry_date'),
   ]);
   if(paymentError||entryError) return NextResponse.json({error:'Finance ledger is not ready. Confirm the finance database migration has been applied.'},{status:503});
 

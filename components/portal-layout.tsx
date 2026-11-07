@@ -54,7 +54,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'settings', label: 'Payment settings', href: '/admin#payment-settings', icon: '⚙' },
       { key: 'teachers', label: 'Teacher assignments', href: '/admin#teacher-assignments', icon: '♧' },
       { key: 'announcements', label: 'Announcements', href: '/admin#announcements', icon: '◉' },
-      { key: 'courses', label: 'Course controls', href: '/admin#course-configuration', icon: '▤' },
+      { key: 'courses', label: 'Course studio', href: '/admin/courses', icon: '▤' },
     ]},
   ],
 };
@@ -82,9 +82,9 @@ export function PortalLayout({
   return (
     <main className="portal-shell portal-layout">
       <aside className="portal-sidebar">
-        <Link className="portal-brand" href="/" aria-label="Sanjay Kumar Chemistry home">
+        <Link className="portal-brand" href="/" aria-label="JMT Academy home">
           <span className="portal-brand-symbol">⚗</span>
-          <span className="portal-brand-copy">Sanjay Kumar Chemistry<small>LEARNING PLATFORM</small></span>
+          <span className="portal-brand-copy">JMT Academy<small>ONLINE & OFFLINE LEARNING</small></span>
         </Link>
         <div className="portal-role-label">{roleNames[role]}</div>
         <nav className="portal-navigation" aria-label="Workspace navigation">

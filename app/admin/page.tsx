@@ -34,7 +34,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const courseNames = new Map((courseData ?? []).map(c => [c.id, c.title] as const));
 
   return <PortalLayout role="admin" active="overview" title="Admin dashboard" returnTo="/admin">
-    <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>JMT Academy administration</h1><p><Link className="btn" href="/admin/courses">Open Course Studio · Create courses, prices, photos and teacher teams</Link></p><p><Link className="btn" href="/students/manage">Open student management · Search, dues, attendance</Link></p><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
+    <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>JMT Academy administration</h1><p><Link className="btn" href="/admin/courses">Open Course Studio · Create courses, prices, photos and teacher teams</Link></p><p><Link className="btn" href="/admin/applications">Review course applications · Online and offline admissions</Link></p><p><Link className="btn" href="/students/manage">Open student management · Search, dues, attendance</Link></p><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
       {params.review_success && <p className="form-success">Review decision saved. Enrollment and tuition access are updated only after approval.</p>}
       {params.review_error && <p className="form-error">Review failed: {params.review_error}</p>}
       {params.settings_success && <p className="form-success">Payment receiving settings updated.</p>}

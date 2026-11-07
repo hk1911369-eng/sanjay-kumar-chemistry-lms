@@ -14,6 +14,7 @@ const paymentErrors: Record<string, string> = {
   admission_required: 'Complete the admission payment before monthly tuition.',
   duplicate: 'এই Transaction ID আগে জমা দেওয়া হয়েছে।',
   submit_failed: 'Payment reference জমা দেওয়া যায়নি। আবার চেষ্টা করুন।',
+  application_required: 'Your application must be accepted before you can submit the admission payment.',
 };
 
 export default async function StudentDashboard({ searchParams }: { searchParams: Promise<{ payment_error?: string; payment_success?: string; profile_error?: string; profile_success?: string; learning_error?: string; application_submitted?: string }> }) {
@@ -28,8 +29,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
 
   const [{ data: courses }, { data: enrollments }, { data: payments }, { data: settings }, { data: notices }, { data: studentNotes }, { data: applications }] = await Promise.all([
     supabase.from('courses').select('id,title,slug,description,monthly_fee_bdt,admission_fee_bdt,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('is_published', true).is('archived_at',null).order('title'),
-    supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through').eq('student_id', user.id),
-    supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
+    supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id),
+    supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,delivery_mode,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
     supabase.from('private_payment_settings').select('provider,receiving_number,is_enabled'),
     supabase.from('notices').select('id,title,body,published_at').not('published_at','is',null).order('published_at',{ascending:false}).limit(10),
     supabase.from('student_followups').select('id,category,severity,details,follow_up_status,created_at').eq('student_id',user.id).eq('visible_to_student',true).order('created_at',{ascending:false}).limit(10),
@@ -45,10 +46,10 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const pendingCount = (payments ?? []).filter(p => p.status === 'pending_review').length;
   const activeCount = (enrollments ?? []).filter(e => e.status === 'active').length;
 
-  function PaymentForm({ courseId, kind, amount }: { courseId: string; kind: 'monthly'; amount: number }) {
+  function PaymentForm({ courseId, kind, amount, deliveryMode }: { courseId: string; kind: 'initial' | 'monthly'; amount: number; deliveryMode?: string }) {
     return <form action={submitManualPayment} className="auth-form payment-form">
       <input type="hidden" name="course_id" value={courseId}/>
-      <input type="hidden" name="payment_kind" value={kind}/>
+      <input type="hidden" name="payment_kind" value={kind}/>{deliveryMode&&<input type="hidden" name="delivery_mode" value={deliveryMode}/>} 
       <p><b>Amount to send: ৳{amount.toLocaleString('en-BD')}</b></p>
       <label>Payment method<select name="provider" required defaultValue=""><option value="" disabled>Select method</option>{(['bkash', 'nagad', 'rocket'] as const).map(p => <option key={p} value={p} disabled={!receiving.get(p)?.is_enabled}>{p.toUpperCase()}</option>)}</select></label>
       <label>Transaction ID<input name="transaction_id" minLength={5} maxLength={100} required placeholder="Enter transaction ID" autoComplete="off"/></label>
@@ -66,7 +67,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       {params.payment_error && <p className="form-error">{paymentErrors[params.payment_error] ?? 'অনুরোধটি সম্পন্ন করা যায়নি।'}</p>}
       {params.learning_error && <p className="form-error">Course access is available only after payment approval.</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
-      <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>৳{MONTHLY_FEE_BDT.toLocaleString('en-BD')}</b><span>Monthly tuition</span></article></div>
+      <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>{applications?.length ?? 0}</b><span>Course applications</span></article></div>
       <h2 id="profile">Student profile</h2>
       {avatarUrl&&<p><img src={avatarUrl} alt="Your profile" style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
       <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">
@@ -93,21 +94,22 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         const initialPending = pending.has(`${c.id}:initial:${period}`);
         const monthlyPending = pending.has(`${c.id}:monthly:${period}`);
         const monthPaid = Boolean(enrollment?.paid_through && enrollment.paid_through >= periodEnd);
-        const monthlyFee = Number(c.monthly_fee_bdt ?? MONTHLY_FEE_BDT);
+        const activeMode = enrollment?.delivery_mode ?? null;
+        const monthlyFee = Number(enrollment?.monthly_fee_bdt ?? (activeMode==='live_recorded'?c.live_price_bdt:activeMode==='recorded_only'?c.recorded_price_bdt:activeMode==='offline'?c.offline_price_bdt:c.monthly_fee_bdt) ?? MONTHLY_FEE_BDT);
         const application = latestApplicationByCourse.get(c.id);
         const modePrice = (mode:string) => mode==='live_recorded'?c.live_price_bdt:mode==='recorded_only'?c.recorded_price_bdt:c.offline_price_bdt;
         return <article className="portal-card" key={c.id}>
           <span className="auth-kicker">JMT ACADEMY COURSE</span><h3>{c.title}</h3><p className="muted">{c.description}</p>
-          {isActive && <p><b>Monthly tuition: ৳{monthlyFee.toLocaleString('en-BD')}</b></p>}
+          {isActive && <p><b>{activeMode==='offline'?'Offline':activeMode==='recorded_only'?'Recorded-only':activeMode==='live_recorded'?'Live + recorded':'Legacy'} monthly fee: ৳{monthlyFee.toLocaleString('en-BD')}</b></p>}
           {!isActive && <p className="muted">Available formats: {(c.delivery_modes??[]).map((mode:string)=>{const label=mode==='live_recorded'?'Live + recorded':mode==='recorded_only'?'Recorded only':'Offline';const price=modePrice(mode);return label+' · '+(price===null||price===undefined?'Contact academy':'৳'+Number(price).toLocaleString('en-BD'));}).join(' | ')}</p>}
           <p>{isActive ? <span className="status-approved">Enrolled</span> : initialPending ? <span className="status-pending">Initial payment under review</span> : <span className="muted">Not enrolled</span>}</p>
           {isActive && monthPaid && <><p className="status-approved">Tuition paid through {enrollment?.paid_through}</p><p><Link className="btn" href={`/learn/${c.id}`}>Open course lessons →</Link></p></>}
-          {isActive && !monthPaid && (monthlyPending ? <p className="status-pending">This month's tuition payment is under review.</p> : <details className="payment-details"><summary>Pay this month's tuition · ৳{monthlyFee}</summary><div className="payment-instructions"><b>Monthly tuition: ৳{monthlyFee}</b><p>Pay for the current Bangladesh billing month.</p>{(['bkash','nagad','rocket'] as const).map(provider => { const item=receiving.get(provider); return <p key={provider}><b>{provider.toUpperCase()}:</b> {item?.is_enabled ? item.receiving_number : 'Currently unavailable'}</p>; })}<p className="small-note">Never share your PIN, OTP or wallet password.</p></div><PaymentForm courseId={c.id} kind="monthly" amount={monthlyFee}/></details>)}
-          {!isActive && !initialPending && <><p>{application ? <span className={application.status==='accepted'?'status-approved':'status-pending'}>Application: {application.status.replace('_',' ')}</span> : <span className="muted">Application not submitted yet.</span>}</p>{application?.admin_note&&<p className="muted">Academy note: {application.admin_note}</p>}<p><Link className="btn" href={'/courses/'+c.slug}>{application?'View course and application details':'View course & apply →'}</Link></p></>}
+          {isActive && !monthPaid && (monthlyPending ? <p className="status-pending">This month's tuition payment is under review.</p> : <details className="payment-details"><summary>Pay this month's tuition · ৳{monthlyFee}</summary><div className="payment-instructions"><b>Monthly tuition: ৳{monthlyFee}</b><p>Pay for the current Bangladesh billing month.</p>{(['bkash','nagad','rocket'] as const).map(provider => { const item=receiving.get(provider); return <p key={provider}><b>{provider.toUpperCase()}:</b> {item?.is_enabled ? item.receiving_number : 'Currently unavailable'}</p>; })}<p className="small-note">Never share your PIN, OTP or wallet password.</p></div><PaymentForm courseId={c.id} kind="monthly" amount={monthlyFee} deliveryMode={activeMode??undefined}/></details>)}
+          {!isActive && !initialPending && <><p>{application ? <span className={application.status==='accepted'?'status-approved':'status-pending'}>Application: {application.status.replace('_',' ')}</span> : <span className="muted">Application not submitted yet.</span>}</p>{application?.admin_note&&<p className="muted">Academy note: {application.admin_note}</p>}{application?.status==='accepted'&&<>{modePrice(application.delivery_mode)!==null&&modePrice(application.delivery_mode)!==undefined&&Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)>0?<details className="payment-details" open><summary>Complete admission payment · ৳{(Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)).toLocaleString('en-BD')}</summary><div className="payment-instructions"><b>Monthly course fee: ৳{Number(modePrice(application.delivery_mode)).toLocaleString('en-BD')}</b><br/><b>One-time admission fee: ৳{Number(c.admission_fee_bdt??0).toLocaleString('en-BD')}</b>{(['bkash','nagad','rocket'] as const).map(provider=>{const item=receiving.get(provider);return <p key={provider}><b>{provider.toUpperCase()}:</b> {item?.is_enabled?item.receiving_number:'Currently unavailable'}</p>;})}<p className="small-note">Your lessons will activate after the academy verifies your payment.</p></div><PaymentForm courseId={c.id} kind="initial" amount={Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)} deliveryMode={application.delivery_mode}/></details>:<p className="muted">Please contact JMT Academy to confirm the admission fee before paying.</p>}</>}{application?.status!=='accepted'&&<p><Link className="btn" href={'/courses/'+c.slug}>{application?'View application details':'View course & apply →'}</Link></p>}</>}
         </article>;
       })}</div>
       <h2 id="payments">Payment history</h2>
-      {(payments ?? []).length === 0 ? <p className="muted">No payment submissions yet.</p> : <div className="table-scroll"><table><thead><tr><th>Type</th><th>Period</th><th>Transaction ID</th><th>Method</th><th>Amount</th><th>Status</th><th>Submitted</th><th>Review note</th></tr></thead><tbody>{payments!.map(p => <tr key={p.id}><td>{p.payment_kind === 'initial' ? 'Admission + first month' : p.payment_kind === 'monthly' ? 'Monthly tuition' : 'Previous payment'}</td><td>{p.billing_period}</td><td>{p.transaction_id}</td><td>{p.provider}</td><td>৳{p.amount_bdt}</td><td>{p.status}</td><td>{new Date(p.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{p.status === 'rejected' ? p.admin_note : '—'}</td></tr>)}</tbody></table></div>}
+      {(payments ?? []).length === 0 ? <p className="muted">No payment submissions yet.</p> : <div className="table-scroll"><table><thead><tr><th>Type</th><th>Learning format</th><th>Period</th><th>Transaction ID</th><th>Method</th><th>Amount</th><th>Status</th><th>Submitted</th><th>Review note</th></tr></thead><tbody>{payments!.map(p => <tr key={p.id}><td>{p.payment_kind === 'initial' ? 'Admission + first month' : p.payment_kind === 'monthly' ? 'Monthly tuition' : 'Previous payment'}</td><td>{p.delivery_mode==='live_recorded'?'Live + recorded':p.delivery_mode==='recorded_only'?'Recorded only':p.delivery_mode==='offline'?'Offline':'Legacy'}</td><td>{p.billing_period}</td><td>{p.transaction_id}</td><td>{p.provider}</td><td>৳{p.amount_bdt}</td><td>{p.status}</td><td>{new Date(p.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{p.status === 'rejected' ? p.admin_note : '—'}</td></tr>)}</tbody></table></div>}
       <p className="muted small-note">New students should apply for a course and select a learning format first. The academy will confirm the correct fee and admission steps. Existing active students can continue to submit monthly payment references here.</p>
     </section>
   </PortalLayout>;

@@ -62,7 +62,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
     studentIds.length ? supabase.from('student_attendance').select('id,student_id,course_id,attendance_date,status,note').in('student_id',studentIds).order('attendance_date',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
     studentIds.length ? supabase.from('student_followups').select('id,student_id,course_id,category,severity,details,guardian_contacted,guardian_call_outcome,follow_up_status,follow_up_date,created_at,created_by').in('student_id',studentIds).order('created_at',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
   ]);
-  const courseIds=[...new Set((enrollments??[]).map(e=>e.course_id))];
+  const courseIds=[...new Set([...(enrollments??[]).map(e=>e.course_id),...paymentCalendars.flatMap(([,items])=>items.map((p:any)=>p.course_id))])];
   const {data:courses}=courseIds.length ? await supabase.from('courses').select('id,title').in('id',courseIds) : {data:[] as any[]};
   const courseNames=new Map((courses??[]).map(c=>[c.id,c.title]));
   const paymentCalendars=await Promise.all(studentIds.map(async id=>{

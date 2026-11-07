@@ -6,6 +6,6 @@ export default async function PortalRouter() {
  if(!user) redirect('/login');
  const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single();
  if(profile?.role==='admin') redirect('/admin');
- if(profile?.role==='teacher') redirect('/teacher');
+ if(profile?.role==='teacher'||profile?.role==='staff') redirect('/teacher');
  redirect('/student');
 }

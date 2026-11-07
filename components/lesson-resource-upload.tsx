@@ -42,8 +42,10 @@ export function LessonResourceUpload({ courseId, lessonId }: { courseId: string;
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-120) || 'lesson-file';
-    const path = courseId + '/' + lessonId + '/' + crypto.randomUUID() + '-' + safeName;
+    const cleanOriginal = file.name.normalize('NFKD').replace(/sanjay[\\s_-]*kumar[\\s_-]*chemistry/ig, 'JMT-Academy');
+    const safeName = cleanOriginal.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-120) || 'lesson-file';
+    const path = courseId + '/' + lessonId + '/JMT-Academy-' + crypto.randomUUID() + '-' + safeName;
+    const displayName = 'JMT Academy · ' + cleanOriginal.replace(/\\s+/g, ' ').trim();
     const { error: uploadError } = await supabase.storage.from('lesson-materials').upload(path, file, {
       contentType: file.type, cacheControl: '3600', upsert: false,
     });
@@ -52,7 +54,7 @@ export function LessonResourceUpload({ courseId, lessonId }: { courseId: string;
     }
     const { error: rowError } = await supabase.from('lesson_resources').insert({
       lesson_id: lessonId, course_id: courseId, uploaded_by: (await supabase.auth.getUser()).data.user?.id,
-      storage_path: path, file_name: file.name, mime_type: file.type, file_size: file.size,
+      storage_path: path, file_name: displayName, mime_type: file.type, file_size: file.size,
       resource_type: resourceType(file.type), caption: caption.trim(), downloadable,
     });
     if (rowError) {

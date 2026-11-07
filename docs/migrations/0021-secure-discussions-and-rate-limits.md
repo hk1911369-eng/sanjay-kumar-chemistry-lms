@@ -5,7 +5,8 @@
 - Prevents users from changing discussion identity/location fields after insertion.
 - Allows discussion authors to edit only the comment body.
 - Restricts pin/unpin changes to admins and teachers/staff assigned to that course. Students cannot set `is_pinned` during insertion or update.
-- Adds a private rate-limit event table and an authenticated RPC: 6 lesson comments per minute and 3 manual payment submissions per 15 minutes per user.
+- Adds database-backed limits: 6 lesson comments/minute and 3 manual payment submissions/15 minutes per authenticated user.
+- Adds a server-only authentication throttle: 10 sign-ins/15 minutes and 3 sign-ups/hour per email, with additional per-IP ceilings. The server-only RPC is called through the existing service-role client; if that key is not configured, Supabase Auth's built-in endpoint/IP limits remain the fallback.
 - Does not delete or rewrite existing discussion rows, courses, enrollments, payments, or files.
 
 ## Apply
@@ -29,4 +30,10 @@ with check (author_id = auth.uid() or public.current_role() = 'admin');
 
 drop function if exists public.consume_app_rate_limit(text);
 drop table if exists public.app_rate_limit_events;
+drop function if exists public.consume_auth_rate_limit(text,text,text);
+drop table if exists public.auth_rate_limit_events;
 ```
+
+
+## Authentication fallback note
+Supabase Auth independently rate-limits sign-up/sign-in endpoints by IP (documented default: 30 requests per 5 minutes, configurable under Authentication → Rate Limits). The application adds tighter email/IP buckets when the server-only `SUPABASE_SERVICE_ROLE_KEY` is configured. Confirm the Auth Rate Limits settings on the test project; do not expose the service-role key to browser code.

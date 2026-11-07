@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 import {
-  markLessonComplete, postLessonDiscussion, toggleLessonReaction, toggleLessonBookmark,
+  markLessonComplete, postLessonDiscussion, toggleLessonReaction, toggleLessonBookmark, pinLessonDiscussion,
 } from '@/app/actions/learning';
 
 type Resource = {
@@ -48,6 +48,11 @@ export default async function LearningPage({
     supabase.from('lesson_resources').select('id,lesson_id,file_name,mime_type,file_size,resource_type,caption,downloadable,storage_path').in('lesson_id', lessonIds).order('created_at'),
     supabase.from('lesson_discussions').select('id,lesson_id,parent_id,author_id,author_name,body,is_pinned,created_at').in('lesson_id', lessonIds).order('created_at'),
   ]) : [{ data: [] as Resource[] }, { data: [] as any[] }];
+  const authorIds = [...new Set((discussions ?? []).map((d: any) => d.author_id))];
+  const { data: authorProfiles } = authorIds.length
+    ? await supabase.from('profiles').select('id,role').in('id', authorIds)
+    : { data: [] as any[] };
+  const authorRoles = new Map((authorProfiles ?? []).map((p: any) => [p.id, p.role]));
   const discussionIds = (discussions ?? []).map(d => d.id);
   const { data: reactions } = discussionIds.length
     ? await supabase.from('lesson_discussion_reactions').select('discussion_id,user_id,reaction').in('discussion_id', discussionIds)
@@ -85,7 +90,7 @@ export default async function LearningPage({
         <p className="muted">{course.description}</p>
         {query.progress_saved && <p className="form-success">Lesson progress saved.</p>}
         {query.progress_error && <p className="form-error">Progress could not be saved.</p>}
-        {discussionError && <p className="form-error">That action could not be completed. Please try again.</p>}
+        {discussionError && <p className="form-error">{discussionError === 'rate_limit' ? 'You have posted too many comments. Please wait a minute and try again.' : 'That action could not be completed. Please try again.'}</p>}
         <div className="portal-stats">
           <article><b>{done.size}</b><span>Lessons completed</span></article>
           <article><b>{lessons?.length ?? 0}</b><span>Published lessons</span></article>
@@ -155,7 +160,7 @@ export default async function LearningPage({
                     const love = reactionSummary(d.id, 'love');
                     const helpful = reactionSummary(d.id, 'helpful');
                     return <div className="discussion-post" key={d.id}>
-                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b><small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small></div>
+                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b>{['admin','teacher','staff'].includes(authorRoles.get(d.author_id) ?? '') && <span className="status-approved">Teacher</span>}<small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small>{isStaff && <form action={pinLessonDiscussion}><input type="hidden" name="discussion_id" value={d.id}/><input type="hidden" name="course_id" value={courseId}/><input type="hidden" name="pinned" value={String(!d.is_pinned)}/><button className="quiet-button">{d.is_pinned ? 'Unpin' : 'Pin comment'}</button></form>}</div>
                       <p>{d.body}</p>
                       <div className="reaction-row">
                         {(['like','love','helpful'] as const).map(kind => {
@@ -169,7 +174,7 @@ export default async function LearningPage({
                         })}
                       </div>
                       {replies.map(reply => <div className="discussion-reply" key={reply.id}>
-                        <b>{reply.author_name || 'Member'}</b><p>{reply.body}</p>
+                        <b>{reply.author_name || 'Member'}</b>{['admin','teacher','staff'].includes(authorRoles.get(reply.author_id) ?? '') && <span className="status-approved">Teacher</span>}<p>{reply.body}</p>
                       </div>)}
                       <details className="reply-details"><summary>Reply to this comment</summary>
                         <form action={postLessonDiscussion} className="discussion-form">

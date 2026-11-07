@@ -272,7 +272,7 @@ returns table (
   payment_kind text,
   billing_period date,
   amount_bdt integer,
-  payment_status public.payment_status,
+  payment_status public.manual_payment_review_status,
   submitted_at timestamptz
 )
 language plpgsql

@@ -15,8 +15,10 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'learning', label: 'Learning room', href: '/student#courses', icon: '▣' },
       { key: 'courses', label: 'Explore courses', href: '/courses', icon: '▤' },
       { key: 'announcements', label: 'Announcements', href: '/student#announcements', icon: '◉' },
+      { key: 'notifications', label: 'Notifications inbox', href: '/academic#notifications', icon: '♧' },
       { key: 'feedback', label: 'Teacher feedback', href: '/student#feedback', icon: '✎' },
       { key: 'academic', label: 'Classes & exams', href: '/academic', icon: '◷' },
+      { key: 'notifications', label: 'Notifications inbox', href: '/academic#notifications', icon: '♧' },
     ]},
     { label: 'MY ACCOUNT', items: [
       { key: 'profile', label: 'My profile', href: '/student#profile', icon: '◌' },

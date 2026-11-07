@@ -60,7 +60,7 @@ export default async function LearningPage({
         ? supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600, { download: 'JMT-Academy-' + r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT-Academy').replace(/[^a-zA-Z0-9._-]+/g, '-') })
         : Promise.resolve({ data: null }),
     ]);
-    return { ...r, previewUrl: preview?.signedUrl ?? null, downloadUrl: download?.signedUrl ?? null };
+    return { ...r, file_name: r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT Academy'), previewUrl: preview?.signedUrl ?? null, downloadUrl: download?.signedUrl ?? null };
   }));
 
   const done = new Set((progress ?? []).filter(p => p.completed).map(p => p.lesson_id));

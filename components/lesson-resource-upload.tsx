@@ -42,10 +42,10 @@ export function LessonResourceUpload({ courseId, lessonId }: { courseId: string;
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const cleanOriginal = file.name.normalize('NFKD').replace(/sanjay[\\s_-]*kumar[\\s_-]*chemistry/ig, 'JMT-Academy');
+    const cleanOriginal = file.name.normalize('NFKD').replace(/sanjay[\s_-]*kumar[\s_-]*chemistry/ig, 'JMT-Academy');
     const safeName = cleanOriginal.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-120) || 'lesson-file';
     const path = courseId + '/' + lessonId + '/JMT-Academy-' + crypto.randomUUID() + '-' + safeName;
-    const displayName = 'JMT Academy · ' + cleanOriginal.replace(/\\s+/g, ' ').trim();
+    const displayName = 'JMT Academy · ' + cleanOriginal.replace(/\s+/g, ' ').trim();
     const { error: uploadError } = await supabase.storage.from('lesson-materials').upload(path, file, {
       contentType: file.type, cacheControl: '3600', upsert: false,
     });

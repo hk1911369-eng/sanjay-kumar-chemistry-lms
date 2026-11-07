@@ -92,3 +92,14 @@ test('manual payment submission is throttled by authenticated user', async () =>
   assert.match(migration, /interval '15 minutes'/);
   assert.match(action, /consume_app_rate_limit.*manual_payment/s);
 });
+
+test('authentication attempts are throttled before Supabase Auth calls', async () => {
+  const action = await read('app/actions/auth.ts');
+  const limiter = await read('lib/auth-rate-limit.ts');
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  assert.match(action, /enforceAuthRateLimit\('sign_in'/);
+  assert.match(action, /enforceAuthRateLimit\('sign_up'/);
+  assert.match(limiter, /supabaseAdmin\(\)/);
+  assert.match(migration, /consume_auth_rate_limit/);
+  assert.match(migration, /grant execute on function public\.consume_auth_rate_limit.*service_role/i);
+});

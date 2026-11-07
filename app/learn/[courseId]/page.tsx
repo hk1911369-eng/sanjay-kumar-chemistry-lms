@@ -6,7 +6,7 @@ import {
 } from '@/app/actions/learning';
 
 type Resource = {
-  id: string; lesson_id: string; file_name: string; mime_type: string;
+  id: string; lesson_id: string; file_name: string; mime_type: string; file_size: number;
   resource_type: string; caption: string; downloadable: boolean; storage_path: string;
 };
 
@@ -40,7 +40,7 @@ export default async function LearningPage({
   ]);
   const lessonIds = (lessons ?? []).map(l => l.id);
   const [{ data: rawResources }, { data: discussions }] = lessonIds.length ? await Promise.all([
-    supabase.from('lesson_resources').select('id,lesson_id,file_name,mime_type,resource_type,caption,downloadable,storage_path').in('lesson_id', lessonIds).order('created_at'),
+    supabase.from('lesson_resources').select('id,lesson_id,file_name,mime_type,file_size,resource_type,caption,downloadable,storage_path').in('lesson_id', lessonIds).order('created_at'),
     supabase.from('lesson_discussions').select('id,lesson_id,parent_id,author_id,author_name,body,is_pinned,created_at').in('lesson_id', lessonIds).order('created_at'),
   ]) : [{ data: [] as Resource[] }, { data: [] as any[] }];
   const discussionIds = (discussions ?? []).map(d => d.id);
@@ -117,7 +117,7 @@ export default async function LearningPage({
                   {lessonResources.map(r => <div className="resource-card" key={r.id}>
                     <div className="resource-meta">
                       <b>{r.file_name}</b>
-                      <span>{r.resource_type.toUpperCase()} · {(Number((rawResources ?? []).find((x: any) => x.id === r.id)?.file_size ?? 0) / 1024 / 1024).toFixed(1)} MB</span>
+                      <span>{r.resource_type.toUpperCase()} · {(Number(r.file_size) / 1024 / 1024).toFixed(1)} MB</span>
                       {r.caption && <small>{r.caption}</small>}
                     </div>
                     {r.resource_type === 'video' && r.previewUrl && <video className="resource-video" controls playsInline preload="metadata" src={r.previewUrl}>Your browser does not support video playback.</video>}

@@ -1,7 +1,6 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 async function actor() {
@@ -85,9 +84,12 @@ export async function createQuiz(formData:FormData) {
  const total=questions.reduce((s,q)=>s+Number(q.marks),0);
  const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!quiz) redirect('/academic?error=quiz');
- const rows=questions.map((q,i)=>({quiz_id:quiz.id,question_text:q.question_text.trim(),options:q.options,correct_option:q.correct_option,marks:Number(q.marks),position:i+1}));
- const inserted=await supabase.from('quiz_questions').insert(rows);
- if(inserted.error) { await supabase.from('quizzes').delete().eq('id',quiz.id); redirect('/academic?error=quiz'); }
+ const rows=questions.map((q,i)=>({quiz_id:quiz.id,question_text:q.question_text.trim(),options:q.options,marks:Number(q.marks),position:i+1}));
+ const inserted=await supabase.from('quiz_questions').insert(rows).select('id');
+ if(inserted.error||!inserted.data) { await supabase.from('quizzes').delete().eq('id',quiz.id); redirect('/academic?error=quiz'); }
+ const keys=inserted.data.map((row,i)=>({question_id:row.id,correct_option:questions[i].correct_option}));
+ const keyInsert=await supabase.from('quiz_answer_keys').insert(keys);
+ if(keyInsert.error) { await supabase.from('quizzes').delete().eq('id',quiz.id); redirect('/academic?error=quiz'); }
  redirect('/academic?saved=quiz');
 }
 
@@ -106,15 +108,15 @@ export async function submitQuiz(formData:FormData) {
  const {supabase,user,role}=await actor();
  if(role!=='student') redirect('/portal');
  const quizId=String(formData.get('quiz_id')||'');
- const raw=String(formData.get('answers_json')||'{}');
- let answers:Record<string,number>;
- try { answers=JSON.parse(raw); } catch { redirect('/academic?error=answers'); }
- const {data:questions}=await supabase.from('quiz_questions').select('id,correct_option,marks').eq('quiz_id',quizId);
- const {data:attempt}=await supabase.from('quiz_attempts').select('id,started_at').eq('quiz_id',quizId).eq('student_id',user.id).is('submitted_at',null).maybeSingle();
- if(!questions||!attempt) redirect('/academic?error=attempt');
- const {data:quiz}=await supabase.from('quizzes').select('duration_minutes,total_marks').eq('id',quizId).single();
- if(!quiz||Date.now()-new Date(attempt.started_at).getTime()>quiz.duration_minutes*60000+60000) redirect('/academic?error=expired');
- const score=questions.reduce((sum,q)=>sum+(Number(answers[q.id])===q.correct_option?Number(q.marks):0),0);
- const {error}=await supabase.from('quiz_attempts').update({answers,score,total_marks:quiz.total_marks,submitted_at:new Date().toISOString()}).eq('id',attempt.id);
+ const answers:Record<string,number>={};
+ for(const [key,value] of formData.entries()) {
+  if(key.startsWith('q_')) {
+   const option=Number(value);
+   if(!Number.isInteger(option)||option<0||option>5) redirect('/academic?error=answers');
+   answers[key.slice(2)]=option;
+  }
+ }
+ if(!quizId||Object.keys(answers).length>50) redirect('/academic?error=answers');
+ const {error}=await supabase.rpc('submit_quiz_attempt',{p_quiz_id:quizId,p_answers:answers});
  redirect(error?'/academic?error=submit':'/academic?saved=result');
 }

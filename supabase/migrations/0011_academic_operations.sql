@@ -175,3 +175,47 @@ using(student_id=auth.uid() and submitted_at is null)
 with check(student_id=auth.uid() and submitted_at is not null and score is null);
 
 grant select,insert,update,delete on public.live_classes,public.assignments,public.assignment_submissions,public.quizzes,public.quiz_questions,public.quiz_attempts to authenticated;
+
+-- Keep answer keys private. Students can read question text/options, never correct answers.
+alter table public.quiz_questions drop column if exists correct_option;
+create table if not exists public.quiz_answer_keys (
+ question_id uuid primary key references public.quiz_questions(id) on delete cascade,
+ correct_option integer not null check(correct_option between 0 and 5)
+);
+alter table public.quiz_answer_keys enable row level security;
+drop policy if exists "teachers read quiz answer keys" on public.quiz_answer_keys;
+create policy "teachers read quiz answer keys" on public.quiz_answer_keys for select to authenticated using (
+ exists(select 1 from public.quiz_questions x join public.quizzes q on q.id=x.quiz_id where x.id=quiz_answer_keys.question_id and (
+  public.current_role()='admin' or (public.current_role()::text in ('teacher','staff') and exists(select 1 from public.course_assignments a where a.course_id=q.course_id and a.teacher_id=auth.uid()))
+ ))
+);
+drop policy if exists "teachers manage quiz answer keys" on public.quiz_answer_keys;
+create policy "teachers manage quiz answer keys" on public.quiz_answer_keys for all to authenticated
+using(exists(select 1 from public.quiz_questions x join public.quizzes q on q.id=x.quiz_id where x.id=quiz_answer_keys.question_id and (public.current_role()='admin' or (public.current_role()::text in ('teacher','staff') and exists(select 1 from public.course_assignments a where a.course_id=q.course_id and a.teacher_id=auth.uid())))))
+with check(exists(select 1 from public.quiz_questions x join public.quizzes q on q.id=x.quiz_id where x.id=quiz_answer_keys.question_id and (public.current_role()='admin' or (public.current_role()::text in ('teacher','staff') and exists(select 1 from public.course_assignments a where a.course_id=q.course_id and a.teacher_id=auth.uid())))));
+grant select,insert,update,delete on public.quiz_answer_keys to authenticated;
+
+-- The database calculates scores. A student cannot submit or alter their own score.
+drop policy if exists "students submit own quiz attempts" on public.quiz_attempts;
+create or replace function public.submit_quiz_attempt(p_quiz_id uuid,p_answers jsonb)
+returns table(attempt_id uuid,earned numeric,possible numeric,submitted timestamptz)
+language plpgsql security definer set search_path=public
+as $$
+declare v_user uuid := auth.uid(); v_attempt public.quiz_attempts%rowtype; v_duration integer; v_score numeric(8,2); v_total numeric(8,2);
+begin
+ if v_user is null or public.current_role() <> 'student' then raise exception 'Student login required'; end if;
+ if jsonb_typeof(p_answers) <> 'object' then raise exception 'Invalid answers'; end if;
+ select a.* into v_attempt from public.quiz_attempts a where a.quiz_id=p_quiz_id and a.student_id=v_user and a.submitted_at is null for update;
+ if not found then raise exception 'No active attempt'; end if;
+ select q.duration_minutes into v_duration from public.quizzes q where q.id=p_quiz_id and q.published
+ and exists(select 1 from public.enrollments e where e.course_id=q.course_id and e.student_id=v_user and e.status='active');
+ if not found then raise exception 'Quiz unavailable'; end if;
+ if now() > v_attempt.started_at + make_interval(mins=>v_duration) + interval '1 minute' then raise exception 'Time expired'; end if;
+ select coalesce(sum(case when p_answers->>x.id::text is not null and (p_answers->>x.id::text)::integer=k.correct_option then x.marks else 0 end),0),coalesce(sum(x.marks),0)
+ into v_score,v_total from public.quiz_questions x join public.quiz_answer_keys k on k.question_id=x.id where x.quiz_id=p_quiz_id;
+ update public.quiz_attempts set answers=p_answers,score=v_score,total_marks=v_total,submitted_at=now() where id=v_attempt.id;
+ return query select v_attempt.id,v_score,v_total,now();
+end;
+$$;
+revoke all on function public.submit_quiz_attempt(uuid,jsonb) from public,anon;
+grant execute on function public.submit_quiz_attempt(uuid,jsonb) to authenticated;

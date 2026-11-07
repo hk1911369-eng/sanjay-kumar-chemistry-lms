@@ -103,3 +103,13 @@ test('authentication attempts are throttled before Supabase Auth calls', async (
   assert.match(migration, /consume_auth_rate_limit/);
   assert.match(migration, /grant execute on function public\.consume_auth_rate_limit.*service_role/i);
 });
+
+test('lesson file signed URLs are created only after an explicit resource request', async () => {
+  const page = await read('app/learn/[courseId]/page.tsx');
+  const action = await read('app/actions/learning.ts');
+  const component = await read('components/lesson-resource-access.tsx');
+  assert.doesNotMatch(page, /createSignedUrl/);
+  assert.match(action, /createSignedUrl\([\s\S]*?, 300/);
+  assert.match(component, /getLessonResourceUrl/);
+  assert.match(component, /onClick=\{\(\) => open\('preview'\)\}/);
+});

@@ -125,7 +125,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
                 {months.map(month=>{
                   const payment=coursePayments.find((p:any)=>p.billing_period===month);
                   const paid=Boolean(enrollment.paid_through&&enrollment.paid_through>=billingMonthEnd(month));
-                  const label=paid?'Paid':payment?.payment_status==='pending'?'Pending review':payment?.payment_status==='rejected'?'Rejected':'Due';
+                  const label=paid?'Paid':payment?.payment_status==='pending_review'?'Pending review':payment?.payment_status==='rejected'?'Rejected':'Due';
                   return <tr key={month}><td>{monthLabel(month)}</td><td>{label}</td><td>{payment?'৳'+payment.amount_bdt:paid?'৳700':'৳700'}</td><td>{payment?new Date(payment.submitted_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'}):'—'}</td></tr>;
                 })}
               </tbody></table></div>

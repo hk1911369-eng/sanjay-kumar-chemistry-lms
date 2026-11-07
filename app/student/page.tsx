@@ -1,8 +1,7 @@
-import { LocaleSwitcher } from '@/components/locale-switcher';
+import { PortalLayout } from '@/components/portal-layout';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { signOut } from '@/app/actions/auth';
 import { submitManualPayment } from '@/app/actions/payments';
 import { updateStudentDetails } from '@/app/actions/student-management';
 import { ADMISSION_FEE_BDT, MONTHLY_FEE_BDT, INITIAL_PAYMENT_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
@@ -55,8 +54,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     </form>;
   }
 
-  return <main className="portal-shell">
-    <header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link><LocaleSwitcher returnTo="/student"/><form action={signOut}><button className="quiet-button">Sign out</button></form></header>
+  return <PortalLayout role="student" active="overview" title="Student dashboard" returnTo="/student">
     <section className="portal-content">
       <span className="auth-kicker">STUDENT PORTAL</span><h1>Welcome, {profile?.full_name || user.email}</h1>
       <p className="muted">Your courses, enrollment and payment status in one place.</p>
@@ -66,7 +64,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       {params.learning_error && <p className="form-error">Course access is available only after payment approval.</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
       <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>৳{MONTHLY_FEE_BDT.toLocaleString('en-BD')}</b><span>Monthly tuition</span></article></div>
-      <h2>Student profile</h2>
+      <h2 id="profile">Student profile</h2>
       {avatarUrl&&<p><img src={avatarUrl} alt="Your profile" style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
       <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">
         <label>Full name<input name="full_name" defaultValue={profile?.full_name ?? ''} required minLength={2} maxLength={100}/></label>
@@ -83,9 +81,9 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         <p className="muted small-note">Your Student ID and admission date are permanent and cannot be changed from this form.</p>
         <button className="auth-submit">Save complete profile</button>
       </form>
-      <h2>Announcements</h2>{(notices??[]).length===0?<p className="muted">No announcements.</p>:<div className="portal-grid">{notices!.map(n=><article className="portal-card" key={n.id}><h3>{n.title}</h3><p>{n.body}</p></article>)}</div>}
-      <h2>Teacher feedback</h2>{(studentNotes??[]).length===0?<p className="muted">No teacher feedback has been shared with you.</p>:<div className="portal-grid">{studentNotes!.map(note=><article className="portal-card" key={note.id}><b>{note.category.replace('_',' ').toUpperCase()} · {note.severity.toUpperCase()}</b><p>{note.details}</p><p className="muted">Status: {note.follow_up_status} · {new Date(note.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p></article>)}</div>}
-      <h2>Available courses</h2>
+      <h2 id="announcements">Announcements</h2>{(notices??[]).length===0?<p className="muted">No announcements.</p>:<div className="portal-grid">{notices!.map(n=><article className="portal-card" key={n.id}><h3>{n.title}</h3><p>{n.body}</p></article>)}</div>}
+      <h2 id="feedback">Teacher feedback</h2>{(studentNotes??[]).length===0?<p className="muted">No teacher feedback has been shared with you.</p>:<div className="portal-grid">{studentNotes!.map(note=><article className="portal-card" key={note.id}><b>{note.category.replace('_',' ').toUpperCase()} · {note.severity.toUpperCase()}</b><p>{note.details}</p><p className="muted">Status: {note.follow_up_status} · {new Date(note.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p></article>)}</div>}
+      <h2 id="courses">Available courses</h2>
       <div className="portal-grid">{(courses ?? []).map(c => {
         const enrollment = enrollmentByCourse.get(c.id);
         const isActive = enrollment?.status === 'active';
@@ -104,9 +102,9 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
           {!isActive && !initialPending && <details className="payment-details"><summary>Admission + first month · ৳{INITIAL_PAYMENT_BDT}</summary><div className="payment-instructions"><b>Admission fee: ৳{admissionFee}</b><br/><b>First month tuition: ৳{monthlyFee}</b><p>Total first payment: <b>৳{admissionFee + monthlyFee}</b></p>{(['bkash','nagad','rocket'] as const).map(provider => { const item=receiving.get(provider); return <p key={provider}><b>{provider.toUpperCase()}:</b> {item?.is_enabled ? item.receiving_number : 'Currently unavailable'}</p>; })}<p className="small-note">Never share your PIN, OTP or wallet password. Send the total amount and submit its transaction ID.</p></div><PaymentForm courseId={c.id} kind="initial" amount={admissionFee + monthlyFee}/></details>}
         </article>;
       })}</div>
-      <h2>Payment history</h2>
+      <h2 id="payments">Payment history</h2>
       {(payments ?? []).length === 0 ? <p className="muted">No payment submissions yet.</p> : <div className="table-scroll"><table><thead><tr><th>Type</th><th>Period</th><th>Transaction ID</th><th>Method</th><th>Amount</th><th>Status</th><th>Submitted</th><th>Review note</th></tr></thead><tbody>{payments!.map(p => <tr key={p.id}><td>{p.payment_kind === 'initial' ? 'Admission + first month' : p.payment_kind === 'monthly' ? 'Monthly tuition' : 'Previous payment'}</td><td>{p.billing_period}</td><td>{p.transaction_id}</td><td>{p.provider}</td><td>৳{p.amount_bdt}</td><td>{p.status}</td><td>{new Date(p.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{p.status === 'rejected' ? p.admin_note : '—'}</td></tr>)}</tbody></table></div>}
       <p className="muted small-note">Initial payment is ৳1,500 admission + ৳700 first month. After that, monthly tuition is ৳700. Payments stay pending until an Admin verifies the transaction in the wallet account.</p>
     </section>
-  </main>;
+  </PortalLayout>;
 }

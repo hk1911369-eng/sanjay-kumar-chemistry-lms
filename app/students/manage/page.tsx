@@ -1,8 +1,7 @@
+import { PortalLayout } from '@/components/portal-layout';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { signOut } from '@/app/actions/auth';
 import { createStudentFollowup, markStudentAttendance, updateStudentFollowupStatus, updateAccountRole } from '@/app/actions/student-management';
 import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
@@ -80,8 +79,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   const currentPeriod=currentBangladeshBillingPeriod();
   const currentEnd=billingMonthEnd(currentPeriod);
 
-  return <main className="portal-shell">
-    <header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link><LocaleSwitcher returnTo="/students/manage"/><form action={signOut}><button className="quiet-button">Sign out</button></form></header>
+  return <PortalLayout role={role as 'admin' | 'teacher' | 'staff'} active="students" title="Student records" returnTo="/students/manage">
     <section className="portal-content">
       <span className="auth-kicker">{role==='admin'?'ADMINISTRATION':'TEACHER & STAFF WORKSPACE'}</span>
       <h1>Student records & search</h1>
@@ -166,5 +164,5 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
       })}
       <p className="muted small-note">Private student records are restricted by database policies. Teachers and staff only see students enrolled in courses assigned to their account. Payment calendar omits wallet transaction IDs and sender numbers.</p>
     </section>
-  </main>;
+  </PortalLayout>;
 }

@@ -125,3 +125,59 @@ button:disabled{cursor:not-allowed}
  .lesson-actions .auth-submit{font-size:12px}
  .pdf-preview{height:62vh}
 }
+
+
+/* Shared role-based application shell */
+.portal-layout{display:grid;grid-template-columns:258px minmax(0,1fr);align-items:start;min-height:100vh;background:#f4f7fc}
+.portal-sidebar{position:sticky;top:0;height:100vh;min-height:640px;padding:27px 17px 20px;background:linear-gradient(180deg,#081e40 0%,#061630 100%);color:#fff;display:flex;flex-direction:column;z-index:8}
+.portal-brand{display:flex;align-items:center;gap:11px;padding:0 5px;color:#fff;text-decoration:none;font-weight:850;font-size:13px;line-height:1.2}
+.portal-brand-symbol{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#ffffff16;border:1px solid #ffffff20;font-size:23px}
+.portal-brand-copy{display:block;letter-spacing:-.2px}
+.portal-brand-copy small{display:block;margin-top:5px;color:#9eb7d8;font-size:9px;letter-spacing:1.8px}
+.portal-role-label{margin:26px 5px 0;padding:9px 11px;border:1px solid #ffffff1b;border-radius:10px;background:#ffffff0b;color:#c5d7ef;font-size:11px;font-weight:750}
+.portal-navigation{display:grid;gap:23px;margin-top:28px}
+.portal-nav-group{display:grid;gap:5px}
+.portal-nav-heading{padding:0 11px 6px;color:#8ea8ca;font-size:9px;font-weight:850;letter-spacing:1.5px}
+.portal-nav-link{display:flex;align-items:center;gap:11px;min-height:42px;padding:9px 11px;border-radius:10px;color:#d4e1f3;text-decoration:none;font-size:12px;font-weight:650;transition:background .16s,color .16s,transform .16s}
+.portal-nav-link:hover{background:#ffffff12;color:white}
+.portal-nav-link.is-active{background:#1b65bd;color:#fff;box-shadow:0 5px 16px #03152d65}
+.portal-nav-icon{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#ffffff12;color:#c6dcfa;font-size:14px;font-weight:800;flex-shrink:0}
+.portal-nav-link.is-active .portal-nav-icon{background:#ffffff20;color:white}
+.portal-sidebar-footer{display:grid;gap:5px;margin-top:auto;padding:14px 9px 3px;border-top:1px solid #ffffff20}
+.portal-sidebar-footer a{color:#d8e6f8;font-size:11px;font-weight:750;text-decoration:none}
+.portal-sidebar-footer span{color:#8ea8ca;font-size:10px}
+.portal-workspace{min-width:0}
+.portal-topbar{position:sticky;top:0;z-index:7;min-height:74px;height:auto;padding:12px 34px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 12px #092c5008;gap:20px}
+.portal-topbar-title{display:grid;gap:2px}
+.portal-topbar-title span{color:#7789a2;font-size:9px;font-weight:850;letter-spacing:1.4px}
+.portal-topbar-title strong{color:var(--navy);font-size:16px;letter-spacing:-.2px}
+.portal-topbar-actions{display:flex;align-items:center;gap:10px}
+.portal-content{max-width:1380px}
+.portal-content h2[id]{scroll-margin-top:100px}
+@media(max-width:960px){
+ .portal-layout{display:block}
+ .portal-sidebar{position:sticky;top:0;height:auto;min-height:0;padding:12px 15px 9px;display:block}
+ .portal-brand{display:inline-flex;gap:8px;font-size:12px}
+ .portal-brand-symbol{width:34px;height:34px;font-size:19px}
+ .portal-brand-copy small{font-size:8px;margin-top:3px}
+ .portal-role-label,.portal-sidebar-footer{display:none}
+ .portal-navigation{display:flex;gap:12px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+ .portal-navigation::-webkit-scrollbar{display:none}
+ .portal-nav-group{display:flex;gap:5px;flex-shrink:0}
+ .portal-nav-heading{display:none}
+ .portal-nav-link{white-space:nowrap;min-height:35px;padding:7px 10px;font-size:11px;border:1px solid #ffffff18}
+ .portal-nav-icon{width:18px;height:18px;font-size:12px}
+ .portal-topbar{position:relative;min-height:60px;padding:10px 18px}
+ .portal-content{padding:30px 18px}
+}
+@media(max-width:520px){
+ .portal-sidebar{padding:10px 11px 8px}
+ .portal-navigation{gap:8px}
+ .portal-nav-link{padding:6px 9px;font-size:10px;gap:6px}
+ .portal-topbar{align-items:flex-start;gap:10px;padding:10px 13px}
+ .portal-topbar-title strong{font-size:13px}
+ .portal-topbar-actions{gap:6px}
+ .portal-topbar-actions .quiet-button{padding:7px 9px;font-size:10px}
+ .portal-topbar-actions .language-button{padding:7px 8px;font-size:10px}
+ .portal-content{padding:24px 13px}
+}

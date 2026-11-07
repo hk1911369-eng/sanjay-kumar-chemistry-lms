@@ -1,8 +1,7 @@
-import { LocaleSwitcher } from '@/components/locale-switcher';
+import { PortalLayout } from '@/components/portal-layout';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { signOut } from '@/app/actions/auth';
 import { updatePaymentSettings } from '@/app/actions/payments';
 import { assignTeacher, publishAnnouncement, setCoursePublication } from '@/app/actions/learning';
 import { PaymentReviewForm } from '@/components/payment-review-form';
@@ -34,20 +33,20 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const studentNames = new Map((studentsData ?? []).map(s => [s.id, s.full_name] as const));
   const courseNames = new Map((courseData ?? []).map(c => [c.id, c.title] as const));
 
-  return <main className="portal-shell"><header className="portal-header"><Link className="brand" href="/">⚗ SANJAY KUMAR CHEMISTRY</Link><LocaleSwitcher returnTo="/admin"/><form action={signOut}><button className="quiet-button">Sign out</button></form></header>
+  return <PortalLayout role="admin" active="overview" title="Admin dashboard" returnTo="/admin">
     <section className="portal-content"><span className="auth-kicker">ADMINISTRATION</span><h1>Admin dashboard</h1><p><Link className="btn" href="/students/manage">Open student management · Search, dues, attendance</Link></p><p className="muted">Welcome, {profile?.full_name || user.email}. Verify each payment in the wallet merchant account before approving.</p>
       {params.review_success && <p className="form-success">Review decision saved. Enrollment and tuition access are updated only after approval.</p>}
       {params.review_error && <p className="form-error">Review failed: {params.review_error}</p>}
       {params.settings_success && <p className="form-success">Payment receiving settings updated.</p>}
       {params.settings_error && <p className="form-error">Payment settings could not be saved. Check the Bangladesh mobile number format.</p>}
       <div className="portal-stats"><article><b>{students ?? 0}</b><span>Student accounts</span></article><article><b>{pending ?? 0}</b><span>Pending payment reviews</span></article><article><b>{enrollments ?? 0}</b><span>Active enrollments</span></article><article><b>{courses?.length ?? 0}</b><span>Configured courses</span></article></div>
-      <h2>Pending payment reviews</h2>
+      <h2 id="payment-reviews">Pending payment reviews</h2>
       {(submissions ?? []).length === 0 ? <p className="muted">No pending payment submissions.</p> : <div className="portal-grid review-grid">{submissions!.map(p => <article className="portal-card" key={p.id}>
         <span className="auth-kicker">{p.provider.toUpperCase()} · {p.payment_kind === 'initial' ? 'ADMISSION + FIRST MONTH' : p.payment_kind === 'monthly' ? 'MONTHLY TUITION' : 'PREVIOUS PAYMENT'} · PENDING REVIEW</span><h3>{courseNames.get(p.course_id) ?? 'Chemistry course'}</h3>
         <p><b>Student:</b> {studentNames.get(p.student_id) || p.student_id.slice(0, 8)}</p><p><b>Transaction ID:</b> <code>{p.transaction_id}</code></p><p><b>Billing month:</b> {p.billing_period}</p><p><b>Sender mobile:</b> {p.sender_phone ?? (p.sender_phone_last4 ? `Ending ${p.sender_phone_last4}` : 'Not supplied')}</p><p><b>Amount:</b> ৳{p.amount_bdt}</p><p className="muted small-note">Submitted: {new Date(p.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
         <PaymentReviewForm submissionId={p.id}/>
       </article>)}</div>}
-      <h2>Payment receiving settings</h2>
+      <h2 id="payment-settings">Payment receiving settings</h2>
       <p className="muted small-note">These receiving numbers accept the first payment of ৳2,200 (৳1,500 admission + ৳700 first month) or monthly tuition of ৳700. Verify each wallet transaction independently before approval.</p>
       <div className="portal-grid">{(paymentSettings ?? []).map(setting => <article className="portal-card" key={setting.provider}>
         <h3>{setting.provider.toUpperCase()}</h3>
@@ -58,14 +57,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
           <button className="auth-submit" type="submit">Save {setting.provider.toUpperCase()} settings</button>
         </form>
       </article>)}</div>
-      <h2>Teacher course assignments</h2>
+      <h2 id="teacher-assignments">Teacher course assignments</h2>
       {params.assignment_success && <p className="form-success">Teacher assignment saved.</p>}{params.assignment_error && <p className="form-error">Teacher assignment could not be saved.</p>}
       <div className="portal-grid">{(courses ?? []).map(c=><article className="portal-card" key={c.id}><h3>{c.title}</h3><p>Admission: ৳{c.admission_fee_bdt} once · Monthly: ৳{c.monthly_fee_bdt}</p><p>First payment: ৳{c.admission_fee_bdt+c.monthly_fee_bdt}</p><p>{(assignments??[]).filter(a=>a.course_id===c.id).length} assigned teacher/staff member(s)</p><form action={assignTeacher} className="auth-form payment-form"><input type="hidden" name="course_id" value={c.id}/><label>Assign teacher or staff<select name="teacher_id" required defaultValue=""><option value="" disabled>Select teacher</option>{(teachers??[]).map(t=><option key={t.id} value={t.id}>{t.full_name||t.id.slice(0,8)} · {t.role}</option>)}</select></label><button className="auth-submit">Assign teacher</button></form></article>)}</div>
-      <h2>Announcements</h2>
+      <h2 id="announcements">Announcements</h2>
       {params.announcement_success && <p className="form-success">Announcement saved.</p>}{params.announcement_error && <p className="form-error">Announcement could not be saved.</p>}
       <form action={publishAnnouncement} className="auth-form portal-card"><label>Title<input name="title" required maxLength={180}/></label><label>Message<textarea name="body" required rows={4} maxLength={10000}/></label><label className="toggle-label"><input type="checkbox" name="published"/> Publish now</label><button className="auth-submit">Save announcement</button></form>
       {(notices??[]).length>0 && <div className="portal-grid">{notices!.map(n=><article className="portal-card" key={n.id}><h3>{n.title}</h3><p>{n.body}</p><span className="muted">{n.published_at?'Published':'Draft'}</span></article>)}</div>}
-      <h2>Course configuration</h2>{params.course_success&&<p className="form-success">Course publication setting saved.</p>}{params.course_error&&<p className="form-error">Course setting could not be saved.</p>}<div className="portal-grid">{(courses ?? []).map(c => <article className="portal-card" key={c.id}><h3>{c.title}</h3><p>৳{c.admission_fee_bdt} admission + ৳{c.monthly_fee_bdt} monthly</p><form action={setCoursePublication} className="auth-form payment-form"><input type="hidden" name="course_id" value={c.id}/><label className="toggle-label"><input type="checkbox" name="published" defaultChecked={c.is_published}/> Publish course</label><button className="auth-submit">Save publication</button></form></article>)}</div>
+      <h2 id="course-configuration">Course configuration</h2>{params.course_success&&<p className="form-success">Course publication setting saved.</p>}{params.course_error&&<p className="form-error">Course setting could not be saved.</p>}<div className="portal-grid">{(courses ?? []).map(c => <article className="portal-card" key={c.id}><h3>{c.title}</h3><p>৳{c.admission_fee_bdt} admission + ৳{c.monthly_fee_bdt} monthly</p><form action={setCoursePublication} className="auth-form payment-form"><input type="hidden" name="course_id" value={c.id}/><label className="toggle-label"><input type="checkbox" name="published" defaultChecked={c.is_published}/> Publish course</label><button className="auth-submit">Save publication</button></form></article>)}</div>
       <p className="muted small-note">Approval is atomic: initial approval activates enrollment and records the paid-through date; monthly approval extends paid access. The Admin must still verify each wallet transaction independently.</p>
-    </section></main>;
+    </section></PortalLayout>;
 }

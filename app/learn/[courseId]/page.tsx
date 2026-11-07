@@ -1,3 +1,4 @@
+import { PortalLayout } from '@/components/portal-layout';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
@@ -31,6 +32,7 @@ export default async function LearningPage({
   if (!course) notFound();
   const isStaff = ['admin', 'teacher', 'staff'].includes(profile?.role ?? '');
   if (enrollment?.status !== 'active' && !isStaff) redirect('/student?learning_error=not_enrolled');
+  const portalRole = profile?.role === 'admin' ? 'admin' : profile?.role === 'teacher' ? 'teacher' : profile?.role === 'staff' ? 'staff' : 'student';
 
   const [{ data: lessons }, { data: progress }, { data: chapters }, { data: bookmarks }] = await Promise.all([
     supabase.from('lessons').select('id,title,description,content,video_url,position,is_published,chapter_id').eq('course_id', courseId).eq('is_published', true).order('position'),
@@ -73,11 +75,7 @@ export default async function LearningPage({
   const discussionError = query.discussion_error || query.reaction_error || query.bookmark_error;
 
   return (
-    <main className="portal-shell">
-      <header className="portal-header">
-        <Link className="brand" href={isStaff ? '/teacher' : '/student'}>⚗ SANJAY KUMAR CHEMISTRY</Link>
-        <Link href={isStaff ? '/teacher' : '/student'}>← {isStaff ? 'Workspace' : 'My courses'}</Link>
-      </header>
+    <PortalLayout role={portalRole} active="learning" title={course.title} returnTo={isStaff ? '/teacher' : '/student'}>
       <section className="portal-content">
         <span className="auth-kicker">LEARNING SPACE</span>
         <h1>{course.title}</h1>
@@ -194,6 +192,6 @@ export default async function LearningPage({
           })}
         </div>
       </section>
-    </main>
+    </PortalLayout>
   );
 }

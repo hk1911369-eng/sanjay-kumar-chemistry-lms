@@ -106,6 +106,28 @@ revoke update,delete on public.written_exam_submissions from authenticated,anon;
 grant update(score,teacher_feedback,graded_by,graded_at) on public.written_exam_submissions to authenticated;
 revoke all on public.written_exam_answer_keys from anon;
 
+
+-- Enforce marks limits and grader identity at the database boundary as well.
+create or replace function public.validate_written_exam_grade()
+returns trigger language plpgsql set search_path=public
+as $
+declare v_total numeric(8,2);
+begin
+ if new.score is not null then
+  select total_marks into v_total from public.written_exams where id=new.exam_id;
+  if new.score<0 or new.score>v_total then raise exception 'Marks exceed exam total'; end if;
+  if new.graded_by is distinct from auth.uid() or new.graded_at is null then
+   raise exception 'Valid grader identity and grading time required';
+  end if;
+ end if;
+ return new;
+end;
+$;
+revoke all on function public.validate_written_exam_grade() from public,anon,authenticated;
+drop trigger if exists validate_written_exam_grade_trigger on public.written_exam_submissions;
+create trigger validate_written_exam_grade_trigger before update of score,graded_by,graded_at on public.written_exam_submissions
+ for each row execute function public.validate_written_exam_grade();
+
 create or replace function public.notify_written_exam_graded()
 returns trigger language plpgsql security definer set search_path=public
 as $$

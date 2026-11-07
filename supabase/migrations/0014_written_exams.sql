@@ -102,8 +102,8 @@ grant select on public.written_exam_answer_keys to authenticated;
 grant insert on public.written_exam_answer_keys to authenticated;
 grant select on public.written_exam_submissions to authenticated;
 grant insert(exam_id,student_id,answers,submitted_at) on public.written_exam_submissions to authenticated;
-grant update(score,teacher_feedback,graded_by,graded_at) on public.written_exam_submissions to authenticated;
 revoke update,delete on public.written_exam_submissions from authenticated,anon;
+grant update(score,teacher_feedback,graded_by,graded_at) on public.written_exam_submissions to authenticated;
 revoke all on public.written_exam_answer_keys from anon;
 
 create or replace function public.notify_written_exam_graded()

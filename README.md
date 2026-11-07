@@ -1,12 +1,14 @@
 # SANJAY KUMAR CHEMISTRY LMS — v9 development release
 
-Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. The business catalogue is limited to HSC 2027 Chemistry, HSC 2028 Chemistry and Admission Chemistry, each at a one-time price of **৳700**. Manual bKash, Nagad and Rocket payment review is used; no wallet API or automatic payment success is implemented.
+Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. The catalogue is limited to HSC 2027 Chemistry, HSC 2028 Chemistry and Admission Chemistry. Every course has a **৳1,500 one-time admission fee** and **৳700 monthly tuition**. The first payment is **৳2,200** (admission + first month). Manual bKash, Nagad and Rocket payment review is used; no wallet API or automatic payment success is implemented.
 
 ## What's in this version
 
 - Supabase SSR email/password authentication, student-only public registration, email confirmation and password recovery.
 - Server-side role routing for Student, Teacher and Admin.
-- Manual payment submission, admin-only review confirmation, atomic database approval/enrollment RPCs and private receiving-number settings.
+- Manual payment submission with separate initial/monthly payment types, admin-only review, atomic enrollment/paid-through updates and private receiving-number settings.
+- Admission and monthly fee rules enforced by database trigger and approval RPC; lessons are visible only while current-month tuition is paid.
+- Additive migration `0008_admission_and_monthly_fees.sql` adds per-course pricing, billing periods, admission status and monthly access dates.
 - Additive migration `0007_learning_content_and_teacher_scope.sql` for teacher course assignments, chapters, lesson text and per-student progress.
 - RLS scope tightened so Teachers can only read/edit assigned course content and cannot access payment review, enrollment administration or merchant settings.
 - Student learning page with published lesson content, external HTTPS video links and completion tracking.
@@ -19,7 +21,7 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 1. Use Node.js 20.9 or newer.
 2. Create a Supabase project and configure email/password Auth.
 3. Copy `.env.example` to `.env.local`; fill `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `APP_URL` locally.
-4. Apply migrations `0001` through `0007` in numeric order to a **new/test project first**. For an existing project, review the SQL and current migration history before applying. Migrations do not reset existing records.
+4. Apply migrations `0001` through `0008` in numeric order to a **new/test project first**. For an existing project, review the SQL and current migration history before applying. Migrations do not reset existing records.
 5. Add `/auth/confirm` to the Supabase Auth redirect allow-list.
 6. Run `npm install`, `npm run typecheck`, `npm test`, `npm run build`, then `npm run dev`.
 7. Register the owner's account normally, confirm its email, then use the trusted SQL procedure in `ADMIN_PROVISIONING.md` to promote it to Admin. Never promote the first public registration automatically.
@@ -27,11 +29,12 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 ## Admin setup
 
 - Apply migration 0007 before using teacher assignment, lesson authoring, announcements or progress tracking.
+- Apply migration 0008 before accepting the new initial or monthly payment types.
 - Create Teacher accounts through trusted provisioning (register and confirm first, then update the profile role in the Supabase SQL editor as documented in `ADMIN_PROVISIONING.md`).
 - Assign teachers to courses from the Admin dashboard.
 - Configure each receiving wallet number only after verifying account ownership and the correct account type. Each payment method starts disabled and blank after migration 0006.
 - Publish the three courses only when real course details and lesson material are ready.
-- Review every submitted transaction independently in the relevant wallet merchant account before approving. Approval activates enrollment in the same database transaction.
+- Review every submitted transaction independently in the relevant wallet merchant account before approving. Approval updates enrollment or monthly access in the same database transaction.
 
 ## Security notes and limitations
 
@@ -48,24 +51,14 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 
 Production deployment requires owner-controlled Supabase project credentials and an authorized hosting account. Do not paste passwords, OTPs or secret keys into chat. Set environment variables only in the provider's secure dashboard. The application is not live until migrations, auth redirects, payment configuration, real-account role tests and a public HTTPS deployment have been verified.
 
-## Changelog — v9 work increment
-
-- Added migration 0007: chapters, course assignments, lesson progress, lesson text, assigned-teacher RLS and stricter legacy-course publication guard.
-- Added teacher course assignment and lesson authoring/editing, student lesson access and completion, Admin announcements.
-- Added password recovery pages/actions and password update callback handling.
-- Added public course catalogue/details and informational/legal/help pages.
-- Added locale cookie and Bangla/English public home translations.
-- Added Admin payment review confirmation and tightened payment-event/notice policies.
-- Preserved the original Version 8 archive unchanged.
-
 ## Student usage
 
-1. Open the public site and register with name, email and optional Bangladesh mobile number.
-2. Confirm the email if Supabase email confirmation is enabled, then log in.
-3. Select one of the three courses. If enrollment is not open, wait for the Admin to publish it.
-4. For an enabled payment method, pay ৳700 and submit the sender mobile number and transaction ID.
-5. Wait for manual Admin review. Pending/rejected claims do not unlock lessons. After approval, open the course from the Student dashboard and mark lessons complete.
-6. Update your permitted profile fields from the Student dashboard. Never submit wallet PINs, OTPs or passwords.
+1. Register and confirm your email.
+2. Choose one of the three Chemistry courses.
+3. First payment: send **৳2,200** (৳1,500 admission + ৳700 first month) and submit one transaction ID.
+4. Wait for Admin verification. Approval activates the course through the end of the current Bangladesh billing month.
+5. Pay **৳700 each month** to keep lesson access active. A pending or rejected monthly payment does not extend access.
+6. Never submit wallet PINs, OTPs or passwords.
 
 ## Teacher usage
 
@@ -78,17 +71,7 @@ Production deployment requires owner-controlled Supabase project credentials and
 ## Admin usage
 
 1. Bootstrap the first Admin using `ADMIN_PROVISIONING.md`.
-2. Publish each course only after its real description/content is ready. Each price remains fixed at ৳700.
-3. Provision Teachers and assign them to the correct courses.
+2. Verify each submitted transaction in the official wallet merchant account before approving or rejecting. Rejection requires a reason.
+3. Initial payment approval records the admission fee and first monthly fee; each monthly approval extends access through that billing month.
 4. Configure bKash/Nagad/Rocket receiving numbers only after confirming account ownership; enable only verified methods.
-5. Check each transaction in the official merchant account before approving or rejecting. Rejection requires a reason. Approval activates enrollment atomically.
-6. Create student announcements from the Admin dashboard.
-
-## Project documents
-
-- `AUDIT_REPORT.md` — Version 8 findings and v9 changes.
-- `DEVELOPMENT_PROGRESS.md` — actual checks and blockers.
-- `SECURITY_REVIEW.md` — implemented controls and outstanding risks.
-- `DEPLOYMENT.md` — owner-controlled deployment steps.
-- `FREE_HOSTING_PLAN.md` — current plan/cost comparison.
-- `CHANGELOG.md` — version changes.
+5. Create student announcements from the Admin dashboard.

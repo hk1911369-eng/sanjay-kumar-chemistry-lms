@@ -11,7 +11,10 @@ export async function enforceAuthRateLimit(action: 'sign_in' | 'sign_up', email:
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return true;
   const requestHeaders = await headers();
   const forwarded = requestHeaders.get('x-forwarded-for');
-  const ip = forwarded?.split(',').map(value => value.trim()).filter(Boolean).at(-1)
+  // Render sits behind Cloudflare; prefer its visitor-IP header, then Render's
+  // client-first X-Forwarded-For value. The last XFF entry is a proxy, not the visitor.
+  const ip = requestHeaders.get('cf-connecting-ip')?.trim()
+    || forwarded?.split(',').map(value => value.trim()).filter(Boolean)[0]
     || requestHeaders.get('x-real-ip') || 'unknown';
   const admin = supabaseAdmin();
   const { data, error } = await admin.rpc('consume_auth_rate_limit', {

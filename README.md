@@ -8,7 +8,7 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 - Server-side role routing for Student, Teacher and Admin.
 - Manual payment submission with separate initial/monthly payment types, admin-only review, atomic enrollment/paid-through updates and private receiving-number settings.
 - Admission and monthly fee rules enforced by database trigger and approval RPC; lessons are visible only while current-month tuition is paid.
-- Additive migration `0008_admission_and_monthly_fees.sql` adds per-course pricing, billing periods, admission status and monthly access dates.\n- Additive migration `0009_student_management.sql` adds permanent Student IDs, guardian/contact/college/location details, private profile photos, Staff role, attendance, follow-up records and a permission-checked payment calendar.
+- Additive migration `0008_admission_and_monthly_fees.sql` adds per-course pricing, billing periods, admission status and monthly access dates.\n- Additive migration `0009_student_management.sql` adds permanent Student IDs, guardian/contact/college/location details, private profile photos, Staff role, attendance, follow-up records and a permission-checked payment calendar.\n- Additive migration `0010_lesson_resources_discussions.sql` adds private teacher uploads for lesson videos, PDFs, slides, documents, in-browser playback/preview, downloadable resources, lesson discussions, replies, reactions and student bookmarks.
 - Additive migration `0007_learning_content_and_teacher_scope.sql` for teacher course assignments, chapters, lesson text and per-student progress.
 - RLS scope tightened so Teachers can only read/edit assigned course content and cannot access payment review, enrollment administration or merchant settings.
 - Student learning page with published lesson content, external HTTPS video links and completion tracking.
@@ -21,7 +21,7 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 1. Use Node.js 20.9 or newer.
 2. Create a Supabase project and configure email/password Auth.
 3. Copy `.env.example` to `.env.local`; fill `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `APP_URL` locally.
-4. Apply migrations `0001` through `0009` in numeric order to a **new/test project first**. For an existing project, review the SQL and current migration history before applying. Migrations do not reset existing records.
+4. Apply migrations `0001` through `0010` in numeric order to a **new/test project first**. For an existing project, review the SQL and current migration history before applying. Migrations do not reset existing records.
 5. Add `/auth/confirm` to the Supabase Auth redirect allow-list.
 6. Run `npm install`, `npm run typecheck`, `npm test`, `npm run build`, then `npm run dev`.
 7. Register the owner's account normally, confirm its email, then use the trusted SQL procedure in `ADMIN_PROVISIONING.md` to promote it to Admin. Never promote the first public registration automatically.
@@ -29,7 +29,7 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 ## Admin setup
 
 - Apply migration 0007 before using teacher assignment, lesson authoring, announcements or progress tracking.
-- Apply migration 0008 before accepting the new initial or monthly payment types.\n- Apply migration 0009 before opening Student Management or provisioning Staff roles. It creates a private `student-avatars` Storage bucket and RLS policies; profile photos are limited to 3 MB JPG/PNG/WebP.
+- Apply migration 0008 before accepting the new initial or monthly payment types.\n- Apply migration 0009 before opening Student Management or provisioning Staff roles.\n- Apply migration 0010 before using lesson file uploads, video playback, PDF previews, downloads, discussions, reactions or bookmarks. It creates a private `student-avatars` Storage bucket and RLS policies; profile photos are limited to 3 MB JPG/PNG/WebP.
 - Create Teacher accounts through trusted provisioning (register and confirm first, then update the profile role in the Supabase SQL editor as documented in `ADMIN_PROVISIONING.md`).
 - Assign teachers to courses from the Admin dashboard.
 - Configure each receiving wallet number only after verifying account ownership and the correct account type. Each payment method starts disabled and blank after migration 0006.
@@ -42,8 +42,8 @@ Mobile-first Next.js 15 / React 19 / TypeScript LMS foundation for Bangladesh. T
 - Student registration never accepts a role. Role changes are protected by a database trigger and trusted admin provisioning.
 - Payment claims are immutable to clients; approval/rejection is an Admin-only RPC. Pending/rejected submissions do not grant access.
 - RLS is used for profiles, courses, enrollments, payment records, lessons, notices, assignments and lesson progress. Review migration SQL carefully before production use.
-- External video URLs are links, not DRM. Screen capture and copying cannot be fully prevented. Private file uploads and signed storage URLs are not implemented yet.
-- Student management now covers identity, guardian contact, search, attendance and staff follow-ups. Direct Admin editing of every student profile field, advanced analytics, audit-log viewer, comprehensive notification delivery and full course CRUD remain future work.
+- External video URLs are links, not DRM. Screen capture and copying cannot be fully prevented. Teacher lesson materials use a private Supabase Storage bucket with RLS and short-lived signed URLs. Uploaded lesson files support videos, PDFs, slides, office documents, images and audio up to 100 MB each. Direct uploads use the signed-in teacher's session; no service-role key is exposed.
+- Student management now covers identity, guardian contact, search, attendance and staff follow-ups. Direct Admin editing of every student profile field, advanced analytics, audit-log viewer, comprehensive notification delivery, full course CRUD, graded assignments, timed quizzes/question banks, scheduled live-class calendar and certificate generation remain future work.
 - The public landing page has Bangla/English switching. Complete translations throughout dashboards and all public pages remain unfinished.
 - No automated browser, RLS integration, payment end-to-end or production tests have been run. The included Node tests are static source guardrails only.
 

@@ -108,7 +108,7 @@ export async function markStudentAttendance(formData: FormData) {
 
 
 export async function updateStudentFollowupStatus(formData: FormData) {
-  const { supabase, user, role } = await getActor();
+  const { supabase, user } = await getActor();
   const id = String(formData.get('followup_id') ?? '');
   const status = String(formData.get('follow_up_status') ?? '');
   if (!id || !['open','in_progress','resolved'].includes(status)) redirect('/students/manage?error=followup');

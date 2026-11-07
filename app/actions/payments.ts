@@ -3,9 +3,11 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
+import { currentBangladeshBillingPeriod } from '@/lib/pricing';
 
 const providers = ['bkash', 'nagad', 'rocket'] as const;
 type Provider = (typeof providers)[number];
+type PaymentKind = 'initial' | 'monthly';
 
 export async function submitManualPayment(formData: FormData) {
   const supabase = await createClient();
@@ -14,30 +16,42 @@ export async function submitManualPayment(formData: FormData) {
 
   const courseId = String(formData.get('course_id') ?? '').trim();
   const provider = String(formData.get('provider') ?? '').trim() as Provider;
+  const paymentKind = String(formData.get('payment_kind') ?? '').trim() as PaymentKind;
   const transactionId = String(formData.get('transaction_id') ?? '').trim().toUpperCase();
   const rawSenderPhone = String(formData.get('sender_phone') ?? '').trim();
   const senderPhone = rawSenderPhone ? normalizeBangladeshMobile(rawSenderPhone) : null;
+  const billingPeriod = currentBangladeshBillingPeriod();
 
-  if (!courseId || !providers.includes(provider) || transactionId.length < 5 || transactionId.length > 100 || !senderPhone) {
+  if (!courseId || !providers.includes(provider) || !['initial', 'monthly'].includes(paymentKind)
+      || transactionId.length < 5 || transactionId.length > 100 || !senderPhone) {
     redirect('/student?payment_error=invalid');
   }
 
   const [{ data: course }, { data: settings }, { data: existingEnrollment }] = await Promise.all([
-    supabase.from('courses').select('id,price_bdt,is_published').eq('id', courseId).single(),
+    supabase.from('courses').select('id,monthly_fee_bdt,admission_fee_bdt,is_published').eq('id', courseId).single(),
     supabase.from('private_payment_settings').select('provider,is_enabled').eq('provider', provider).maybeSingle(),
-    supabase.from('enrollments').select('id,status').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
+    supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
 
-  if (!course?.is_published || course.price_bdt !== 700 || !settings?.is_enabled) redirect('/student?payment_error=unavailable');
-  if (existingEnrollment?.status === 'active') redirect('/student?payment_error=enrolled');
+  if (!course?.is_published || !settings?.is_enabled) redirect('/student?payment_error=unavailable');
+  const amount = paymentKind === 'initial'
+    ? Number(course.admission_fee_bdt) + Number(course.monthly_fee_bdt)
+    : Number(course.monthly_fee_bdt);
+  if (paymentKind === 'initial' && existingEnrollment?.admission_fee_paid) redirect('/student?payment_error=already_admitted');
+  if (paymentKind === 'monthly' && (existingEnrollment?.status !== 'active' || !existingEnrollment.admission_fee_paid)) {
+    redirect('/student?payment_error=admission_required');
+  }
+  if (!Number.isInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
 
   const { error } = await supabase.from('manual_payment_submissions').insert({
     student_id: user.id,
     course_id: courseId,
     provider,
-    amount_bdt: course.price_bdt,
+    amount_bdt: amount,
+    payment_kind: paymentKind,
+    billing_period: billingPeriod,
     transaction_id: transactionId,
-    sender_phone_last4: senderPhone ? senderPhone.slice(-4) : null,
+    sender_phone_last4: senderPhone.slice(-4),
     sender_phone: senderPhone,
     status: 'pending_review',
   });

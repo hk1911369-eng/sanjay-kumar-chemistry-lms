@@ -3,10 +3,21 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 
+function getAppUrl() {
+  const configured = process.env.APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return configured.replace(/\\/+$/, '');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('APP_URL or NEXT_PUBLIC_SITE_URL must be configured for production authentication redirects.');
+  }
+  return 'http://localhost:3000';
+}
+
 function safeMessage(message: string) {
   if (/invalid login credentials/i.test(message)) return 'Email or password is incorrect.';
-  if (/already registered/i.test(message)) return 'An account with this email already exists.';
-  if (/password/i.test(message)) return 'Password must be at least 8 characters.';
+  if (/email not confirmed|email_not_confirmed/i.test(message)) return 'Please confirm your email address before signing in. Open the latest confirmation email.';
+  if (/rate limit|email rate limit exceeded/i.test(message)) return 'Supabase email limit reached. Wait before requesting another email.';
+  if (/already registered/i.test(message)) return 'An account with this email already exists. Sign in or reset its password.';
+  if (/password.*(length|short)|at least 8 characters/i.test(message)) return 'Password must be at least 8 characters.';
   return 'Authentication failed. Please check your details and try again.';
 }
 
@@ -31,7 +42,7 @@ export async function signUp(formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email, password,
     options: {
-      emailRedirectTo: `${process.env.APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/auth/confirm`,
+      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
       data: { full_name: fullName, phone },
     },
   });
@@ -49,7 +60,7 @@ export async function requestPasswordReset(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (!email) redirect('/forgot-password?error=invalid');
   const supabase = await createClient();
-  const redirectTo = `${process.env.APP_URL ?? 'http://localhost:3000'}/auth/confirm?next=/reset-password`;
+  const redirectTo = `${getAppUrl()}/auth/confirm?next=/reset-password`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) redirect('/forgot-password?error=failed');
   redirect('/forgot-password?sent=1');

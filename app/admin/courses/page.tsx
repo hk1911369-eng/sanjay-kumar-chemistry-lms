@@ -4,7 +4,7 @@ import {PortalLayout} from '@/components/portal-layout';
 import {createClient} from '@/lib/supabase/server';
 import {saveAcademyCourse} from '@/app/actions/course-studio';
 
-export default async function CourseStudio({searchParams}:{searchParams:Promise<{saved?:string;error?:string;edit?:string}>}){
+export default async function CourseStudio({searchParams}:{searchParams:Promise<{saved?:string;error?:string;edit?:string;updated?:string}>}){
  const p=await searchParams;const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
  const {data:me}=await db.from('profiles').select('role').eq('id',user.id).single();if(me?.role!=='admin')redirect('/portal');
  const [{data:courses},{data:teachers},{data:assignments}]=await Promise.all([

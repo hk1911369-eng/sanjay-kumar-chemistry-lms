@@ -148,7 +148,7 @@ export default async function LearningPage({
                     const love = reactionSummary(d.id, 'love');
                     const helpful = reactionSummary(d.id, 'helpful');
                     return <div className="discussion-post" key={d.id}>
-                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b>{['admin','teacher','staff'].includes(authorRoles.get(d.author_id) ?? '') && <span className="status-approved">Teacher</span>}<small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small>{isStaff && <form action={pinLessonDiscussion}><input type="hidden" name="discussion_id" value={d.id}/><input type="hidden" name="course_id" value={courseId}/><input type="hidden" name="pinned" value={String(!d.is_pinned)}/><button className="quiet-button">{d.is_pinned ? 'Unpin' : 'Pin comment'}</button></form>}</div>
+                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b>{['teacher','staff'].includes(authorRoles.get(d.author_id) ?? '') && <span className="status-approved">Teacher</span>}<small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small>{isStaff && <form action={pinLessonDiscussion}><input type="hidden" name="discussion_id" value={d.id}/><input type="hidden" name="course_id" value={courseId}/><input type="hidden" name="pinned" value={String(!d.is_pinned)}/><button className="quiet-button">{d.is_pinned ? 'Unpin' : 'Pin comment'}</button></form>}</div>
                       <p>{d.body}</p>
                       <div className="reaction-row">
                         {(['like','love','helpful'] as const).map(kind => {
@@ -162,7 +162,7 @@ export default async function LearningPage({
                         })}
                       </div>
                       {replies.map(reply => <div className="discussion-reply" key={reply.id}>
-                        <b>{reply.author_name || 'Member'}</b>{['admin','teacher','staff'].includes(authorRoles.get(reply.author_id) ?? '') && <span className="status-approved">Teacher</span>}<p>{reply.body}</p>
+                        <b>{reply.author_name || 'Member'}</b>{['teacher','staff'].includes(authorRoles.get(reply.author_id) ?? '') && <span className="status-approved">Teacher</span>}<p>{reply.body}</p>
                       </div>)}
                       <details className="reply-details"><summary>Reply to this comment</summary>
                         <form action={postLessonDiscussion} className="discussion-form">

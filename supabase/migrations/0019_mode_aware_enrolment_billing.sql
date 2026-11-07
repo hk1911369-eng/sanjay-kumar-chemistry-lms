@@ -300,7 +300,10 @@ $$;
 revoke all on function public.approve_manual_payment_submission(uuid, text) from public, anon;
 grant execute on function public.approve_manual_payment_submission(uuid, text) to authenticated;
 
--- Only live + recorded learners (and legacy mode-less enrollments) can see live class links.
+-- Students need a paid-through current Bangladesh billing month for learning access.
+-- Offline students receive the recorded library as part of their paid offline fee;
+-- recorded access is not a separate paid add-on.
+
 drop policy if exists "live classes scoped read" on public.live_classes;
 create policy "live classes scoped read" on public.live_classes
 for select to authenticated
@@ -318,6 +321,139 @@ using (
     where e.course_id = live_classes.course_id
       and e.student_id = (select auth.uid())
       and e.status = 'active'
+      and e.admission_fee_paid = true
+      and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
       and (e.delivery_mode is null or e.delivery_mode = 'live_recorded')
+  )
+);
+
+drop policy if exists "chapters visible to enrolled students and assigned teachers" on public.chapters;
+create policy "chapters visible to enrolled students and assigned teachers" on public.chapters
+for select to authenticated
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a where a.course_id = chapters.course_id and a.teacher_id = (select auth.uid()))
+  )
+  or (
+    published and exists (
+      select 1 from public.enrollments e
+      where e.course_id = chapters.course_id and e.student_id = (select auth.uid())
+        and e.status = 'active' and e.admission_fee_paid = true
+        and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+    )
+  )
+);
+
+drop policy if exists "lessons visible by enrollment or assignment" on public.lessons;
+create policy "lessons visible by enrollment or assignment" on public.lessons
+for select to authenticated
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a where a.course_id = lessons.course_id and a.teacher_id = (select auth.uid()))
+  )
+  or (
+    is_published and exists (
+      select 1 from public.enrollments e
+      where e.course_id = lessons.course_id and e.student_id = (select auth.uid())
+        and e.status = 'active' and e.admission_fee_paid = true
+        and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+    )
+  )
+);
+
+drop policy if exists "assignments scoped read" on public.assignments;
+create policy "assignments scoped read" on public.assignments
+for select to authenticated
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a where a.course_id = assignments.course_id and a.teacher_id = (select auth.uid()))
+  )
+  or (
+    published and exists (
+      select 1 from public.enrollments e
+      where e.course_id = assignments.course_id and e.student_id = (select auth.uid())
+        and e.status = 'active' and e.admission_fee_paid = true
+        and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+    )
+  )
+);
+
+drop policy if exists "students submit own assignments" on public.assignment_submissions;
+create policy "students submit own assignments" on public.assignment_submissions
+for insert to authenticated
+with check (
+  student_id = (select auth.uid())
+  and exists (
+    select 1 from public.assignments x
+    join public.enrollments e on e.course_id = x.course_id
+    where x.id = assignment_submissions.assignment_id and x.published
+      and e.student_id = (select auth.uid()) and e.status = 'active'
+      and e.admission_fee_paid = true
+      and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+  )
+);
+
+drop policy if exists "quizzes scoped read" on public.quizzes;
+create policy "quizzes scoped read" on public.quizzes
+for select to authenticated
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a where a.course_id = quizzes.course_id and a.teacher_id = (select auth.uid()))
+  )
+  or (
+    published and exists (
+      select 1 from public.enrollments e
+      where e.course_id = quizzes.course_id and e.student_id = (select auth.uid())
+        and e.status = 'active' and e.admission_fee_paid = true
+        and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+    )
+  )
+);
+
+drop policy if exists "quiz questions scoped read" on public.quiz_questions;
+create policy "quiz questions scoped read" on public.quiz_questions
+for select to authenticated
+using (
+  exists (
+    select 1 from public.quizzes q
+    where q.id = quiz_questions.quiz_id
+      and (
+        public.current_role() = 'admin'
+        or (
+          public.current_role()::text in ('teacher','staff')
+          and exists (select 1 from public.course_assignments a where a.course_id = q.course_id and a.teacher_id = (select auth.uid()))
+        )
+        or (
+          q.published and exists (
+            select 1 from public.enrollments e
+            where e.course_id = q.course_id and e.student_id = (select auth.uid())
+              and e.status = 'active' and e.admission_fee_paid = true
+              and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+          )
+        )
+      )
+  )
+);
+
+drop policy if exists "students create own quiz attempts" on public.quiz_attempts;
+create policy "students create own quiz attempts" on public.quiz_attempts
+for insert to authenticated
+with check (
+  student_id = (select auth.uid()) and submitted_at is null and score is null
+  and exists (
+    select 1 from public.quizzes q
+    join public.enrollments e on e.course_id = q.course_id
+    where q.id = quiz_attempts.quiz_id and q.published
+      and e.student_id = (select auth.uid()) and e.status = 'active'
+      and e.admission_fee_paid = true
+      and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
   )
 );

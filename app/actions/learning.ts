@@ -115,3 +115,65 @@ export async function saveChapter(formData: FormData) {
   const { error } = await supabase.from('chapters').insert({ course_id: courseId, title, description, sort_order: (last?.sort_order ?? 0)+1, published: formData.get('published') === 'on' });
   redirect(error ? '/teacher?chapter_error=save' : '/teacher?chapter_success=1');
 }
+
+
+export async function postLessonDiscussion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const lessonId = String(formData.get('lesson_id') ?? '');
+  const courseId = String(formData.get('course_id') ?? '');
+  const parentId = String(formData.get('parent_id') ?? '').trim() || null;
+  const body = String(formData.get('body') ?? '').trim();
+  if (!lessonId || !courseId || body.length < 2 || body.length > 3000) redirect('/student');
+  const [{ data: lesson }, { data: profile }] = await Promise.all([
+    supabase.from('lessons').select('id,course_id').eq('id', lessonId).eq('course_id', courseId).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
+  ]);
+  if (!lesson) redirect('/student');
+  const authorName = (profile?.full_name || user.email || 'Student').slice(0, 100);
+  const { error } = await supabase.from('lesson_discussions').insert({
+    lesson_id: lessonId, course_id: courseId, parent_id: parentId,
+    author_id: user.id, author_name: authorName, body,
+  });
+  if (error) redirect('/learn/' + courseId + '?discussion_error=1#discussion-' + lessonId);
+  revalidatePath('/learn/' + courseId);
+  redirect('/learn/' + courseId + '#discussion-' + lessonId);
+}
+
+export async function toggleLessonReaction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const discussionId = String(formData.get('discussion_id') ?? '');
+  const reaction = String(formData.get('reaction') ?? '');
+  if (!discussionId || !['like','love','helpful'].includes(reaction)) redirect('/student');
+  const { data: discussion } = await supabase.from('lesson_discussions')
+    .select('id,course_id,lesson_id').eq('id', discussionId).maybeSingle();
+  if (!discussion) redirect('/student');
+  const { data: existing } = await supabase.from('lesson_discussion_reactions')
+    .select('id').eq('discussion_id', discussionId).eq('user_id', user.id).eq('reaction', reaction).maybeSingle();
+  const result = existing
+    ? await supabase.from('lesson_discussion_reactions').delete().eq('id', existing.id)
+    : await supabase.from('lesson_discussion_reactions').insert({ discussion_id: discussionId, user_id: user.id, reaction });
+  if (result.error) redirect('/learn/' + discussion.course_id + '?reaction_error=1#discussion-' + discussion.lesson_id);
+  revalidatePath('/learn/' + discussion.course_id);
+  redirect('/learn/' + discussion.course_id + '#discussion-' + discussion.lesson_id);
+}
+
+export async function toggleLessonBookmark(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const lessonId = String(formData.get('lesson_id') ?? '');
+  const courseId = String(formData.get('course_id') ?? '');
+  if (!lessonId || !courseId) redirect('/student');
+  const { data: existing } = await supabase.from('lesson_bookmarks')
+    .select('id').eq('lesson_id', lessonId).eq('student_id', user.id).maybeSingle();
+  const result = existing
+    ? await supabase.from('lesson_bookmarks').delete().eq('id', existing.id)
+    : await supabase.from('lesson_bookmarks').insert({ lesson_id: lessonId, student_id: user.id });
+  if (result.error) redirect('/learn/' + courseId + '?bookmark_error=1');
+  revalidatePath('/learn/' + courseId);
+  redirect('/learn/' + courseId + '#lesson-' + lessonId);
+}

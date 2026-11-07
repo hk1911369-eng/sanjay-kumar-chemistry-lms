@@ -80,7 +80,7 @@ export async function createQuiz(formData:FormData) {
  if(!courseId||title.length<3||duration<1||duration>300||lines.length>30000||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=quiz');
  let questions:any[];
  try { questions=JSON.parse(lines); } catch { redirect('/academic?error=quiz_format'); }
- if(!Array.isArray(questions)||questions.length<1||questions.length>50||questions.some(q=>typeof q.question_text!=='string'||q.question_text.trim().length<2||!Array.isArray(q.options)||q.options.length<2||q.options.length>6||!Number.isInteger(q.correct_option)||q.correct_option<0||q.correct_option>=q.options.length||!Number.isFinite(Number(q.marks))||Number(q.marks)<=0)) redirect('/academic?error=quiz_format');
+ if(!Array.isArray(questions)||questions.length<1||questions.length>50||questions.some(q=>!q||typeof q!=='object'||typeof q.question_text!=='string'||q.question_text.trim().length<2||!Array.isArray(q.options)||q.options.length<2||q.options.length>6||!Number.isInteger(q.correct_option)||q.correct_option<0||q.correct_option>=q.options.length||!Number.isFinite(Number(q.marks))||Number(q.marks)<=0)) redirect('/academic?error=quiz_format');
  const total=questions.reduce((s,q)=>s+Number(q.marks),0);
  const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!quiz) redirect('/academic?error=quiz');
@@ -99,8 +99,8 @@ export async function startQuiz(formData:FormData) {
  const quizId=String(formData.get('quiz_id')||'');
  const {data:quiz}=await supabase.from('quizzes').select('id').eq('id',quizId).eq('published',true).maybeSingle();
  if(!quiz) redirect('/academic?error=quiz_unavailable');
- const {error}=await supabase.from('quiz_attempts').insert({quiz_id:quizId,student_id:user.id,answers:{},started_at:new Date().toISOString()});
- if(error) redirect('/academic?error=attempt_exists');
+ const {data:existing}=await supabase.from('quiz_attempts').select('id').eq('quiz_id',quizId).eq('student_id',user.id).maybeSingle();
+ if(!existing) { const {error}=await supabase.from('quiz_attempts').insert({quiz_id:quizId,student_id:user.id,answers:{},started_at:new Date().toISOString()}); if(error) redirect('/academic?error=attempt_exists'); }
  redirect('/academic?attempt='+quizId);
 }
 

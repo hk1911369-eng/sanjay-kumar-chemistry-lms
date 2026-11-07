@@ -2,6 +2,7 @@ import { PortalLayout } from '@/components/portal-layout';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 import {
   markLessonComplete, postLessonDiscussion, toggleLessonReaction, toggleLessonBookmark,
 } from '@/app/actions/learning';
@@ -27,11 +28,13 @@ export default async function LearningPage({
   const [{ data: profile }, { data: course }, { data: enrollment }] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', user.id).single(),
     supabase.from('courses').select('id,title,description').eq('id', courseId).maybeSingle(),
-    supabase.from('enrollments').select('status').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
+    supabase.from('enrollments').select('status,delivery_mode,admission_fee_paid,paid_through').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
   if (!course) notFound();
   const isStaff = ['admin', 'teacher', 'staff'].includes(profile?.role ?? '');
-  if (enrollment?.status !== 'active' && !isStaff) redirect('/student?learning_error=not_enrolled');
+  const currentPaidThrough = enrollment?.paid_through && enrollment.paid_through >= billingMonthEnd(currentBangladeshBillingPeriod());
+  if (!isStaff && enrollment?.status !== 'active') redirect('/student?learning_error=not_enrolled');
+  if (!isStaff && (!enrollment?.admission_fee_paid || !currentPaidThrough)) redirect('/student?learning_error=payment_due');
   const portalRole = profile?.role === 'admin' ? 'admin' : profile?.role === 'teacher' ? 'teacher' : profile?.role === 'staff' ? 'staff' : 'student';
 
   const [{ data: lessons }, { data: progress }, { data: chapters }, { data: bookmarks }] = await Promise.all([

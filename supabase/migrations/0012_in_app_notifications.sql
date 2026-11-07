@@ -114,11 +114,15 @@ create trigger quiz_published_notification after insert or update of published o
 create or replace function public.notify_submission_graded()
 returns trigger language plpgsql security definer set search_path=public
 as $$
-declare v_title text;
+declare v_title text; v_notify boolean := false;
 begin
- if new.marks is not null and (
-   tg_op='INSERT' or old.marks is distinct from new.marks or old.graded_at is distinct from new.graded_at
- ) then
+ if tg_op='INSERT' then
+  v_notify := new.marks is not null;
+ else
+  v_notify := new.marks is not null and
+   (old.marks is distinct from new.marks or old.graded_at is distinct from new.graded_at);
+ end if;
+ if v_notify then
   select a.title into v_title from public.assignments a where a.id=new.assignment_id;
   insert into public.notifications(recipient_id,category,title,body,href)
   values(new.student_id,'grade','Assignment graded: '||coalesce(v_title,'Your assignment'),

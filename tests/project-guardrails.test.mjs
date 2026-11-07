@@ -10,7 +10,7 @@ test('courses are created only by admins and are not seeded by new feature migra
     'supabase/migrations/0016_course_applications.sql',
     'supabase/migrations/0021_secure_discussions_and_rate_limits.sql',
   ];
-  assert.match(action, /profile\?\.role !== 'admin'/);
+  assert.match(action, /me\?\.role!=='admin'/);
   assert.match(action, /HSC 2027/);
   assert.match(action, /HSC 2028/);
   assert.match(action, /Admission Batch/);

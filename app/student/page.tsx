@@ -93,7 +93,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         const monthlyFee = Number(c.monthly_fee_bdt ?? MONTHLY_FEE_BDT);
         const admissionFee = Number(c.admission_fee_bdt ?? ADMISSION_FEE_BDT);
         return <article className="portal-card" key={c.id}>
-          <span className="auth-kicker">CHEMISTRY PROGRAM</span><h3>{c.title}</h3><p className="muted">{c.description}</p>
+          <span className="auth-kicker">JMT ACADEMY COURSE</span><h3>{c.title}</h3><p className="muted">{c.description}</p>
           <p><b>Admission: ৳{admissionFee.toLocaleString('en-BD')}</b><br/><b>Monthly tuition: ৳{monthlyFee.toLocaleString('en-BD')}</b></p>
           {!isActive && <p className="muted">First payment includes admission and the first month: ৳{(admissionFee + monthlyFee).toLocaleString('en-BD')}.</p>}
           <p>{isActive ? <span className="status-approved">Enrolled</span> : initialPending ? <span className="status-pending">Initial payment under review</span> : <span className="muted">Not enrolled</span>}</p>

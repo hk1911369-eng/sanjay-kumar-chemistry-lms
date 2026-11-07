@@ -100,7 +100,7 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
         <article><b>{pendingCount ?? 0}</b><span>Payments awaiting review</span></article>
         <article><b>{dueStudents}</b><span>Active students not paid through this month</span></article>
       </div>
-      <h2>Record cash, bank, expense or refund</h2>
+      <h2>Record cash, bank, expense or refund</h2><p className="muted small-note">Approved bKash, Nagad and Rocket student payments are counted automatically above. Do not enter those receipts again here; use this form for cash/bank receipts, expenses and refunds.</p>
       <form action={saveFinanceEntry} className="auth-form portal-card">
         <input type="hidden" name="month" value={monthKey}/>
         <div className="studio-two"><label>Entry type<select name="entry_type" defaultValue="expense"><option value="expense">Expense</option><option value="cash_income">Cash / bank income</option><option value="refund">Refund</option></select></label><label>Category<input name="category" required minLength={2} maxLength={80} placeholder="Rent, salary, electricity, books…"/></label></div>

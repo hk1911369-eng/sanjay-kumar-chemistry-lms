@@ -98,7 +98,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         const modePrice = (mode:string) => mode==='live_recorded'?c.live_price_bdt:mode==='recorded_only'?c.recorded_price_bdt:c.offline_price_bdt;
         return <article className="portal-card" key={c.id}>
           <span className="auth-kicker">JMT ACADEMY COURSE</span><h3>{c.title}</h3><p className="muted">{c.description}</p>
-          <p><b>Admission: ৳{admissionFee.toLocaleString('en-BD')}</b><br/><b>Monthly tuition: ৳{monthlyFee.toLocaleString('en-BD')}</b></p>
+          {isActive && <p><b>Monthly tuition: ৳{monthlyFee.toLocaleString('en-BD')}</b></p>}
           {!isActive && <p className="muted">Available formats: {(c.delivery_modes??[]).map((mode:string)=>{const label=mode==='live_recorded'?'Live + recorded':mode==='recorded_only'?'Recorded only':'Offline';const price=modePrice(mode);return label+' · '+(price===null||price===undefined?'Contact academy':'৳'+Number(price).toLocaleString('en-BD'));}).join(' | ')}</p>}
           <p>{isActive ? <span className="status-approved">Enrolled</span> : initialPending ? <span className="status-pending">Initial payment under review</span> : <span className="muted">Not enrolled</span>}</p>
           {isActive && monthPaid && <><p className="status-approved">Tuition paid through {enrollment?.paid_through}</p><p><Link className="btn" href={`/learn/${c.id}`}>Open course lessons →</Link></p></>}

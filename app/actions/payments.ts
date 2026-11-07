@@ -14,6 +14,8 @@ export async function submitManualPayment(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const { data: allowed } = await supabase.rpc('consume_app_rate_limit', { p_action: 'manual_payment' });
+  if (!allowed) redirect('/student?payment_error=rate_limit');
   const courseId = String(formData.get('course_id') ?? '').trim();
   const provider = String(formData.get('provider') ?? '').trim() as Provider;
   const paymentKind = String(formData.get('payment_kind') ?? '').trim() as PaymentKind;

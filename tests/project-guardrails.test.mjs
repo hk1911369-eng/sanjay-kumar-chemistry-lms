@@ -120,3 +120,15 @@ test('authentication throttling uses the visitor IP rather than a proxy IP', asy
   assert.match(limiter, /filter\(Boolean\)\[0\]/);
   assert.doesNotMatch(limiter, /filter\(Boolean\)\.at\(-1\)/);
 });
+
+test('discussion reactions are scoped to members of the related course', async () => {
+  const migration = await read('supabase/migrations/0028_scope_discussion_reactions.sql');
+  assert.match(migration, /course members read discussion reactions/);
+  assert.match(migration, /course members add own discussion reactions/);
+  assert.match(migration, /a\.teacher_id = \(select auth\.uid\(\)\)/);
+  assert.match(migration, /e\.student_id = \(select auth\.uid\(\)\)/);
+  assert.match(migration, /e\.status = 'active'/);
+  assert.match(migration, /e\.admission_fee_paid = true/);
+  assert.match(migration, /e\.paid_through >=/);
+  assert.doesNotMatch(migration, /to public/i);
+});

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/app/actions/auth';
 import { submitManualPayment } from '@/app/actions/payments';
-import { updateStudentProfile } from '@/app/actions/learning';
+import { updateStudentDetails } from '@/app/actions/student-management';
 import { ADMISSION_FEE_BDT, MONTHLY_FEE_BDT, INITIAL_PAYMENT_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
 const paymentErrors: Record<string, string> = {
@@ -22,8 +22,10 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role').eq('id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role,student_code,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact').eq('id', user.id).single();
   if (profile?.role !== 'student') redirect('/portal');
+  const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
+  const avatarUrl = avatarData?.signedUrl ?? null;
 
   const [{ data: courses }, { data: enrollments }, { data: payments }, { data: settings }, { data: notices }] = await Promise.all([
     supabase.from('courses').select('id,title,description,monthly_fee_bdt,admission_fee_bdt').eq('is_published', true).order('title'),
@@ -57,12 +59,29 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     <section className="portal-content">
       <span className="auth-kicker">STUDENT PORTAL</span><h1>Welcome, {profile?.full_name || user.email}</h1>
       <p className="muted">Your courses, enrollment and payment status in one place.</p>
+      <p><b>Permanent Student ID:</b> <code>{profile?.student_code ?? 'Being assigned'}</code> · Keep this ID safe. If forgotten, the office can find your profile using your or your guardian’s mobile number.</p>
       {params.payment_success && <p className="form-success">Payment reference জমা হয়েছে। Admin যাচাই করার পর Enrollment সক্রিয় হবে।</p>}
       {params.payment_error && <p className="form-error">{paymentErrors[params.payment_error] ?? 'অনুরোধটি সম্পন্ন করা যায়নি।'}</p>}
       {params.learning_error && <p className="form-error">Course access is available only after payment approval.</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
       <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>৳{MONTHLY_FEE_BDT.toLocaleString('en-BD')}</b><span>Monthly tuition</span></article></div>
-      <h2>Profile</h2><form action={updateStudentProfile} className="auth-form portal-card"><label>Full name<input name="full_name" defaultValue={profile?.full_name ?? ''} required minLength={2} maxLength={100}/></label><label>Mobile number<input name="phone" defaultValue={profile?.phone ?? ''} placeholder="01XXXXXXXXX" inputMode="numeric" pattern="(?:\\+?88)?01[3-9][0-9]{8}" maxLength={14}/></label><button className="auth-submit">Save profile</button></form>
+      <h2>Student profile</h2>
+      {avatarUrl&&<p><img src={avatarUrl} alt="Your profile" style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
+      <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">
+        <label>Full name<input name="full_name" defaultValue={profile?.full_name ?? ''} required minLength={2} maxLength={100}/></label>
+        <label>Student mobile number<input name="phone" defaultValue={profile?.phone ?? ''} placeholder="01XXXXXXXXX" inputMode="tel" pattern="(?:\\+?88)?01[3-9][0-9]{8}" maxLength={14}/></label>
+        <label>Guardian name<input name="guardian_name" defaultValue={profile?.guardian_name??''} maxLength={100}/></label>
+        <label>Guardian mobile number<input name="guardian_phone" defaultValue={profile?.guardian_phone??''} placeholder="01XXXXXXXXX" inputMode="tel" pattern="(?:\\+?88)?01[3-9][0-9]{8}" maxLength={14}/></label>
+        <label>College / institution name<input name="college_name" defaultValue={profile?.college_name??''} maxLength={180}/></label>
+        <label>Village / area / district<input name="location" defaultValue={profile?.location??''} maxLength={180}/></label>
+        <label>Date of birth<input name="date_of_birth" type="date" defaultValue={profile?.date_of_birth??''}/></label>
+        <label>Gender<select name="gender" defaultValue={profile?.gender??''}><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option><option value="prefer_not_to_say">Prefer not to say</option></select></label>
+        <label>Blood group<select name="blood_group" defaultValue={profile?.blood_group??''}><option value="">Not provided</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(v=><option key={v}>{v}</option>)}</select></label>
+        <label>Emergency contact number<input name="emergency_contact" defaultValue={profile?.emergency_contact??''} placeholder="01XXXXXXXXX" inputMode="tel" pattern="(?:\\+?88)?01[3-9][0-9]{8}" maxLength={14}/></label>
+        <label>Profile picture (JPG, PNG or WebP; max 3 MB)<input name="profile_photo" type="file" accept="image/jpeg,image/png,image/webp"/></label>
+        <p className="muted small-note">Your Student ID and admission date are permanent and cannot be changed from this form.</p>
+        <button className="auth-submit">Save complete profile</button>
+      </form>
       <h2>Announcements</h2>{(notices??[]).length===0?<p className="muted">No announcements.</p>:<div className="portal-grid">{notices!.map(n=><article className="portal-card" key={n.id}><h3>{n.title}</h3><p>{n.body}</p></article>)}</div>}
       <h2>Available courses</h2>
       <div className="portal-grid">{(courses ?? []).map(c => {

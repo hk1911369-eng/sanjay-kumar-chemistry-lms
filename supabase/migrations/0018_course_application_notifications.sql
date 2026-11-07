@@ -1,10 +1,10 @@
 -- 0018: notify students when their JMT Academy application is reviewed.
 -- Notifications are written by a private trigger function; clients cannot call it.
 
-create schema if not exists private;
-revoke all on schema private from public, anon, authenticated;
+create schema if not exists jmt_private;
+revoke all on schema jmt_private from public, anon, authenticated;
 
-create or replace function private.notify_course_application_status()
+create or replace function jmt_private.notify_course_application_status()
 returns trigger
 language plpgsql
 security definer
@@ -39,9 +39,9 @@ begin
 end;
 $$;
 
-revoke all on function private.notify_course_application_status() from public, anon, authenticated;
+revoke all on function jmt_private.notify_course_application_status() from public, anon, authenticated;
 drop trigger if exists course_application_status_notification on public.course_applications;
 create trigger course_application_status_notification
 after update of status on public.course_applications
 for each row
-execute function private.notify_course_application_status();
+execute function jmt_private.notify_course_application_status();

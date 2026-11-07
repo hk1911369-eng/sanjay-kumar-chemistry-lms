@@ -28,7 +28,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
   const avatarUrl = avatarData?.signedUrl ?? null;
 
-  const [courseResult, enrollmentResult, paymentResult, settingsResult, noticeResult, noteResult, applicationResult] = await Promise.all([
+  const [courseResult, enrollmentResult, paymentResult, settingsResult, noticeResult, noteResult, applicationResult, attendanceResult] = await Promise.all([
     supabase.from('courses').select('id,title,slug,description,monthly_fee_bdt,admission_fee_bdt,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('is_published', true).is('archived_at',null).order('title'),
     supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id),
     supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,delivery_mode,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
@@ -36,6 +36,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     supabase.from('notices').select('id,title,body,published_at').not('published_at','is',null).order('published_at',{ascending:false}).limit(10),
     supabase.from('student_followups').select('id,category,severity,details,follow_up_status,created_at').eq('student_id',user.id).eq('visible_to_student',true).order('created_at',{ascending:false}).limit(10),
     supabase.from('course_applications').select('id,course_id,delivery_mode,status,admin_note,created_at').eq('student_id',user.id).order('created_at',{ascending:false}).limit(50),
+    supabase.from('student_attendance').select('id,course_id,attendance_date,status,note').eq('student_id',user.id).order('attendance_date',{ascending:false}).limit(100),
   ]);
   const {data:courses}=courseResult;
   let enrollments: any[] | null = enrollmentResult.data;
@@ -51,7 +52,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const {data:settings}=settingsResult;
   const {data:notices}=noticeResult;
   const {data:studentNotes}=noteResult;
-  const {data:applications}=applicationResult;
+  const {data:applications}=applicationResult;const {data:attendance}=attendanceResult;
   const enrollmentByCourse = new Map((enrollments ?? []).map(e => [e.course_id, e]));
   const latestApplicationByCourse = new Map<string, any>();
   for (const application of applications ?? []) if (!latestApplicationByCourse.has(application.course_id)) latestApplicationByCourse.set(application.course_id, application);
@@ -61,6 +62,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const periodEnd = billingMonthEnd(period);
   const pendingCount = (payments ?? []).filter(p => p.status === 'pending_review').length;
   const activeCount = (enrollments ?? []).filter(e => e.status === 'active').length;
+  const attendanceRows=attendance??[];
+  const attendanceSummary={present:attendanceRows.filter(a=>a.status==='present').length,absent:attendanceRows.filter(a=>a.status==='absent').length,late:attendanceRows.filter(a=>a.status==='late').length,excused:attendanceRows.filter(a=>a.status==='excused').length};
 
   function PaymentForm({ courseId, kind, amount, deliveryMode }: { courseId: string; kind: 'initial' | 'monthly'; amount: number; deliveryMode?: string }) {
     return <form action={submitManualPayment} className="auth-form payment-form">
@@ -124,6 +127,9 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
           {!isActive && !initialPending && <><p>{application ? <span className={application.status==='accepted'?'status-approved':'status-pending'}>Application: {application.status.replace('_',' ')}</span> : <span className="muted">Application not submitted yet.</span>}</p>{application?.admin_note&&<p className="muted">Academy note: {application.admin_note}</p>}{application?.status==='accepted'&&<>{modePrice(application.delivery_mode)!==null&&modePrice(application.delivery_mode)!==undefined&&Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)>0?<details className="payment-details" open><summary>Complete admission payment · ৳{(Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)).toLocaleString('en-BD')}</summary><div className="payment-instructions"><b>Monthly course fee: ৳{Number(modePrice(application.delivery_mode)).toLocaleString('en-BD')}</b><br/><b>One-time admission fee: ৳{Number(c.admission_fee_bdt??0).toLocaleString('en-BD')}</b>{(['bkash','nagad','rocket'] as const).map(provider=>{const item=receiving.get(provider);return <p key={provider}><b>{provider.toUpperCase()}:</b> {item?.is_enabled?item.receiving_number:'Currently unavailable'}</p>;})}<p className="small-note">Your lessons will activate after the academy verifies your payment.</p></div><PaymentForm courseId={c.id} kind="initial" amount={Number(modePrice(application.delivery_mode))+Number(c.admission_fee_bdt??0)} deliveryMode={application.delivery_mode}/></details>:<p className="muted">Please contact JMT Academy to confirm the admission fee before paying.</p>}</>}{application?.status!=='accepted'&&<p><Link className="btn" href={'/courses/'+c.slug}>{application?'View application details':'View course & apply →'}</Link></p>}</>}
         </article>;
       })}</div>
+      <h2 id="attendance">My attendance</h2>
+      <div className="portal-stats"><article><b>{attendanceSummary.present}</b><span>Present</span></article><article><b>{attendanceSummary.absent}</b><span>Absent</span></article><article><b>{attendanceSummary.late}</b><span>Late</span></article><article><b>{attendanceSummary.excused}</b><span>Excused</span></article></div>
+      {attendanceRows.length===0?<p className="muted">Your attendance records will appear here after a teacher or staff member marks a class.</p>:<div className="table-scroll"><table><thead><tr><th>Date</th><th>Course</th><th>Status</th><th>Note</th></tr></thead><tbody>{attendanceRows.slice(0,40).map(row=><tr key={row.id}><td>{row.attendance_date}</td><td>{courses?.find(course=>course.id===row.course_id)?.title??'Course'}</td><td><span className={row.status==='present'?'status-approved':row.status==='absent'?'status-pending':'muted'}>{row.status.toUpperCase()}</span></td><td>{row.note||'—'}</td></tr>)}</tbody></table></div>}
       <h2 id="payments">Payment history</h2>
       {(payments ?? []).length === 0 ? <p className="muted">No payment submissions yet.</p> : <div className="table-scroll"><table><thead><tr><th>Type</th><th>Learning format</th><th>Period</th><th>Transaction ID</th><th>Method</th><th>Amount</th><th>Status</th><th>Submitted</th><th>Review note</th><th>Receipt</th></tr></thead><tbody>{payments!.map(p => <tr key={p.id}><td>{p.payment_kind === 'initial' ? 'Admission + first month' : p.payment_kind === 'monthly' ? 'Monthly tuition' : 'Previous payment'}</td><td>{p.delivery_mode==='live_recorded'?'Live + recorded':p.delivery_mode==='recorded_only'?'Recorded only':p.delivery_mode==='offline'?'Offline':'Legacy'}</td><td>{p.billing_period}</td><td>{p.transaction_id}</td><td>{p.provider}</td><td>৳{p.amount_bdt}</td><td>{p.status}</td><td>{new Date(p.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{p.status === 'rejected' ? p.admin_note : '—'}</td><td>{p.status==='approved'?<Link href={'/student/receipt/'+p.id}>View receipt →</Link>:'—'}</td></tr>)}</tbody></table></div>}
       <p className="muted small-note">New students should apply for a course and select a learning format first. The academy will confirm the correct fee and admission steps. Existing active students can continue to submit monthly payment references here.</p>

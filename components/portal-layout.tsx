@@ -16,6 +16,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'courses', label: 'Explore courses', href: '/courses', icon: '▤' },
       { key: 'announcements', label: 'Announcements', href: '/student#announcements', icon: '◉' },
       { key: 'feedback', label: 'Teacher feedback', href: '/student#feedback', icon: '✎' },
+      { key: 'academic', label: 'Classes & exams', href: '/academic', icon: '◷' },
     ]},
     { label: 'MY ACCOUNT', items: [
       { key: 'profile', label: 'My profile', href: '/student#profile', icon: '◌' },
@@ -30,6 +31,8 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'chapters', label: 'Chapter manager', href: '/teacher#chapter-manager', icon: '▤' },
       { key: 'lessons', label: 'Lesson studio', href: '/teacher#lesson-creator', icon: '✎' },
       { key: 'library', label: 'Lesson library', href: '/teacher#lesson-library', icon: '▥' },
+      { key: 'academic', label: 'Classes & exams', href: '/academic', icon: '◷' },
+      { key: 'academic', label: 'Classes & exams', href: '/academic', icon: '◷' },
       { key: 'students', label: 'Students & attendance', href: '/students/manage', icon: '♙' },
     ]},
   ],

@@ -34,7 +34,7 @@ begin
 end;
 $$;
 drop trigger if exists assign_student_code on public.profiles;
-create trigger assign_student_code before insert on public.profiles
+create trigger assign_student_code before insert or update of role on public.profiles
 for each row execute function public.assign_student_code();
 
 update public.profiles

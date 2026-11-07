@@ -64,3 +64,25 @@ test('learning page selects the chapter id before rendering chapter labels', asy
   assert.match(page, /select\('[^']*chapter_id[^']*'\)/);
   assert.match(page, /l\.chapter_id/);
 });
+
+test('lesson discussion identity and pin privileges are enforced in the database', async () => {
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  const action = await read('app/actions/learning.ts');
+  const page = await read('app/learn/[courseId]/page.tsx');
+  assert.match(migration, /new\.author_name := coalesce\(v_name, 'Member'\)/);
+  assert.match(migration, /Only assigned teachers and admins can pin discussions/);
+  assert.match(migration, /Discussion identity and location fields cannot be changed/);
+  assert.match(migration, /authors and assigned teachers update discussion body or pin/);
+  assert.match(action, /consume_app_rate_limit.*lesson_discussion/s);
+  assert.match(action, /pinLessonDiscussion/);
+  assert.match(page, /Teacher/);
+  assert.match(page, /Pin comment/);
+});
+
+test('manual payment submission is throttled by authenticated user', async () => {
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  const action = await read('app/actions/payments.ts');
+  assert.match(migration, /manual_payment/);
+  assert.match(migration, /interval '15 minutes'/);
+  assert.match(action, /consume_app_rate_limit.*manual_payment/s);
+});

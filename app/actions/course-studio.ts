@@ -19,7 +19,9 @@ export async function saveAcademyCourse(fd:FormData){
  if(image instanceof File&&image.size){if(!['image/jpeg','image/png','image/webp'].includes(image.type)||image.size>5242880)redirect('/admin/courses?error=image');
  const ext=image.type==='image/png'?'png':image.type==='image/webp'?'webp':'jpg';imagePath=user.id+'/'+crypto.randomUUID()+'.'+ext;
  const {error}=await db.storage.from('jmt-course-media').upload(imagePath,image,{contentType:image.type});if(error)redirect('/admin/courses?error=upload');}
- const slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,65)+'-'+crypto.randomUUID().slice(0,8);
+ const {data:existingCourse}=id?await db.from('courses').select('id,slug').eq('id',id).maybeSingle():{data:null};
+ if(id&&!existingCourse)redirect('/admin/courses?error=not_found');
+ const slug=existingCourse?.slug??(title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,65)+'-'+crypto.randomUUID().slice(0,8));
  const payload={title,slug,level:group==='Admission Batch'?'ADMISSION':'HSC',description:String(fd.get('description')??'').trim(),programme_group:group,subjects,
  teaching_method:String(fd.get('teaching_method')??'').trim(),schedule_text:String(fd.get('schedule_text')??'').trim(),delivery_modes:selected,
  live_price_bdt:live,recorded_price_bdt:recorded,offline_price_bdt:offline,monthly_fee_bdt:live??recorded??offline??0,admission_fee_bdt:0,price_bdt:live??recorded??offline??0,
@@ -30,6 +32,6 @@ export async function saveAcademyCourse(fd:FormData){
  if(teachers.length&&(valid?.length??0)!==teachers.length)redirect('/admin/courses?error=teachers');
  const {error:delError}=await db.from('course_assignments').delete().eq('course_id',courseId);if(delError)redirect('/admin/courses?error=assignments');
  if(teachers.length){const {error}=await db.from('course_assignments').insert(teachers.map(teacher_id=>({course_id:courseId,teacher_id,assigned_by:user.id})));if(error)redirect('/admin/courses?error=assignments');}
- revalidatePath('/admin');revalidatePath('/admin/courses');revalidatePath('/courses');revalidatePath('/');
- redirect('/admin/courses?saved=1');
+ revalidatePath('/admin');revalidatePath('/admin/courses');revalidatePath('/courses');revalidatePath('/');revalidatePath('/courses/'+slug);
+ redirect('/admin/courses?saved=1'+(id?'&updated=1':''));
 }

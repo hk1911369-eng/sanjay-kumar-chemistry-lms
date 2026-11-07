@@ -132,3 +132,9 @@ test('discussion reactions are scoped to members of the related course', async (
   assert.match(migration, /e\.paid_through >=/);
   assert.doesNotMatch(migration, /to public/i);
 });
+
+test('lesson downloads do not depend on popup windows after an async request', async () => {
+  const component = await read('components/lesson-resource-access.tsx');
+  assert.match(component, /window\.location\.assign\(result\.url\)/);
+  assert.doesNotMatch(component, /window\.open\(result\.url/);
+});

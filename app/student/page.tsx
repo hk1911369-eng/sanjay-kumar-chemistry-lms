@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { submitManualPayment } from '@/app/actions/payments';
 import { updateStudentDetails } from '@/app/actions/student-management';
-import { ADMISSION_FEE_BDT, MONTHLY_FEE_BDT, INITIAL_PAYMENT_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
+import { MONTHLY_FEE_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
 const paymentErrors: Record<string, string> = {
   invalid: 'তথ্যগুলো যাচাই করুন। Transaction ID কমপক্ষে ৫ অক্ষরের হতে হবে।',
@@ -45,7 +45,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const pendingCount = (payments ?? []).filter(p => p.status === 'pending_review').length;
   const activeCount = (enrollments ?? []).filter(e => e.status === 'active').length;
 
-  function PaymentForm({ courseId, kind, amount }: { courseId: string; kind: 'initial' | 'monthly'; amount: number }) {
+  function PaymentForm({ courseId, kind, amount }: { courseId: string; kind: 'monthly'; amount: number }) {
     return <form action={submitManualPayment} className="auth-form payment-form">
       <input type="hidden" name="course_id" value={courseId}/>
       <input type="hidden" name="payment_kind" value={kind}/>
@@ -94,7 +94,6 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         const monthlyPending = pending.has(`${c.id}:monthly:${period}`);
         const monthPaid = Boolean(enrollment?.paid_through && enrollment.paid_through >= periodEnd);
         const monthlyFee = Number(c.monthly_fee_bdt ?? MONTHLY_FEE_BDT);
-        const admissionFee = Number(c.admission_fee_bdt ?? ADMISSION_FEE_BDT);
         const application = latestApplicationByCourse.get(c.id);
         const modePrice = (mode:string) => mode==='live_recorded'?c.live_price_bdt:mode==='recorded_only'?c.recorded_price_bdt:c.offline_price_bdt;
         return <article className="portal-card" key={c.id}>

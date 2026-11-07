@@ -15,7 +15,7 @@ export function LessonResourceAccess({ resource }: { resource: {
     const result = await getLessonResourceUrl(resource.id, mode);
     setBusy(false);
     if (!result.url) { setError('This file is not available to your account.'); return; }
-    if (mode === 'download') { window.open(result.url, '_blank', 'noopener,noreferrer'); return; }
+    if (mode === 'download') { window.location.assign(result.url); return; }
     setPreviewUrl(result.url);
   }
 

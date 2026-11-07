@@ -57,7 +57,7 @@ export default async function LearningPage({
     const [{ data: preview }, { data: download }] = await Promise.all([
       supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600),
       r.downloadable
-        ? supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600, { download: true })
+        ? supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600, { download: 'JMT-Academy-' + r.file_name.replace(/sanjay[\\s_-]*kumar[\\s_-]*chemistry/ig, 'JMT-Academy').replace(/[^a-zA-Z0-9._-]+/g, '-') })
         : Promise.resolve({ data: null }),
     ]);
     return { ...r, previewUrl: preview?.signedUrl ?? null, downloadUrl: download?.signedUrl ?? null };

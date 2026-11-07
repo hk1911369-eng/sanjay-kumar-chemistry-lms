@@ -60,10 +60,11 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
   for (const row of received) addCourseAmount(row.course_id,Number(row.amount_bdt||0));
   for (const row of manualEntries) if (row.course_id && row.entry_type !== 'expense') addCourseAmount(row.course_id,row.entry_type==='refund'?-Number(row.amount_bdt||0):Number(row.amount_bdt||0));
   const dueStudents = (enrollments ?? []).filter(enrollment => !enrollment.paid_through || enrollment.paid_through < endDate).length;
-  const studentIds = [...new Set([...received.map(row => row.student_id),...manualEntries.map(row=>row.student_id).filter(Boolean)])];
+  const studentIds = [...new Set([...received.map(row => row.student_id),...manualEntries.map(row=>row.student_id).filter((id):id is string=>Boolean(id))])];
+  const linkedCourseIds = [...new Set([...received.map(row=>row.course_id),...manualEntries.map(row=>row.course_id).filter((id):id is string=>Boolean(id))])];
   const [{ data: paymentStudents }, { data: paymentCourses }] = await Promise.all([
     studentIds.length ? db.from('profiles').select('id,full_name,student_code').in('id', studentIds) : Promise.resolve({ data: [] as { id: string; full_name: string; student_code: string | null }[] }),
-    [...new Set(received.map(row=>row.course_id).concat(manualEntries.map(row=>row.course_id).filter(Boolean)))].length ? db.from('courses').select('id,title').in('id',[...new Set(received.map(row=>row.course_id).concat(manualEntries.map(row=>row.course_id).filter(Boolean)))]) : Promise.resolve({ data: [] as {id:string;title:string}[] }),
+    linkedCourseIds.length ? db.from('courses').select('id,title').in('id',linkedCourseIds) : Promise.resolve({ data: [] as {id:string;title:string}[] }),
   ]);
   const studentMap = new Map([...(students??[]),...(paymentStudents??[])].map(row => [row.id,row]));
   const paymentCourseMap = new Map((paymentCourses ?? []).map(row => [row.id, row.title]));

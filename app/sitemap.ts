@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-const base=(process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || 'https://sanjay-kumar-chemistry-lms.onrender.com').replace(/\\/$/, '');
+const base=(process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || 'https://sanjay-kumar-chemistry-lms.onrender.com').replace(/\/$/, '');
 export default function sitemap(): MetadataRoute.Sitemap {
  const now=new Date();
  const paths=['','/courses','/about','/contact','/help','/privacy','/terms'];

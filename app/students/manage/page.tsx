@@ -118,9 +118,11 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
           {studentEnrollments.length===0?<p className="muted">No course enrollment yet.</p>:studentEnrollments.map(enrollment=>{
             const coursePayments=calendar.filter((p:any)=>p.course_id===enrollment.course_id);
             const months=monthSequence((enrollment.starts_at??student.admission_date??today).slice(0,10),currentPeriod);
+            const pendingMonths=months.filter(month=>coursePayments.some((p:any)=>p.billing_period===month&&p.payment_status==='pending_review')).length;
+            const dueMonths=months.filter(month=>!(enrollment.paid_through&&enrollment.paid_through>=billingMonthEnd(month))&&!coursePayments.some((p:any)=>p.billing_period===month&&p.payment_status==='pending_review')).length;
             return <div key={enrollment.id} className="payment-instructions">
               <b>{courseNames.get(enrollment.course_id)??'Chemistry course'}</b> · {enrollment.status} · Admission fee: {enrollment.admission_fee_paid?'Recorded as paid':'Not recorded'}
-              <p>Paid through: <b>{enrollment.paid_through??'No monthly payment recorded'}</b></p>
+              <p>Paid through: <b>{enrollment.paid_through??'No monthly payment recorded'}</b> · Pending review: <b>{pendingMonths}</b> month(s) · Due: <b>{dueMonths}</b> month(s) / ৳{dueMonths*700}</p>
               <div className="table-scroll"><table><thead><tr><th>Month</th><th>Payment</th><th>Amount</th><th>Submitted</th></tr></thead><tbody>
                 {months.map(month=>{
                   const payment=coursePayments.find((p:any)=>p.billing_period===month);

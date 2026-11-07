@@ -17,31 +17,70 @@ export async function submitManualPayment(formData: FormData) {
   const courseId = String(formData.get('course_id') ?? '').trim();
   const provider = String(formData.get('provider') ?? '').trim() as Provider;
   const paymentKind = String(formData.get('payment_kind') ?? '').trim() as PaymentKind;
+  let deliveryMode = String(formData.get('delivery_mode') ?? '').trim();
   const transactionId = String(formData.get('transaction_id') ?? '').trim().toUpperCase();
   const rawSenderPhone = String(formData.get('sender_phone') ?? '').trim();
   const senderPhone = rawSenderPhone ? normalizeBangladeshMobile(rawSenderPhone) : null;
   const billingPeriod = currentBangladeshBillingPeriod();
 
   if (!courseId || !providers.includes(provider) || !['initial', 'monthly'].includes(paymentKind)
-      || transactionId.length < 5 || transactionId.length > 100 || !senderPhone) {
+      || transactionId.length < 5 || transactionId.length > 100 || !senderPhone
+      || (deliveryMode && !['live_recorded','recorded_only','offline'].includes(deliveryMode))) {
     redirect('/student?payment_error=invalid');
   }
 
   const [{ data: course }, { data: settings }, { data: existingEnrollment }] = await Promise.all([
-    supabase.from('courses').select('id,monthly_fee_bdt,admission_fee_bdt,is_published').eq('id', courseId).single(),
+    supabase.from('courses').select('id,monthly_fee_bdt,admission_fee_bdt,is_published,enrollment_open,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('id', courseId).single(),
     supabase.from('private_payment_settings').select('provider,is_enabled').eq('provider', provider).maybeSingle(),
-    supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
+    supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
 
   if (!course?.is_published || !settings?.is_enabled) redirect('/student?payment_error=unavailable');
-  const amount = paymentKind === 'initial'
-    ? Number(course.admission_fee_bdt) + Number(course.monthly_fee_bdt)
-    : Number(course.monthly_fee_bdt);
-  if (paymentKind === 'initial' && existingEnrollment?.admission_fee_paid) redirect('/student?payment_error=already_admitted');
-  if (paymentKind === 'monthly' && (existingEnrollment?.status !== 'active' || !existingEnrollment.admission_fee_paid)) {
-    redirect('/student?payment_error=admission_required');
+  if (!deliveryMode && paymentKind === 'monthly' && existingEnrollment?.delivery_mode) {
+    deliveryMode = existingEnrollment.delivery_mode;
   }
-  if (!Number.isInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
+
+  let amount: number;
+  let feeMonthly: number | null = null;
+  let feeAdmission: number | null = null;
+
+  if (deliveryMode) {
+    if (!course.delivery_modes?.includes(deliveryMode)) redirect('/student?payment_error=unavailable');
+    const modePrice = deliveryMode === 'live_recorded' ? course.live_price_bdt
+      : deliveryMode === 'recorded_only' ? course.recorded_price_bdt : course.offline_price_bdt;
+    if (modePrice === null || modePrice === undefined) redirect('/student?payment_error=unavailable');
+
+    if (paymentKind === 'initial') {
+      if (!course.enrollment_open) redirect('/student?payment_error=unavailable');
+      if (existingEnrollment?.admission_fee_paid) redirect('/student?payment_error=already_admitted');
+      const { data: acceptedApplication } = await supabase.from('course_applications')
+        .select('id').eq('student_id',user.id).eq('course_id',courseId)
+        .eq('delivery_mode',deliveryMode).eq('status','accepted').maybeSingle();
+      if (!acceptedApplication) redirect('/student?payment_error=application_required');
+      feeMonthly = Number(modePrice);
+      feeAdmission = Number(course.admission_fee_bdt ?? 0);
+      amount = feeMonthly + feeAdmission;
+    } else {
+      if (existingEnrollment?.status !== 'active' || !existingEnrollment.admission_fee_paid
+          || existingEnrollment.delivery_mode !== deliveryMode) {
+        redirect('/student?payment_error=admission_required');
+      }
+      feeMonthly = Number(existingEnrollment.monthly_fee_bdt ?? modePrice);
+      feeAdmission = 0;
+      amount = feeMonthly;
+    }
+  } else {
+    // Compatibility path for existing accounts that predate learning-format applications.
+    amount = paymentKind === 'initial'
+      ? Number(course.admission_fee_bdt) + Number(course.monthly_fee_bdt)
+      : Number(course.monthly_fee_bdt);
+    if (paymentKind === 'initial' && existingEnrollment?.admission_fee_paid) redirect('/student?payment_error=already_admitted');
+    if (paymentKind === 'monthly' && (existingEnrollment?.status !== 'active' || !existingEnrollment.admission_fee_paid)) {
+      redirect('/student?payment_error=admission_required');
+    }
+  }
+
+  if (!Number.isSafeInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
 
   const { error } = await supabase.from('manual_payment_submissions').insert({
     student_id: user.id,
@@ -50,6 +89,9 @@ export async function submitManualPayment(formData: FormData) {
     amount_bdt: amount,
     payment_kind: paymentKind,
     billing_period: billingPeriod,
+    delivery_mode: deliveryMode || null,
+    fee_monthly_bdt: feeMonthly,
+    fee_admission_bdt: feeAdmission,
     transaction_id: transactionId,
     sender_phone_last4: senderPhone.slice(-4),
     sender_phone: senderPhone,

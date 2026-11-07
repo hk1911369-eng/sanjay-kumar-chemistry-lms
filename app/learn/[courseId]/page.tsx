@@ -59,4 +59,6 @@ export default async function LearningPage({
     ? await supabase.from('lesson_discussion_reactions').select('discussion_id,user_id,reaction').in('discussion_id', discussionIds)
     : { data: [] as any[] };
 
-  const resources = (rawResources ?? []).map((r: Resource) => ({\n    ...r, file_name: r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT Academy'),\n  }));
+  const resources = (rawResources ?? []).map((r: Resource) => ({
+    ...r, file_name: r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT Academy'),
+  }));

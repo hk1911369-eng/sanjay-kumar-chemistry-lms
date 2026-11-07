@@ -120,3 +120,41 @@ export async function submitQuiz(formData:FormData) {
  const {error}=await supabase.rpc('submit_quiz_attempt',{p_quiz_id:quizId,p_answers:answers});
  redirect(error?'/academic?error=submit':'/academic?saved=result');
 }
+
+export async function createBankQuestion(formData:FormData) {
+ const {supabase,user,role}=await actor();
+ const courseId=String(formData.get('course_id')||'');
+ const question=String(formData.get('question_text')||'').trim();
+ const options=['option_a','option_b','option_c','option_d'].map(k=>String(formData.get(k)||'').trim());
+ const correct=Number(formData.get('correct_option'));
+ const marks=Number(formData.get('marks')||1);
+ const topic=String(formData.get('topic')||'').trim();
+ const chapter=String(formData.get('chapter_label')||'').trim();
+ const explanation=String(formData.get('explanation')||'').trim();
+ const difficulty=String(formData.get('difficulty')||'medium');
+ if(!courseId||question.length<2||options.some(x=>!x)||!Number.isInteger(correct)||correct<0||correct>3||!Number.isFinite(marks)||marks<=0||!['easy','medium','hard'].includes(difficulty)||topic.length>120||chapter.length>120||explanation.length>4000||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=bank_question');
+ const {error}=await supabase.from('question_bank').insert({course_id:courseId,question_text:question,options,correct_option:correct,marks,topic,chapter_label:chapter,difficulty,explanation,created_by:user.id});
+ redirect(error?'/academic?error=bank_question':'/academic?saved=bank_question');
+}
+
+export async function createQuizFromBank(formData:FormData) {
+ const {supabase,user,role}=await actor();
+ const courseId=String(formData.get('course_id')||'');
+ const title=String(formData.get('title')||'').trim();
+ const duration=Number(formData.get('duration_minutes')||30);
+ const ids=formData.getAll('question_ids').map(x=>String(x)).filter(Boolean);
+ if(!courseId||title.length<3||title.length>180||duration<1||duration>300||ids.length<1||ids.length>50||new Set(ids).size!==ids.length||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=bank_quiz');
+ const {data:bank,error:bankError}=await supabase.from('question_bank').select('id,question_text,options,correct_option,marks').eq('course_id',courseId).in('id',ids);
+ if(bankError||!bank||bank.length!==ids.length) redirect('/academic?error=bank_quiz');
+ const byId=new Map(bank.map((q:any)=>[q.id,q]));
+ const ordered=ids.map(id=>byId.get(id)).filter(Boolean) as any[];
+ const total=ordered.reduce((sum,q)=>sum+Number(q.marks),0);
+ const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
+ if(error||!quiz) redirect('/academic?error=bank_quiz');
+ const inserted=await supabase.from('quiz_questions').insert(ordered.map((q:any,i:number)=>({quiz_id:quiz.id,question_text:q.question_text,options:q.options,marks:q.marks,position:i+1}))).select('id');
+ if(inserted.error||!inserted.data||inserted.data.length!==ordered.length){await supabase.from('quizzes').delete().eq('id',quiz.id);redirect('/academic?error=bank_quiz');}
+ const keys=inserted.data.map((row:any,i:number)=>({question_id:row.id,correct_option:ordered[i].correct_option}));
+ const saved=await supabase.from('quiz_answer_keys').insert(keys);
+ if(saved.error){await supabase.from('quizzes').delete().eq('id',quiz.id);redirect('/academic?error=bank_quiz');}
+ redirect('/academic?saved=bank_quiz');
+}

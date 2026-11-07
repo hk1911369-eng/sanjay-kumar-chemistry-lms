@@ -457,3 +457,65 @@ with check (
       and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
   )
 );
+
+
+drop policy if exists "written exams scoped read" on public.written_exams;
+create policy "written exams scoped read" on public.written_exams
+for select to authenticated
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments ca where ca.course_id = written_exams.course_id and ca.teacher_id = (select auth.uid()))
+  )
+  or (
+    published and exists (
+      select 1 from public.enrollments e
+      where e.course_id = written_exams.course_id and e.student_id = (select auth.uid())
+        and e.status = 'active' and e.admission_fee_paid = true
+        and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+    )
+  )
+);
+
+drop policy if exists "written exam questions scoped read" on public.written_exam_questions;
+create policy "written exam questions scoped read" on public.written_exam_questions
+for select to authenticated
+using (
+  exists (
+    select 1 from public.written_exams x
+    where x.id = written_exam_questions.exam_id
+      and (
+        public.current_role() = 'admin'
+        or (
+          public.current_role()::text in ('teacher','staff')
+          and exists (select 1 from public.course_assignments ca where ca.course_id = x.course_id and ca.teacher_id = (select auth.uid()))
+        )
+        or (
+          x.published and exists (
+            select 1 from public.enrollments e
+            where e.course_id = x.course_id and e.student_id = (select auth.uid())
+              and e.status = 'active' and e.admission_fee_paid = true
+              and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+          )
+        )
+      )
+  )
+);
+
+drop policy if exists "students submit written exams" on public.written_exam_submissions;
+create policy "students submit written exams" on public.written_exam_submissions
+for insert to authenticated
+with check (
+  student_id = (select auth.uid()) and score is null and graded_by is null and graded_at is null
+  and exists (
+    select 1 from public.written_exams x
+    join public.enrollments e on e.course_id = x.course_id
+    where x.id = written_exam_submissions.exam_id and x.published
+      and e.student_id = (select auth.uid()) and e.status = 'active'
+      and e.admission_fee_paid = true
+      and e.paid_through >= (date_trunc('month', now() at time zone 'Asia/Dhaka')::date + interval '1 month - 1 day')::date
+      and (x.starts_at is null or now() >= x.starts_at)
+      and (x.ends_at is null or now() <= x.ends_at)
+  )
+);

@@ -1,16 +1,17 @@
-# Sanjay Kumar Chemistry — Platform Rebuild Blueprint
+# JMT Academy — Online & Offline Learning Platform Blueprint
 
 ## Product direction
 
-Build one coherent, mobile-first Chemistry learning platform for HSC 2027, HSC 2028 and university-admission learners. Use ACS Future School as a reference for the quality and breadth of the learning experience, not as a design or content copy. Keep the product focused on Chemistry and on the needs of this coaching centre.
+Build JMT Academy as a complete, mobile-first online-and-offline coaching academy platform. It offers exactly three programme groups: HSC 2027, HSC 2028 and Admission Batch. Admins create and manage courses, subjects, batches, prices, schedules, teachers, images and delivery formats. Use ACS Future School and other mature education platforms as feature-quality references, not as copied branding or content.
 
 The platform must be organised around complete user journeys. A feature is not complete because a button or menu item exists: its database records, permissions, teacher workflow, student experience, admin controls and tests must all work together.
 
 ## Navigation and product areas
 
 ### Public website
-- Home: clear course choices, learning benefits, teacher introduction, sample lesson and calls to action.
-- Course catalogue: separate HSC 2027, HSC 2028 and Admission Chemistry pages with syllabus, chapter plan, teacher, class format, materials, schedule and fees.
+- JMT Academy brand identity, professional hero photography, course imagery, clear calls to action and mobile-first navigation.
+- Dynamic course catalogue populated from admin-created courses; each course has cover image, subjects, syllabus, teaching method, teacher team, schedule, format, pricing and enrolment status.
+- Exactly three programme groups: HSC 2027, HSC 2028 and Admission Batch. Admin can create multiple courses within each group.
 - Free sample classes and public learning resources.
 - Teacher profile, student achievements/testimonials (only real, approved content).
 - Admission instructions, tuition policy, contact, help/FAQ, privacy and terms.
@@ -44,7 +45,8 @@ The platform must be organised around complete user journeys. A feature is not c
 - At-a-glance operations dashboard and alerts.
 - Student CRM: admission profile, guardian information, college/location, photo, course history, payment ledger and status.
 - Staff and teacher accounts, role assignment and course assignment.
-- Course catalogue, curriculum, syllabus, schedule, teachers and publication controls.
+- Full course studio: create/edit/archive courses; choose programme group; set course name, subjects, syllabus, chapters, cover/gallery photos, teaching method, schedule/days, online/offline availability, prices, enrolment capacity, dates, published status and multiple assigned teachers.
+- Enrolment funnel and course purchase/registration management with admin review and seat/capacity controls.
 - Admissions, enrolments, monthly billing, payment verification, due list and payment calendar.
 - Lesson/content moderation and publishing.
 - Timetable, attendance, assignments, exams, question banks and result reports.
@@ -140,7 +142,7 @@ Not yet implemented as complete end-to-end modules:
 - Keep payment and role permissions enforced by server actions and RLS, not by hiding buttons.
 - Do not show a menu item as available until the workflow exists.
 - Do not label a feature complete until it has been built and tested with the relevant user role.
-- Preserve the current verified fees and admission rules unless the owner explicitly changes them.
+- Course pricing is configurable per course and delivery format. Do not hardcode one universal fee across all courses. Preserve historical payment ledgers while adding new pricing rules.
 
 ## Reference features
 
@@ -151,3 +153,16 @@ References:
 - https://acsfutureschool.com/courses
 - https://www.acsfutureschool.com/frb/3c2913ca-d4a6-44c3-8018-a859d1f7be90
 - https://www.acsfutureschool.com/master-plan
+
+
+## JMT Academy business model (owner clarification, 7 November 2026)
+
+- Brand name: **JMT Academy**. Replace the old Sanjay Kumar Chemistry identity across public branding, portal headers, metadata and copy as the redesign rolls out.
+- Programme groups: **HSC 2027**, **HSC 2028** and **Admission Batch**. Admin may create multiple courses under each group.
+- Admin controls the catalogue: course title, subjects, description, photos/cover/gallery, syllabus, teaching method, schedule, teacher team (including multiple teachers per course), delivery modes, prices, capacity, enrolment dates and publication.
+- Delivery choices: **Live + recorded** (live attendance plus replay; higher price); **Recorded-only** (recordings without live teacher interaction; lower price); **Offline academy** (in-person teaching with attendance, payment monitoring and student operations).
+- Offline-enrolled students receive the recorded-class library free as a make-up facility when they miss an in-person class. This entitlement is linked to an active offline enrolment and does not require buying the paid online recorded-only plan.
+- Preserve offline attendance, guardian contact, admission profile, monthly payment calendar, paid-through date, outstanding dues and follow-up tools. Extend enrolment/payment models without deleting historical data.
+- Enrolment journey: course detail -> select eligible delivery format -> submit student/guardian details -> admin review/payment workflow -> activate correct access -> student dashboard.
+- Multiple teachers may be assigned to one course, with admin-controlled permissions. Students see the teacher team on course pages.
+- Use genuine JMT Academy photos and academy-supplied images when available. Build polished upload slots and galleries; never invent teacher portraits, testimonials or academy photographs.

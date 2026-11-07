@@ -110,7 +110,7 @@ revoke all on public.written_exam_answer_keys from anon;
 -- Enforce marks limits and grader identity at the database boundary as well.
 create or replace function public.validate_written_exam_grade()
 returns trigger language plpgsql set search_path=public
-as $
+as $$
 declare v_total numeric(8,2);
 begin
  if new.score is not null then
@@ -122,7 +122,7 @@ begin
  end if;
  return new;
 end;
-$;
+$$;
 revoke all on function public.validate_written_exam_grade() from public,anon,authenticated;
 drop trigger if exists validate_written_exam_grade_trigger on public.written_exam_submissions;
 create trigger validate_written_exam_grade_trigger before update of score,graded_by,graded_at on public.written_exam_submissions

@@ -45,7 +45,6 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
     byCourse.set(row.course_id, current);
   }
   const currentMonth = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit' }).format(new Date());
-  const isCurrentMonth = currentMonth === monthKey;
   const dueStudents = (enrollments ?? []).filter(enrollment => {
     const paidThrough = enrollment.paid_through;
     return !paidThrough || paidThrough < end.toISOString().slice(0, 10);

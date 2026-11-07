@@ -51,6 +51,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'overview', label: 'Admin overview', href: '/admin', icon: '⌂' },
       { key: 'students', label: 'Student records', href: '/students/manage', icon: '♙' },
       { key: 'payments', label: 'Payment reviews', href: '/admin#payment-reviews', icon: '৳' },
+      { key: 'finance', label: 'Finance & accounts', href: '/admin/finance', icon: '▥' },
       { key: 'settings', label: 'Payment settings', href: '/admin#payment-settings', icon: '⚙' },
       { key: 'teachers', label: 'Teacher assignments', href: '/admin#teacher-assignments', icon: '♧' },
       { key: 'announcements', label: 'Announcements', href: '/admin#announcements', icon: '◉' },

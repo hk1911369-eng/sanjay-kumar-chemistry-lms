@@ -32,8 +32,8 @@ export default async function FinanceCentre({ searchParams }: { searchParams: Pr
   const { data: actor } = await db.from('profiles').select('role').eq('id', user.id).single();
   if (actor?.role !== 'admin') redirect('/portal');
 
-  const startIso = start.toISOString();
-  const endIso = end.toISOString();
+  const startIso = new Date(start.getTime() - 6 * 60 * 60 * 1000).toISOString();
+  const endIso = new Date(end.getTime() - 6 * 60 * 60 * 1000).toISOString();
   const [{ data: payments }, { count: pendingCount }, { data: enrollments }, { data: courses }, { data: entries }, { data: students }] = await Promise.all([
     db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,amount_bdt,transaction_id,status,created_at,reviewed_at').eq('status', 'approved').gte('reviewed_at', startIso).lt('reviewed_at', endIso).order('reviewed_at', { ascending: false }).limit(10000),
     db.from('manual_payment_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),

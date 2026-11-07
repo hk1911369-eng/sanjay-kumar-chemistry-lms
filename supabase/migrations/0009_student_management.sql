@@ -263,3 +263,44 @@ using (
     where a.course_id = enrollments.course_id and a.teacher_id = auth.uid()
   )
 );
+
+-- A narrow, permission-checked payment calendar for assigned staff.
+-- It intentionally omits transaction IDs, wallet provider and sender numbers.
+create or replace function public.get_student_payment_calendar(p_student_id uuid)
+returns table (
+  course_id uuid,
+  payment_kind text,
+  billing_period date,
+  amount_bdt integer,
+  payment_status public.payment_status,
+  submitted_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  if public.current_role() = 'admin' then
+    return query
+      select m.course_id, m.payment_kind, m.billing_period, m.amount_bdt, m.status, m.created_at
+      from public.manual_payment_submissions m
+      where m.student_id = p_student_id
+      order by m.billing_period desc, m.created_at desc;
+  elsif public.current_role()::text in ('teacher','staff') then
+    return query
+      select m.course_id, m.payment_kind, m.billing_period, m.amount_bdt, m.status, m.created_at
+      from public.manual_payment_submissions m
+      join public.course_assignments a on a.course_id = m.course_id and a.teacher_id = auth.uid()
+      where m.student_id = p_student_id
+      order by m.billing_period desc, m.created_at desc;
+  else
+    raise exception 'Not authorized to view this payment calendar';
+  end if;
+end;
+$$;
+revoke all on function public.get_student_payment_calendar(uuid) from public, anon;
+grant execute on function public.get_student_payment_calendar(uuid) to authenticated;

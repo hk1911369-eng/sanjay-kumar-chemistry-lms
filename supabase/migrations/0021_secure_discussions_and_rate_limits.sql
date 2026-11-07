@@ -17,6 +17,16 @@ begin
     if auth.uid() is not null and new.author_id <> auth.uid() then
       raise exception 'Discussion author must match the signed-in user' using errcode = '42501';
     end if;
+    v_role := public.current_role()::text;
+    v_can_moderate := v_role = 'admin' or (
+      v_role in ('teacher','staff') and exists (
+        select 1 from public.course_assignments a
+        where a.course_id = new.course_id and a.teacher_id = auth.uid()
+      )
+    );
+    if new.is_pinned and not v_can_moderate then
+      raise exception 'Only assigned teachers and admins can pin discussions' using errcode = '42501';
+    end if;
     new.author_name := coalesce(v_name, 'Member');
     return new;
   end if;

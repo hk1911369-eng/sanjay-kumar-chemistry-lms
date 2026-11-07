@@ -30,7 +30,8 @@ export async function saveFinanceEntry(formData: FormData) {
       || category.length < 2 || category.length > 80
       || description.length < 2 || description.length > 500
       || !Number.isSafeInteger(amount) || amount < 1 || amount > 100000000
-      || reference.length > 120 || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)) {
+      || reference.length > 120 || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)
+      || (entryType === 'cash_income' && ['bkash','nagad','rocket'].includes(paymentMethod))) {
     redirect('/admin/finance?error=invalid' + (returnMonth ? '&month=' + returnMonth : ''));
   }
 

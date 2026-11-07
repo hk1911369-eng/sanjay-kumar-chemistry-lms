@@ -13,7 +13,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   if (!user) redirect('/login');
   const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user.id).single();
   if (profile?.role !== 'admin') redirect('/portal');
-  const [{ count: students }, { count: pending }, { count: enrollments }, { data: courses }, { data: submissions }, { data: paymentSettings }, { data: teachers }, { data: assignments }, { data: notices }] = await Promise.all([
+  const [studentsResult,pendingResult,enrollmentResult,coursesResult,submissionResult,settingsResult,teachersResult,assignmentsResult,noticesResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
     supabase.from('manual_payment_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
     supabase.from('enrollments').select('*',{count:'exact',head:true}).eq('status','active'),
@@ -24,6 +24,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     supabase.from('course_assignments').select('id,course_id,teacher_id'),
     supabase.from('notices').select('id,title,body,published_at,created_at').order('created_at',{ascending:false}).limit(20),
   ]);
+  const {count:students}=studentsResult;const {count:pending}=pendingResult;const {count:enrollments}=enrollmentResult;
+  const {data:courses}=coursesResult;const {data:paymentSettings}=settingsResult;const {data:teachers}=teachersResult;
+  const {data:assignments}=assignmentsResult;const {data:notices}=noticesResult;
+  let submissions: any[] | null = submissionResult.data;
+  if(submissionResult.error){
+    const fallback=await supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,sender_phone,sender_phone_last4,status,created_at').eq('status','pending_review').order('created_at',{ascending:true}).limit(100);
+    submissions=fallback.data;
+  }
   const studentIds = [...new Set((submissions ?? []).map(p => p.student_id))];
   const courseIds = [...new Set((submissions ?? []).map(p => p.course_id))];
   const [{ data: studentsData }, { data: courseData }] = await Promise.all([

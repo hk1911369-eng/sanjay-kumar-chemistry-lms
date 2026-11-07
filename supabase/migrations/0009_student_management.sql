@@ -304,3 +304,110 @@ end;
 $$;
 revoke all on function public.get_student_payment_calendar(uuid) from public, anon;
 grant execute on function public.get_student_payment_calendar(uuid) to authenticated;
+
+
+-- Give the new Staff role the same assigned-course content scope as Teachers.
+drop policy if exists "teachers see own assignments and admins all" on public.course_assignments;
+create policy "teaching staff see own assignments and admins all" on public.course_assignments for select
+using (
+  (teacher_id = auth.uid() and public.current_role()::text in ('teacher','staff'))
+  or public.current_role() = 'admin'
+);
+
+drop policy if exists "courses visible by role" on public.courses;
+create policy "courses visible by role" on public.courses for select
+using (
+  public.current_role() = 'admin'
+  or (is_published and public.current_role() = 'student')
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = courses.id and a.teacher_id = auth.uid())
+  )
+);
+
+drop policy if exists "chapters visible to enrolled students and assigned teachers" on public.chapters;
+create policy "chapters visible to enrolled students and assigned teachers" on public.chapters for select
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = chapters.course_id and a.teacher_id = auth.uid())
+  )
+  or (published and exists (
+    select 1 from public.enrollments e
+    where e.course_id = chapters.course_id and e.student_id = auth.uid() and e.status = 'active'
+  ))
+);
+drop policy if exists "assigned teachers and admins manage chapters" on public.chapters;
+create policy "assigned teachers and admins manage chapters" on public.chapters for all
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = chapters.course_id and a.teacher_id = auth.uid())
+  )
+)
+with check (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = chapters.course_id and a.teacher_id = auth.uid())
+  )
+);
+
+drop policy if exists "lessons visible by enrollment or assignment" on public.lessons;
+create policy "lessons visible by enrollment or assignment" on public.lessons for select
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = lessons.course_id and a.teacher_id = auth.uid())
+  )
+  or (is_published and exists (
+    select 1 from public.enrollments e
+    where e.course_id = lessons.course_id and e.student_id = auth.uid() and e.status = 'active'
+  ))
+);
+drop policy if exists "assigned teachers and admins manage lessons" on public.lessons;
+create policy "assigned teachers and admins manage lessons" on public.lessons for all
+using (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = lessons.course_id and a.teacher_id = auth.uid())
+  )
+)
+with check (
+  public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (select 1 from public.course_assignments a
+      where a.course_id = lessons.course_id and a.teacher_id = auth.uid())
+  )
+);
+
+drop policy if exists "students read own lesson progress" on public.lesson_progress;
+create policy "students read own lesson progress" on public.lesson_progress for select
+using (
+  student_id = auth.uid() or public.current_role() = 'admin'
+  or (
+    public.current_role()::text in ('teacher','staff')
+    and exists (
+      select 1 from public.lessons l
+      join public.course_assignments a on a.course_id = l.course_id
+      where l.id = lesson_progress.lesson_id and a.teacher_id = auth.uid()
+    )
+  )
+);
+
+-- Admins may provision Teacher and Staff roles for existing confirmed accounts.
+drop policy if exists "admins update any profile" on public.profiles;
+create policy "admins update any profile" on public.profiles for update to authenticated
+using (public.current_role() = 'admin')
+with check (public.current_role() = 'admin');

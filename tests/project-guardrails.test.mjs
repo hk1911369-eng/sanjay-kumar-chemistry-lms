@@ -3,15 +3,21 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('catalogue migration seeds exactly the three authorized ৳700 courses', async () => {
-  const sql = await read('supabase/migrations/0003_hsc_admission_configuration.sql');
-  const guard = await read('supabase/migrations/0005_auth_roles_and_course_guardrails.sql');
-  assert.match(sql, /HSC 2027 Chemistry/);
-  assert.match(sql, /HSC 2028 Chemistry/);
-  assert.match(sql, /Admission Chemistry/);
-  assert.match(sql, /700, false/);
-  assert.match(guard, /new\.price_bdt <> 700/);
-  assert.match(guard, /hsc-2027-chemistry.*hsc-2028-chemistry.*admission-chemistry/s);
+test('courses are created only by admins and are not seeded by new feature migrations', async () => {
+  const action = await read('app/actions/course-studio.ts');
+  const migrations = [
+    'supabase/migrations/0015_jmt_academy_course_studio.sql',
+    'supabase/migrations/0016_course_applications.sql',
+    'supabase/migrations/0021_secure_discussions_and_rate_limits.sql',
+  ];
+  assert.match(action, /profile\?\.role !== 'admin'/);
+  assert.match(action, /HSC 2027/);
+  assert.match(action, /HSC 2028/);
+  assert.match(action, /Admission Batch/);
+  for (const path of migrations) {
+    const sql = await read(path);
+    assert.doesNotMatch(sql, /insert\s+into\s+public\.courses/i);
+  }
 });
 
 test('payment submission is student-owned and review is admin-only through RPC', async () => {

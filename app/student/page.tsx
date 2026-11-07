@@ -27,12 +27,13 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
   const avatarUrl = avatarData?.signedUrl ?? null;
 
-  const [{ data: courses }, { data: enrollments }, { data: payments }, { data: settings }, { data: notices }] = await Promise.all([
+  const [{ data: courses }, { data: enrollments }, { data: payments }, { data: settings }, { data: notices }, { data: studentNotes }] = await Promise.all([
     supabase.from('courses').select('id,title,description,monthly_fee_bdt,admission_fee_bdt').eq('is_published', true).order('title'),
     supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through').eq('student_id', user.id),
     supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
     supabase.from('private_payment_settings').select('provider,receiving_number,is_enabled'),
     supabase.from('notices').select('id,title,body,published_at').not('published_at','is',null).order('published_at',{ascending:false}).limit(10),
+    supabase.from('student_followups').select('id,category,severity,details,follow_up_status,created_at').eq('student_id',user.id).eq('visible_to_student',true).order('created_at',{ascending:false}).limit(10),
   ]);
   const enrollmentByCourse = new Map((enrollments ?? []).map(e => [e.course_id, e]));
   const pending = new Set((payments ?? []).filter(p => p.status === 'pending_review').map(p => `${p.course_id}:${p.payment_kind}:${p.billing_period}`));
@@ -83,6 +84,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         <button className="auth-submit">Save complete profile</button>
       </form>
       <h2>Announcements</h2>{(notices??[]).length===0?<p className="muted">No announcements.</p>:<div className="portal-grid">{notices!.map(n=><article className="portal-card" key={n.id}><h3>{n.title}</h3><p>{n.body}</p></article>)}</div>}
+      <h2>Teacher feedback</h2>{(studentNotes??[]).length===0?<p className="muted">No teacher feedback has been shared with you.</p>:<div className="portal-grid">{studentNotes!.map(note=><article className="portal-card" key={note.id}><b>{note.category.replace('_',' ').toUpperCase()} · {note.severity.toUpperCase()}</b><p>{note.details}</p><p className="muted">Status: {note.follow_up_status} · {new Date(note.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p></article>)}</div>}
       <h2>Available courses</h2>
       <div className="portal-grid">{(courses ?? []).map(c => {
         const enrollment = enrollmentByCourse.get(c.id);

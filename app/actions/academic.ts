@@ -158,3 +158,63 @@ export async function createQuizFromBank(formData:FormData) {
  if(saved.error){await supabase.from('quizzes').delete().eq('id',quiz.id);redirect('/academic?error=bank_quiz');}
  redirect('/academic?saved=bank_quiz');
 }
+
+export async function createWrittenExam(formData:FormData) {
+ const {supabase,user,role}=await actor();
+ const courseId=String(formData.get('course_id')||'');
+ const title=String(formData.get('title')||'').trim();
+ const instructions=String(formData.get('instructions')||'').trim();
+ const start=String(formData.get('starts_at')||'');
+ const end=String(formData.get('ends_at')||'');
+ const raw=String(formData.get('questions_json')||'');
+ if(!courseId||title.length<3||title.length>180||instructions.length>10000||raw.length>50000||(start&&end&&new Date(end)<=new Date(start))||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=written_exam');
+ let questions:any[];
+ try { questions=JSON.parse(raw); } catch { redirect('/academic?error=written_format'); }
+ if(!Array.isArray(questions)||questions.length<1||questions.length>30||questions.some(q=>{
+  if(!q||typeof q!=='object'||typeof q.question_text!=='string'||q.question_text.trim().length<2||q.question_text.length>5000||!['mcq','short_answer','long_answer'].includes(q.question_type)||!Number.isFinite(Number(q.marks))||Number(q.marks)<=0) return true;
+  if(q.question_type==='mcq') return !Array.isArray(q.options)||q.options.length<2||q.options.length>6||q.options.some((x:any)=>typeof x!=='string'||!x.trim())||!Number.isInteger(q.correct_option)||q.correct_option<0||q.correct_option>=q.options.length;
+  return (q.options&&q.options.length>0)||typeof q.model_answer!=='string'||q.model_answer.length>5000;
+ })) redirect('/academic?error=written_format');
+ const total=questions.reduce((sum,q)=>sum+Number(q.marks),0);
+ const {data:exam,error}=await supabase.from('written_exams').insert({course_id:courseId,title,instructions,starts_at:start?new Date(start).toISOString():null,ends_at:end?new Date(end).toISOString():null,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
+ if(error||!exam) redirect('/academic?error=written_exam');
+ const rows=questions.map((q,i)=>({exam_id:exam.id,question_type:q.question_type,question_text:q.question_text.trim(),options:q.question_type==='mcq'?q.options:[],marks:Number(q.marks),position:i+1}));
+ const inserted=await supabase.from('written_exam_questions').insert(rows).select('id');
+ if(inserted.error||!inserted.data||inserted.data.length!==rows.length){await supabase.from('written_exams').delete().eq('id',exam.id);redirect('/academic?error=written_exam');}
+ const keys=inserted.data.map((row:any,i:number)=>({question_id:row.id,correct_option:questions[i].question_type==='mcq'?questions[i].correct_option:null,model_answer:questions[i].question_type==='mcq'?'':String(questions[i].model_answer||'').trim()}));
+ const saved=await supabase.from('written_exam_answer_keys').insert(keys);
+ if(saved.error){await supabase.from('written_exams').delete().eq('id',exam.id);redirect('/academic?error=written_exam');}
+ redirect('/academic?saved=written_exam');
+}
+
+export async function submitWrittenExam(formData:FormData) {
+ const {supabase,user,role}=await actor();
+ if(role!=='student') redirect('/portal');
+ const examId=String(formData.get('exam_id')||'');
+ const {data:exam}=await supabase.from('written_exams').select('id,starts_at,ends_at,published').eq('id',examId).eq('published',true).maybeSingle();
+ const now=Date.now();
+ if(!exam||(exam.starts_at&&now<new Date(exam.starts_at).getTime())||(exam.ends_at&&now>new Date(exam.ends_at).getTime())) redirect('/academic?error=written_unavailable');
+ const {data:qs}=await supabase.from('written_exam_questions').select('id,question_type').eq('exam_id',examId);
+ if(!qs?.length) redirect('/academic?error=written_submission');
+ const answers:Record<string,string>={};
+ for(const q of qs) {
+  const value=String(formData.get('answer_'+q.id)||'').trim();
+  if(!value||value.length>12000) redirect('/academic?error=written_answers');
+  answers[q.id]=value;
+ }
+ const {error}=await supabase.from('written_exam_submissions').insert({exam_id:examId,student_id:user.id,answers,submitted_at:new Date().toISOString()});
+ redirect(error?'/academic?error=written_duplicate':'/academic?saved=written_submission');
+}
+
+export async function gradeWrittenExam(formData:FormData) {
+ const {supabase,user,role}=await actor();
+ if(!['admin','teacher','staff'].includes(role)) redirect('/portal');
+ const submissionId=String(formData.get('submission_id')||'');
+ const score=Number(formData.get('score'));
+ const feedback=String(formData.get('teacher_feedback')||'').trim();
+ const {data:submission}=await supabase.from('written_exam_submissions').select('id,exam_id,exam:written_exams(course_id,total_marks)').eq('id',submissionId).maybeSingle();
+ const exam:any=submission?.exam;
+ if(!submission||!exam||!await canTeach(supabase,user.id,role,exam.course_id)||!Number.isFinite(score)||score<0||score>Number(exam.total_marks)||feedback.length>5000) redirect('/academic?error=written_grading');
+ const {error}=await supabase.from('written_exam_submissions').update({score,teacher_feedback:feedback,graded_by:user.id,graded_at:new Date().toISOString()}).eq('id',submissionId);
+ redirect(error?'/academic?error=written_grading':'/academic?saved=written_grade');
+}

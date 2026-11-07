@@ -17,7 +17,7 @@ export async function saveLesson(formData: FormData) {
   const chapterId = String(formData.get('chapter_id') ?? '').trim() || null;
   if (!courseId || title.length < 2 || title.length > 180 || content.length > 100000 || (videoUrl && !/^https:\/\//i.test(videoUrl))) redirect('/teacher?lesson_error=invalid');
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin' && profile?.role !== 'teacher') redirect('/portal');
+  if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
   const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
   const { data: last } = await supabase.from('lessons').select('position').eq('course_id', courseId).order('position', { ascending: false }).limit(1).maybeSingle();
@@ -52,7 +52,7 @@ export async function assignTeacher(formData: FormData) {
   const teacherId = String(formData.get('teacher_id') ?? '');
   const [{ data: course }, { data: teacher }] = await Promise.all([
     supabase.from('courses').select('id').eq('id', courseId).maybeSingle(),
-    supabase.from('profiles').select('id').eq('id', teacherId).eq('role', 'teacher').maybeSingle()
+    supabase.from('profiles').select('id').eq('id', teacherId).in('role', ['teacher','staff']).maybeSingle()
   ]);
   if (!course || !teacher) redirect('/admin?assignment_error=invalid');
   const { error } = await supabase.from('course_assignments').upsert({ course_id: courseId, teacher_id: teacherId, assigned_by: user.id }, { onConflict: 'course_id,teacher_id' });

@@ -10,7 +10,9 @@ export default async function PaymentReceipt({params}:{params:Promise<{id:string
  const {id}=await params;
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
  const {data:actor}=await db.from('profiles').select('role,full_name,student_code').eq('id',user.id).single();
- const {data:payment}=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,fee_monthly_bdt,fee_admission_bdt,amount_bdt,transaction_id,status,created_at,reviewed_at,reviewed_by').eq('id',id).maybeSingle();
+ const paymentResult=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,fee_monthly_bdt,fee_admission_bdt,amount_bdt,transaction_id,status,created_at,reviewed_at,reviewed_by').eq('id',id).maybeSingle();
+ let payment:any=paymentResult.data;
+ if(paymentResult.error){const fallback=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,status,created_at,reviewed_at,reviewed_by').eq('id',id).maybeSingle();payment=fallback.data?{...fallback.data,delivery_mode:null,fee_monthly_bdt:null,fee_admission_bdt:null}:null;}
  if(!payment||payment.status!=='approved'||(payment.student_id!==user.id&&actor?.role!=='admin'))notFound();
  const [{data:student},{data:course},{data:academy}]=await Promise.all([
   db.from('profiles').select('full_name,student_code').eq('id',payment.student_id).maybeSingle(),

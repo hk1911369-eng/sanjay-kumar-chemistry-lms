@@ -6,6 +6,7 @@ umask 077
 : "${JMT_RESTORE_FILE:?Set JMT_RESTORE_FILE to an existing custom-format dump}"
 : "${JMT_RESTORE_TARGET:?Set JMT_RESTORE_TARGET=test}"
 : "${JMT_RESTORE_CONFIRMATION:?Type RESTORE JMT TEST DATABASE to continue}"
+: "${JMT_TEST_DB_HOST:?Set the expected test database host}"
 
 if [[ "$JMT_RESTORE_TARGET" != "test" ]]; then
   echo "This script is test-only and refuses production restores." >&2
@@ -14,6 +15,11 @@ fi
 
 if [[ "$JMT_RESTORE_CONFIRMATION" != "RESTORE JMT TEST DATABASE" ]]; then
   echo "Restore confirmation did not match." >&2
+  exit 2
+fi
+
+if [[ "$JMT_RESTORE_DATABASE_URL" != *"$JMT_TEST_DB_HOST"* ]]; then
+  echo "Refusing: restore URL does not match JMT_TEST_DB_HOST." >&2
   exit 2
 fi
 

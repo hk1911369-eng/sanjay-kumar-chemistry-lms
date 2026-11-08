@@ -22,6 +22,8 @@ test('CSV escapes formula-leading cells without corrupting ordinary text', () =>
   assert.equal(csvCell('+cmd'), "\"'+cmd\"");
   assert.equal(csvCell('@value'), "\"'@value\"");
   assert.equal(csvCell('\tstart'), "\"'\tstart\"");
+  assert.equal(csvCell(' =SUM(A1)'), "\"' =SUM(A1)\"");
+  assert.equal(csvCell('\n=SUM(A1)'), "\"'\n=SUM(A1)\"");
   assert.equal(csvCell('rahim'), '"rahim"');
   assert.equal(csvCell('tab\tvalue'), '"tab\tvalue"');
   assert.equal(csvCell('t123'), '"t123"');

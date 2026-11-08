@@ -106,6 +106,25 @@ test('Learning knowledge graph rejects cross-subject and circular links at datab
   assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_lesson_concept_subject()'));
 });
 
+test('revision completion is transactional and limited to the student's own active course', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213452_learning_os_secure_revision_task_completion.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("public.current_role())::text IS DISTINCT FROM 'student'"));
+  assert.ok(migration.includes('student_id = auth.uid()'));
+  assert.ok(migration.includes("status = 'pending'"));
+  assert.ok(migration.includes('FOR UPDATE'));
+  assert.ok(migration.includes("e.status = 'active'"));
+  assert.ok(migration.includes("event_type, source_id, occurred_at"));
+  assert.ok(migration.includes("'revision_completed'"));
+  assert.ok(migration.includes('GRANT EXECUTE ON FUNCTION public.complete_revision_task(uuid) TO authenticated'));
+});
+
+test('lesson completion events are deduplicated and advance goals only once', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213521_learning_os_dedupe_lesson_completion_progress.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('CREATE UNIQUE INDEX IF NOT EXISTS learning_events_one_lesson_completion'));
+  assert.ok(migration.includes("NEW.event_type = 'lesson_completed' AND NEW.lesson_id IS NOT NULL"));
+  assert.ok(migration.includes("status = CASE WHEN current_value + 1 >= target_value THEN 'completed' ELSE status END"));
+});
+
 test('Learning OS goals count only verified lesson completions', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213407_learning_os_verified_lesson_goals_and_events.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("event_type = 'lesson_completed'"));

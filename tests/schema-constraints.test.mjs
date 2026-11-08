@@ -92,3 +92,10 @@ test('anonymous course browsing does not depend on authenticated role helpers', 
   assert.ok(adminMigration.includes('ALTER POLICY "admins manage courses"'));
   assert.ok(adminMigration.includes('TO authenticated'));
 });
+ 
+test('anonymous notice reads do not evaluate the admin role helper', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108130902_scope_notice_admin_policy_to_authenticated.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('ALTER POLICY "admins manage notices"'));
+  assert.ok(migration.includes('ON public.notices'));
+  assert.ok(migration.includes('TO authenticated'));
+});

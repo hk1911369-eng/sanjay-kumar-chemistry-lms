@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('courses are created only by admins and are not seeded by new feature migrations', async () => {
+test('courses are admin-created with flexible programme labels and are not seeded by feature migrations', async () => {
   const action = await read('app/actions/course-studio.ts');
   const migrations = [
     'supabase/migrations/0015_jmt_academy_course_studio.sql',
@@ -11,9 +11,10 @@ test('courses are created only by admins and are not seeded by new feature migra
     'supabase/migrations/0021_secure_discussions_and_rate_limits.sql',
   ];
   assert.match(action, /me\?\.role!=='admin'/);
-  assert.match(action, /HSC 2027/);
-  assert.match(action, /HSC 2028/);
-  assert.match(action, /Admission Batch/);
+  assert.match(action, /group\.length>80/);
+  assert.match(action, /programme_group:group/);
+  assert.match(action, /Medical\|engineering/i);
+  assert.doesNotMatch(action, /HSC 2027|HSC 2028|Admission Batch/);
   for (const path of migrations) {
     const sql = await read(path);
     assert.doesNotMatch(sql, /insert\s+into\s+public\.courses/i);

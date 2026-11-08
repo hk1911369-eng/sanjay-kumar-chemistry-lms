@@ -11,12 +11,20 @@ test('attendance dates must be real calendar dates and cannot be future dates in
   assert.equal(isValidAttendanceDate('2026-13-01', now), false);
   assert.equal(isValidAttendanceDate('08-11-2026', now), false);
   assert.equal(isValidAttendanceDate('2026-11-09', now), false);
+  assert.equal(isValidAttendanceDate('2026-02-31', now), false);
+  assert.equal(isValidAttendanceDate('2026-11-8', now), false);
 });
 
 test('CSV escapes formula-leading cells without corrupting ordinary text', () => {
   assert.equal(csvCell('-1+1'), '"\'-1+1"');
   assert.equal(csvCell('=SUM(A1)'), '"\'=SUM(A1)"');
   assert.equal(csvCell('rahim'), '"rahim"');
+  assert.equal(csvCell('+cmd'), '"\\'+cmd"');
+  assert.equal(csvCell('@value'), '"\\'@value"');
+  assert.equal(csvCell('tab\\tvalue'), '"tab\\tvalue"');
+  assert.equal(csvCell('t123'), '"t123"');
+  assert.equal(csvCell('r123'), '"r123"');
+  assert.equal(csvCell('a"b'), '"a""b"');
 });
 
 test('CSV output uses real CRLF line breaks for Excel', () => {

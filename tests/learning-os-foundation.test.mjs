@@ -53,6 +53,15 @@ test('Learning OS staff visibility does not leak the whole academic twin across 
   assert.ok(migration.includes('e.student_id = learner_concept_mastery.student_id'));
 });
 
+test('course studio writes universal subject links whenever a course is created or edited', async () => {
+  const action = await readFile(new URL('../app/actions/course-studio.ts', import.meta.url), 'utf8');
+  assert.ok(action.includes("from('academic_subjects').upsert(subjectRows"));
+  assert.ok(action.includes("from('course_subjects').upsert(subjectLinks"));
+  assert.ok(action.includes("from('course_subjects').delete()"));
+  assert.ok(action.includes("subject_id:subjectIdBySlug.get(row.slug)!"));
+  assert.ok(action.includes("codePointAt(0)"), 'non-Latin subject names receive stable valid slugs');
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

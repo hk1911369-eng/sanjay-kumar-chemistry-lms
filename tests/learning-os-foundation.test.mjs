@@ -21,13 +21,17 @@ test('Learning OS foundation is subject-agnostic and additive', async () => {
 
 test('Learning OS sensitive derived records are read-only to client roles', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108211708_learning_os_multi_subject_foundation.sql', import.meta.url), 'utf8');
+  assert.match(
+    migration,
+    /GRANT SELECT ON public\.learner_profiles, public\.learner_concept_mastery,\s+public\.learner_mistake_memory, public\.revision_tasks TO authenticated;/,
+  );
   for (const table of ['learner_profiles','learner_concept_mastery','learner_mistake_memory','revision_tasks']) {
-    assert.ok(migration.includes(`GRANT SELECT ON public.${table}`), table);
+    assert.doesNotMatch(
+      migration,
+      new RegExp(`GRANT\\s+(?:INSERT|UPDATE|DELETE)[^;]*public\\.${table}`, 'i'),
+      `${table} must not grant client writes`,
+    );
   }
-  assert.equal(migration.includes('GRANT INSERT, UPDATE, DELETE ON public.learner_profiles'), false);
-  assert.equal(migration.includes('GRANT INSERT, UPDATE, DELETE ON public.learner_concept_mastery'), false);
-  assert.equal(migration.includes('GRANT INSERT, UPDATE, DELETE ON public.learner_mistake_memory'), false);
-  assert.equal(migration.includes('GRANT INSERT, UPDATE, DELETE ON public.revision_tasks'), false);
 });
 
 test('Learning OS event ingestion cannot manufacture assessment scores or cross-course links', async () => {

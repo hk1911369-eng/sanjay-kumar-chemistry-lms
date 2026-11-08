@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState } from 'react';
 import { getLessonResourceUrl } from '@/app/actions/learning';
@@ -29,7 +30,7 @@ export function LessonResourceAccess({ resource }: { resource: {
     {error && <p className="form-error" role="status">{error}</p>}
     {previewUrl && resource.resource_type === 'video' && <div className="resource-video-shell jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video className="resource-video" controls playsInline preload="metadata" src={previewUrl}>Your browser does not support video playback.</video></div>}
     {previewUrl && resource.resource_type === 'pdf' && <iframe className="pdf-preview" src={previewUrl} title={resource.file_name}/>}
-    {previewUrl && resource.resource_type === 'image' && <a href={previewUrl} target="_blank" rel="noreferrer"><img className="resource-image" src={previewUrl} alt={resource.file_name}/></a>}
+    {previewUrl && resource.resource_type === 'image' && <a href={previewUrl} target="_blank" rel="noreferrer"><Image className="resource-image" src={previewUrl} alt={resource.file_name} width={1200} height={900} unoptimized/></a>}
     {previewUrl && !['video','pdf','image'].includes(resource.resource_type) && <a href={previewUrl} target="_blank" rel="noreferrer">Open file in a new tab</a>}
   </div>;
 }

@@ -130,7 +130,7 @@ test('attendance visibility and writes are limited to students enrolled in assig
   const migration = await readFile(new URL('../supabase/migrations/20261108134500_enforce_attendance_course_enrollment_scope.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('ALTER POLICY "assigned staff mark attendance"'));
   assert.ok(migration.includes('ALTER POLICY "attendance scoped read"'));
-  assert.equal((migration.match(/FROM public\\.enrollments e/g) || []).length, 3);
-  assert.equal((migration.match(/FROM public\\.course_assignments a/g) || []).length, 3);
+  assert.equal((migration.match(/FROM public\.enrollments e/g) || []).length, 3);
+  assert.equal((migration.match(/FROM public\.course_assignments a/g) || []).length, 3);
   assert.ok(migration.includes('marked_by = (SELECT auth.uid())'));
 });

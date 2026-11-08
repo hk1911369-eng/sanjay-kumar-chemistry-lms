@@ -106,7 +106,7 @@ test('Learning knowledge graph rejects cross-subject and circular links at datab
   assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_lesson_concept_subject()'));
 });
 
-test("revision completion is transactional and limited to the student's own active course", async () => {
+test(`revision completion is transactional and limited to the student's own active course`, async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213452_learning_os_secure_revision_task_completion.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("public.current_role())::text IS DISTINCT FROM 'student'"));
   assert.ok(migration.includes('student_id = auth.uid()'));
@@ -167,6 +167,11 @@ test('applied lesson completion deduplication migration is recorded in source co
 test('redundant lesson completion index is removed while canonical index remains', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213723_learning_os_remove_redundant_lesson_completion_index.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('DROP INDEX IF EXISTS public.learning_events_one_lesson_completion_idx'));
+});
+
+test('stale permissive learning-event policy is removed', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213855_learning_os_remove_permissive_learning_event_insert_policy.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "students record own learning events" ON public.learning_events'));
 });
 
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {

@@ -136,7 +136,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
       ? <p className="learning-os-muted">Personal lesson recommendations will appear when a topic has at least three verified learning signals and a published lesson is available in a currently paid course. Recommendations are based on evidence, not guesses.</p>
       : <ul className="learning-os-list">{recommendations.map(item => <li key={item.lessonId}>
           <b>{item.lessonTitle}</b>
-          <small className="learning-os-muted"> Revisit {item.conceptTitle} · {Math.round(item.masteryScore * 100)}% current mastery · {courseNames.get(item.courseId) ?? 'Your course'}</small>
+          <small className="learning-os-muted"> Revisit {item.conceptTitle} · {item.masteryScore===null?'Prerequisite not assessed yet':Math.round(item.masteryScore*100)+'% current mastery'} · {item.rootCauseFor?'Prerequisite to revisit for '+item.rootCauseFor:'Evidence-backed weak topic'} · {courseNames.get(item.courseId) ?? 'Your course'}</small>
           <p><Link href={`/learn/${item.courseId}#lesson-${item.lessonId}`}>Study this lesson →</Link></p>
         </li>)}</ul>}
 

@@ -1,11 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { randomUUID } from 'node:crypto';
+import { isAllowedImageSignature } from '@/lib/image-signature.js';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { currentBangladeshBillingPeriod } from '@/lib/pricing';
 import { paymentReviewErrorCode } from '@/lib/payment-review-error.js';
-import { isAllowedImageSignature } from '@/lib/image-signature.js';
 
 const providers = ['bkash', 'nagad', 'rocket'] as const;
 type Provider = (typeof providers)[number];
@@ -26,14 +27,12 @@ export async function submitManualPayment(formData: FormData) {
   const rawSenderPhone = String(formData.get('sender_phone') ?? '').trim();
   const senderPhone = rawSenderPhone ? normalizeBangladeshMobile(rawSenderPhone) : null;
   const proof = formData.get('payment_proof');
-  const allowedProofTypes = ['image/jpeg','image/png','image/webp'];
-  if (!(proof instanceof File) || proof.size < 12 || proof.size > 3 * 1024 * 1024 || !allowedProofTypes.includes(proof.type)) redirect('/student?payment_error=invalid');
-  const proofBytes = new Uint8Array(await proof.arrayBuffer());
-  if (!isAllowedImageSignature(proof.type, proofBytes)) redirect('/student?payment_error=invalid');
   const billingPeriod = currentBangladeshBillingPeriod();
 
   if (!courseId || !providers.includes(provider) || !['initial', 'monthly'].includes(paymentKind)
       || transactionId.length < 5 || transactionId.length > 100 || !senderPhone
+      || !(proof instanceof File) || proof.size < 12 || proof.size > 3 * 1024 * 1024
+      || !['image/jpeg','image/png','image/webp'].includes(proof.type)
       || (deliveryMode && !['live_recorded','recorded_only','offline'].includes(deliveryMode))) {
     redirect('/student?payment_error=invalid');
   }
@@ -96,13 +95,21 @@ export async function submitManualPayment(formData: FormData) {
 
   if (!Number.isSafeInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
 
+  const proofBytes = new Uint8Array(await proof.arrayBuffer());
+  if (!isAllowedImageSignature(proof.type, proofBytes)) redirect('/student?payment_error=invalid');
   const extension = proof.type === 'image/jpeg' ? 'jpg' : proof.type === 'image/png' ? 'png' : 'webp';
-  const proofPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(proofPath, proofBytes, { contentType: proof.type, upsert: false });
-  if (uploadError) redirect('/student?payment_error=submit_failed');
+  const proofPath = `${user.id}/${randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(proofPath, proofBytes, {
+    contentType: proof.type,
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (uploadError) {
+    console.error('Payment proof upload failed', { code: uploadError.name ?? 'unknown' });
+    redirect('/student?payment_error=proof_upload_failed');
+  }
 
   const submission: Record<string, unknown> = {
-    proof_storage_path: proofPath,
     student_id: user.id,
     course_id: courseId,
     provider,
@@ -113,6 +120,7 @@ export async function submitManualPayment(formData: FormData) {
     sender_phone_last4: senderPhone.slice(-4),
     sender_phone: senderPhone,
     status: 'pending_review',
+    proof_storage_path: proofPath,
   };
   if (deliveryMode) {
     submission.delivery_mode = deliveryMode;
@@ -122,6 +130,7 @@ export async function submitManualPayment(formData: FormData) {
   const { error } = await supabase.from('manual_payment_submissions').insert(submission);
 
   if (error) {
+    // Remove an unreferenced upload if the database insert fails.
     await supabase.storage.from('payment-proofs').remove([proofPath]);
     if (deliveryMode && (error.code === '42703' || /delivery_mode|fee_monthly_bdt|fee_admission_bdt/i.test(error.message))) redirect('/student?payment_error=migration_required');
     const duplicate = error.code === '23505' || /duplicate|unique/i.test(error.message);

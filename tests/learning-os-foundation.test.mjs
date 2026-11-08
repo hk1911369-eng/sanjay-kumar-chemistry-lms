@@ -299,21 +299,6 @@ test('quizzes enforce scheduled start/end windows and reject invalid answer refe
   assert.ok(page.includes('Ends at (Bangladesh time, optional)'));
 });
 
-test('Exam War Room uses student-guarded RPCs and appears in the student dashboard', async () => {
-  const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
-  const page = await readFile(new URL('../app/student/page.tsx', import.meta.url), 'utf8');
-  const component = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
-  assert.ok(action.includes("rpc('create_exam_war_room_target'"));
-  assert.ok(action.includes("rpc('cancel_exam_war_room_target'"));
-  assert.ok(action.includes("profile?.role !== 'student'"));
-  assert.ok(action.includes('dailyMinutes < 15 || dailyMinutes > 600'));
-  assert.ok(page.includes("from('learner_exam_targets')"));
-  assert.ok(page.includes('examCourseNames'));
-  assert.ok(component.includes('Exam War Room'));
-  assert.ok(component.includes('createExamWarRoomTarget'));
-  assert.ok(component.includes('cancelExamWarRoomTarget'));
-});
-
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

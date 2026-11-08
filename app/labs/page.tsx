@@ -4,7 +4,8 @@ import { VirtualLabStudio } from '@/components/virtual-lab-studio';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 
-export default async function VirtualLabsPage() {
+export default async function VirtualLabsPage({ searchParams }: { searchParams: Promise<{ lab_completed?: string; lab_error?: string }> }) {
+  const params = await searchParams;
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
@@ -29,7 +30,9 @@ export default async function VirtualLabsPage() {
       <h1>Virtual labs & simulations</h1>
       <p className="muted">Interactive learning environments for different subjects. Change variables, observe outcomes and understand the principle behind each result.</p>
       <p className="virtual-labs-subjects"><b>Your enrolled subjects:</b> {subjects.length ? subjects.join(' · ') : 'Your courses'}</p>
-      <VirtualLabStudio />
+      {params.lab_completed && <p className="form-success">Simulation completion saved to your learning activity.</p>}
+      {params.lab_error && <p className="form-error">The simulation activity could not be saved. Please choose an active paid course and try again.</p>}
+      <VirtualLabStudio courses={courses ?? []} />
     </section>
   </PortalLayout>;
 }

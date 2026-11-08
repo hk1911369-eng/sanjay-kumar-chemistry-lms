@@ -32,7 +32,7 @@ export default async function VirtualLabsPage({ searchParams }: { searchParams: 
       <p className="virtual-labs-subjects"><b>Your enrolled subjects:</b> {subjects.length ? subjects.join(' · ') : 'Your courses'}</p>
       {params.completed && <p className="form-success">Simulation recorded in your learning history.</p>}
       {params.error && <p className="form-error">The simulation could not be recorded. Check your course access and try again.</p>}
-      <VirtualLabStudio courses={(courses ?? []).map(course => ({id:course.id,title:course.title}))} />
+      <VirtualLabStudio courses={courses ?? []} subjects={subjects} />
     </section>
   </PortalLayout>;
 }

@@ -20,10 +20,13 @@ test('course assignment replacement is one validated database RPC', async () => 
 test('password reset is rate-limited and always uses the same public response', async () => {
   const action = await readFile(new URL('../app/actions/auth.ts', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20261108091524_0038_atomic_course_assignments_and_password_reset_limit.sql', import.meta.url), 'utf8');
+  const constraintMigration = await readFile(new URL('../supabase/migrations/20261108222002_extend_auth_rate_limit_actions.sql', import.meta.url), 'utf8');
   assert.match(action, /enforceAuthRateLimit\(['"]password_reset['"]/);
   assert.match(action, /resetPasswordForEmail/);
   assert.match(action, /forgot-password\?sent=1/);
   assert.match(migration, /password_reset/);
+  assert.match(constraintMigration, /'password_reset'/);
+  assert.match(constraintMigration, /auth_rate_limit_events_action_check/);
 });
 
 test('payment review exposes stable error codes, never database messages', async () => {

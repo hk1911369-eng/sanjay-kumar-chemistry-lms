@@ -19,7 +19,7 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     const { data: profile, error } = await supabase.from('profiles').select('is_active').eq('id', user.id).maybeSingle();
-    if (!error && profile?.is_active === false) {
+    if (!error && profile?.is_active !== true) {
       const destination = request.nextUrl.clone();
       destination.pathname = '/account-disabled';
       destination.search = '';

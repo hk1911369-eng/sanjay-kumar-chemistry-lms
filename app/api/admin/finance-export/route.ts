@@ -24,11 +24,11 @@ export async function GET(request: Request) {
     fetchAllPages((from, to) => db.from('manual_payment_submissions')
       .select('id,student_id,course_id,provider,payment_kind,delivery_mode,amount_bdt,transaction_id,reviewed_at')
       .eq('status','approved').gte('reviewed_at',start).lt('reviewed_at',end)
-      .order('reviewed_at').range(from, to)),
+      .order('reviewed_at').order('id').range(from, to)),
     fetchAllPages((from, to) => db.from('finance_entries')
       .select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id')
       .gte('entry_date',startDate).lt('entry_date',nextMonth)
-      .order('entry_date').range(from, to)),
+      .order('entry_date').order('id').range(from, to)),
   ]);
   const payments = paymentsResult.data;
   const entries = entriesResult.data;

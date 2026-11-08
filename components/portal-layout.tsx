@@ -61,6 +61,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'teachers', label: 'Teacher assignments', href: '/admin#teacher-assignments', icon: 'users' },
       { key: 'announcements', label: 'Announcements', href: '/admin#announcements', icon: 'bell' },
       { key: 'courses', label: 'Course studio', href: '/admin/courses', icon: 'book' },
+      { key: 'learning-graph', label: 'Subjects & concept graph', href: '/admin/learning', icon: 'chart' },
     ]},
   ],
 };

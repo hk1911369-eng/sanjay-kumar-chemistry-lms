@@ -85,3 +85,11 @@ input,select,textarea,button{max-width:100%}
  .jmt-floating-note{right:10px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Desktop hero badge: keep it inside the artwork and clear of the headline. */
+.jmt-hero-visual{overflow:hidden}
+.jmt-floating-note{right:16px;bottom:16px;max-width:calc(100% - 32px)}
+@media(min-width:961px){
+ .jmt-visual-placeholder{padding:0 24px 76px}
+ .jmt-visual-placeholder b{max-width:90%;margin-inline:auto;line-height:1.5}
+}

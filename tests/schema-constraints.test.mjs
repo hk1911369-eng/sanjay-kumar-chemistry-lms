@@ -265,3 +265,12 @@ test('student register export rejects callers without an active admin profile', 
   assert.ok(migration.includes("RAISE EXCEPTION 'Admin access required'"));
   assert.ok(migration.includes("SET search_path TO ''"));
 });
+
+
+test('course assignment replacement fails closed for callers without an admin profile', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108205520_fail_closed_course_assignment_admin_guard.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("auth.uid() IS NULL"));
+  assert.ok(migration.includes("public.current_role())::text IS DISTINCT FROM 'admin'"));
+  assert.ok(migration.includes("RAISE EXCEPTION 'Admin access required'"));
+  assert.ok(migration.includes('SET search_path TO pg_catalog, public, pg_temp'));
+});

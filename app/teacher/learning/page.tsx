@@ -27,17 +27,19 @@ export default async function TeacherLearningInsights() {
   const courseIds = courses.map((course: any) => course.id);
   const courseNames = new Map(courses.map((course: any) => [course.id, course.title]));
 
-  const { data: visibleProfiles } = await db.from('profiles')
-    .select('id,full_name,student_code').eq('role','student').limit(250);
-  const students = (visibleProfiles ?? []) as Student[];
-  const studentIds = students.map(student => student.id);
+  // Resolve enrollments first, so staff scope comes from the assigned-course RPC
+  // and is not silently truncated by a global profile limit.
   const enrollmentResult = role === 'admin'
-    ? (studentIds.length && courseIds.length
-      ? await db.from('enrollments').select('student_id,course_id,status').in('student_id',studentIds).in('course_id',courseIds).eq('status','active')
+    ? (courseIds.length
+      ? await db.from('enrollments').select('student_id,course_id,status').in('course_id',courseIds).eq('status','active')
       : { data: [] as any[] })
-    : (studentIds.length ? await db.rpc('get_assigned_student_enrollments',{p_student_ids:studentIds}) : { data: [] as any[] });
+    : await db.rpc('get_assigned_student_enrollments',{p_student_ids:null});
   const activeEnrollments = (enrollmentResult.data ?? []).filter((row: any) => row.status === 'active' && courseIds.includes(row.course_id));
   const activeStudentIds: string[] = [...new Set<string>(activeEnrollments.map((row: any) => String(row.student_id)))];
+  const { data: visibleProfiles } = activeStudentIds.length
+    ? await db.from('profiles').select('id,full_name,student_code').eq('role','student').in('id',activeStudentIds)
+    : { data: [] as Student[] };
+  const students = (visibleProfiles ?? []) as Student[];
   const [goalResult, masteryResult, revisionResult, mistakeResult] = await Promise.all([
     activeStudentIds.length && courseIds.length
       ? db.from('learner_study_goals').select('id,student_id,course_id,goal_type,target_value,current_value,period_end')

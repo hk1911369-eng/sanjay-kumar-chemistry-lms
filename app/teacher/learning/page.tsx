@@ -3,17 +3,19 @@ import Link from 'next/link';
 import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAllPages } from '@/lib/pagination';
+import { assignTeacherRevisionTask } from '@/app/actions/teacher-learning';
 
 type Student = { id: string; full_name: string | null; student_code: string | null };
 type Goal = { id: string; student_id: string; course_id: string; goal_type: string; target_value: number; current_value: number; period_end: string };
 type Mastery = {
   student_id: string; concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
-  learning_concepts?: { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
+  learning_concepts?: { title?: string; subject_id?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; subject_id?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
 };
 type Revision = { id: string; student_id: string; course_id: string; title: string; scheduled_for: string; priority: number };
 type Mistake = { id: string; student_id: string; course_id: string; mistake_type: string; occurrence_count: number; last_seen_at: string };
 
-export default async function TeacherLearningInsights() {
+export default async function TeacherLearningInsights({ searchParams }: { searchParams?: Promise<{ revision_assigned?: string; error?: string }> }) {
+  const params = searchParams ? await searchParams : {};
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
@@ -47,7 +49,7 @@ export default async function TeacherLearningInsights() {
       .eq('role', 'student').in('id', activeStudentIds).order('id').range(from, to))
     : { data: [] as Student[], error: null };
   const students = (profileResult.data ?? []) as Student[];
-  const [goalResult, masteryResult, revisionResult, mistakeResult] = await Promise.all([
+  const [goalResult, masteryResult, revisionResult, mistakeResult, courseSubjectResult] = await Promise.all([
     activeStudentIds.length && courseIds.length
       ? fetchAllPages((from, to) => db.from('learner_study_goals')
         .select('id,student_id,course_id,goal_type,target_value,current_value,period_end')
@@ -56,7 +58,7 @@ export default async function TeacherLearningInsights() {
       : Promise.resolve({ data: [] as Goal[], error: null }),
     activeStudentIds.length
       ? fetchAllPages((from, to) => db.from('learner_concept_mastery')
-        .select('student_id,concept_id,mastery_score,confidence,evidence_count,learning_concepts(title,academic_subjects(name))')
+        .select('student_id,concept_id,mastery_score,confidence,evidence_count,learning_concepts(title,subject_id,academic_subjects(name))')
         .in('student_id', activeStudentIds).order('student_id').order('concept_id').range(from, to))
       : Promise.resolve({ data: [] as Mastery[], error: null }),
     activeStudentIds.length && courseIds.length
@@ -71,14 +73,20 @@ export default async function TeacherLearningInsights() {
         .in('student_id', activeStudentIds).in('course_id', courseIds).gte('occurrence_count', 2)
         .order('student_id').order('last_seen_at', { ascending: false }).order('id').range(from, to))
       : Promise.resolve({ data: [] as Mistake[], error: null }),
+    courseIds.length
+      ? fetchAllPages((from, to) => db.from('course_subjects').select('course_id,subject_id')
+        .in('course_id', courseIds).order('course_id').order('subject_id').range(from, to))
+      : Promise.resolve({ data: [] as {course_id:string;subject_id:string}[], error: null }),
   ]);
   const goals = (goalResult.data ?? []) as Goal[];
   const mastery = (masteryResult.data ?? []) as Mastery[];
   const revisions = (revisionResult.data ?? []) as Revision[];
   const mistakes = (mistakeResult.data ?? []) as Mistake[];
   const dataLoadError = [assignedResult.error, enrollmentResult.error, profileResult.error,
-    goalResult.error, masteryResult.error, revisionResult.error, mistakeResult.error].some(Boolean);
+    goalResult.error, masteryResult.error, revisionResult.error, mistakeResult.error, courseSubjectResult.error].some(Boolean);
   const studentById = new Map(students.map(student => [student.id, student]));
+  const courseSubjectKeys = new Set((courseSubjectResult.data ?? []).map((row:any) => String(row.course_id) + ':' + String(row.subject_id)));
+  const todayDhaka = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const now = Date.now();
   const due = revisions.filter(task => new Date(task.scheduled_for).getTime() <= now);
   const lowMastery = mastery.filter(item => Number(item.evidence_count) >= 2 && Number(item.mastery_score) < 0.5);
@@ -113,6 +121,8 @@ export default async function TeacherLearningInsights() {
           <p className="muted">Evidence-based signals from your assigned courses. Predictions are intentionally withheld until enough validated assessment data exists.</p></div>
         <Link className="quiet-button" href="/students/manage">Student records</Link>
       </div>
+      {params.revision_assigned && <p className="form-success">Targeted revision assigned to the learner.</p>}
+      {params.error === 'revision' && <p className="form-error">Could not assign this revision. Check the paid enrollment, course mapping and existing pending task.</p>}
       <div className="learning-graph-stats">
         <article className="portal-card"><strong>{courses.length}</strong><span>Assigned courses</span></article>
         <article className="portal-card"><strong>{activeStudentCount}</strong><span>Active learners</span></article>
@@ -165,7 +175,26 @@ export default async function TeacherLearningInsights() {
             {studentMastery.length > 0 && <div><b>Concepts needing support</b><ul className="learning-os-list">{studentMastery.slice(0,5).map(item => {
               const concept = Array.isArray(item.learning_concepts) ? item.learning_concepts[0] : item.learning_concepts;
               const score = Math.round(Number(item.mastery_score)*100);
-              return <li key={item.concept_id}>{concept?.title ?? 'Learning concept'} · {score}% mastery · {item.evidence_count} evidence</li>;
+              const assignedCourse = activeEnrollments.find((row:any) => row.student_id === studentId
+                && courseSubjectKeys.has(String(row.course_id) + ':' + String(concept?.subject_id ?? '')));
+              return <li key={item.concept_id}>
+                {concept?.title ?? 'Learning concept'} · {score}% mastery · {item.evidence_count} evidence
+                {assignedCourse && <form action={assignTeacherRevisionTask} className="auth-form teacher-revision-assignment">
+                  <input type="hidden" name="student_id" value={studentId}/>
+                  <input type="hidden" name="course_id" value={assignedCourse.course_id}/>
+                  <input type="hidden" name="concept_id" value={item.concept_id}/>
+                  <label>Review date (Bangladesh time)
+                    <input type="date" name="scheduled_date" min={todayDhaka} defaultValue={todayDhaka} required/>
+                  </label>
+                  <label>Priority
+                    <select name="priority" defaultValue="2">
+                      <option value="1">Urgent</option><option value="2">High</option><option value="3">Normal</option>
+                      <option value="4">Low</option><option value="5">Optional</option>
+                    </select>
+                  </label>
+                  <button type="submit">Assign revision</button>
+                </form>}
+              </li>;
             })}</ul></div>}
             {studentMistakes.length > 0 && <div><b>Repeated mistake patterns</b><ul className="learning-os-list">{studentMistakes.slice(0,4).map(item => <li key={item.id}>{item.mistake_type.replaceAll('_',' ')} · {item.occurrence_count} occurrences</li>)}</ul></div>}
             {!studentGoals.length&&!studentDue.length&&!studentMastery.length&&!studentMistakes.length&&<p className="muted">No intervention signal yet. Continue collecting learning evidence.</p>}

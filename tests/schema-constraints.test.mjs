@@ -79,7 +79,7 @@ test('desktop portal layout keeps the sidebar scrollable and dashboard grids flu
 
 
 test('manual payment reads do not retain a duplicate permissive policy', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108130000_remove_redundant_manual_payment_select_policy.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108125442_remove_redundant_manual_payment_select_policy.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('DROP POLICY IF EXISTS "student reads own manual payment"'));
   assert.ok(migration.includes('public.manual_payment_submissions'));
 });

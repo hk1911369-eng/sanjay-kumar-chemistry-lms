@@ -4,7 +4,7 @@ import { VirtualLabStudio } from '@/components/virtual-lab-studio';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 
-export default async function VirtualLabsPage({ searchParams }: { searchParams: Promise<{ lab_completed?: string; lab_error?: string }> }) {
+export default async function VirtualLabsPage({ searchParams }: { searchParams: Promise<{ completed?: string; error?: string }> }) {
   const params = await searchParams;
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
@@ -30,9 +30,9 @@ export default async function VirtualLabsPage({ searchParams }: { searchParams: 
       <h1>Virtual labs & simulations</h1>
       <p className="muted">Interactive learning environments for different subjects. Change variables, observe outcomes and understand the principle behind each result.</p>
       <p className="virtual-labs-subjects"><b>Your enrolled subjects:</b> {subjects.length ? subjects.join(' · ') : 'Your courses'}</p>
-      {params.lab_completed && <p className="form-success">Simulation completion saved to your learning activity.</p>}
-      {params.lab_error && <p className="form-error">The simulation activity could not be saved. Please choose an active paid course and try again.</p>}
-      <VirtualLabStudio courses={courses ?? []} />
+      {params.completed && <p className="form-success">Simulation recorded in your learning history.</p>}
+      {params.error && <p className="form-error">The simulation could not be recorded. Check your course access and try again.</p>}
+      <VirtualLabStudio courses={(courses ?? []).map(course => ({id:course.id,title:course.title}))} />
     </section>
   </PortalLayout>;
 }

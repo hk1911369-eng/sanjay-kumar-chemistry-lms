@@ -18,24 +18,20 @@ test('virtual lab simulations cover multiple subjects and are interactive', asyn
   assert.ok(source.includes('Educational simulations only'));
 });
 
+test('virtual lab completion is recorded through a paid-enrollment-checked database RPC', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108215559_learning_os_record_virtual_lab_completion.sql', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  assert.ok(migration.includes("'simulation_completed'"));
+  assert.ok(migration.includes("public.current_role() IS DISTINCT FROM 'student'::public.app_role"));
+  assert.ok(migration.includes('e.admission_fee_paid IS TRUE'));
+  assert.ok(migration.includes('e.paid_through>=v_period_end'));
+  assert.ok(action.includes("rpc('record_simulation_completion'"));
+  assert.ok(component.includes('recordSimulationCompletion'));
+  assert.ok(component.includes('hasInteracted'));
+});
+
 test('virtual labs appear in student workspace navigation', async () => {
   const source = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
   assert.ok(source.includes("key: 'labs', label: 'Virtual labs', href: '/labs'"));
-});
-
-
-test('virtual lab completion is recorded only for the student\'s current paid course', async () => {
-  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
-  const page = await readFile(new URL('../app/labs/page.tsx', import.meta.url), 'utf8');
-  const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
-  assert.ok(action.includes("profile?.role !== 'student'"));
-  assert.ok(action.includes(".eq('student_id', user.id)"));
-  assert.ok(action.includes(".eq('status', 'active')"));
-  assert.ok(action.includes(".eq('admission_fee_paid', true)"));
-  assert.ok(action.includes(".gte('paid_through', periodEnd)"));
-  assert.ok(action.includes("event_type: 'simulation_completed'"));
-  assert.ok(action.includes('labSubjects[labId]'));
-  assert.ok(page.includes('<VirtualLabStudio courses={courses ?? []} />'));
-  assert.ok(studio.includes('recordVirtualLabCompletion'));
-  assert.ok(studio.includes('Mark simulation complete'));
 });

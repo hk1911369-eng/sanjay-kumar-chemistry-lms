@@ -16,6 +16,9 @@ test('teacher analytics is role-gated and reads only assigned course/student sig
   const page = await readFile(new URL('../app/teacher/learning/page.tsx', import.meta.url), 'utf8');
   assert.ok(page.includes("!['admin','teacher','staff'].includes(role)"));
   assert.ok(page.includes("rpc('get_assigned_student_enrollments'"));
+  assert.ok(page.includes("p_student_ids:null"));
+  assert.ok(page.includes(".in('id',activeStudentIds)"));
+  assert.ok(!page.includes(".limit(250)"));
   assert.ok(page.includes(".in('course_id',courseIds)"));
   assert.ok(page.includes(".gte('occurrence_count',2)"));
   assert.ok(page.includes('Learner-wide preferences and global goals are not shown'));

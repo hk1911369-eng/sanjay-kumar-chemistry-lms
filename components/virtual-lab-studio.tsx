@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { recordVirtualLabCompletion } from '@/app/actions/virtual-labs';
 
 const labs = [
   { id: 'physics', subject: 'Physics', title: "Ohm's law circuit", summary: 'Explore how voltage and resistance affect current.', principle: 'For an ideal resistor, current I = V ÷ R and power P = V × I.' },
@@ -10,8 +11,11 @@ const labs = [
   { id: 'ict', subject: 'ICT', title: 'Binary number converter', summary: 'Convert binary digits into a decimal number.', principle: 'Each binary digit represents a power of two, starting with 2⁰ at the right.' },
 ] as const;
 
-export function VirtualLabStudio() {
+type LabCourse = { id: string; title: string };
+
+export function VirtualLabStudio({ courses }: { courses: LabCourse[] }) {
   const [active, setActive] = useState<string>('physics');
+  const [courseId, setCourseId] = useState<string>(courses[0]?.id ?? '');
   const [voltage, setVoltage] = useState(6);
   const [resistance, setResistance] = useState(12);
   const [acid, setAcid] = useState(0.1);
@@ -85,7 +89,16 @@ export function VirtualLabStudio() {
       </div>}
 
       <div className="virtual-lab-principle"><b>Learning principle</b><p>{selected.principle}</p></div>
-      <p className="muted small-note">Educational simulations only. They do not replace supervised physical laboratory work or professional safety procedures.</p>
+      <form action={recordVirtualLabCompletion} className="virtual-lab-completion">
+        <input type="hidden" name="lab_id" value={active}/>
+        <label>Save this activity to
+          <select name="course_id" value={courseId} onChange={event => setCourseId(event.target.value)} required>
+            {courses.map(course => <option value={course.id} key={course.id}>{course.title}</option>)}
+          </select>
+        </label>
+        <button type="submit" disabled={!courseId}>Mark simulation complete</button>
+      </form>
+      <p className="muted small-note">Completion is recorded as a learning activity, not an exam score. Simulations do not replace supervised physical laboratory work or professional safety procedures.</p>
     </article>
   </div>;
 }

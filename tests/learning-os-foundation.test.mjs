@@ -259,9 +259,9 @@ test('quiz question concepts feed trusted mastery and mistake memory evidence', 
   const bankIdentity = await readFile(new URL('../supabase/migrations/20261108215223_learning_os_aggregate_repeated_bank_question_mistakes.sql', import.meta.url), 'utf8');
   const cleanup = await readFile(new URL('../supabase/migrations/20261108215412_learning_os_finalize_question_bank_mistake_memory.sql', import.meta.url), 'utf8');
   assert.ok(bankIdentity.includes('question_bank_id'));
-  assert.ok(bankIdentity.includes('COALESCE(x.question_bank_id, x.id)'));
+  assert.ok(bankIdentity.includes('COALESCE(x.question_bank_id,x.id)'));
   assert.ok(cleanup.includes('DROP COLUMN IF EXISTS source_bank_question_id'));
-  assert.ok(cleanup.includes('resolved_at = NEW.submitted_at'));
+  assert.ok(cleanup.includes('resolved_at=NEW.submitted_at'));
   assert.ok(action.includes('question_bank_id:q.id'));
   assert.ok(action.includes("concept_id:conceptId"));
   assert.ok(action.includes("concept_id:q.concept_id"));

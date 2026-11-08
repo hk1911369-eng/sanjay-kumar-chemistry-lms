@@ -75,6 +75,52 @@ begin
 end;
 $$;
 
+-- Make inactive status effective for direct Supabase API access as well as web routes.
+create or replace function public.current_role()
+returns public.app_role
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.role
+  from public.profiles p
+  where p.id = auth.uid()
+    and p.is_active is true
+  limit 1;
+$$;
+
+revoke all on function public.current_role() from public, anon;
+grant execute on function public.current_role() to authenticated, service_role;
+
+do $$
+declare
+  table_row record;
+begin
+  for table_row in
+    select c.relname
+    from pg_catalog.pg_class c
+    join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p')
+      and c.relrowsecurity
+  loop
+    execute format('drop policy if exists %I on public.%I', 'active accounts only', table_row.relname);
+    execute format(
+      'create policy %I on public.%I as restrictive for all to authenticated using ((select public.current_role()) is not null) with check ((select public.current_role()) is not null)',
+      'active accounts only',
+      table_row.relname
+    );
+  end loop;
+end;
+$$;
+
+drop policy if exists "active accounts only" on storage.objects;
+create policy "active accounts only"
+on storage.objects as restrictive for all to authenticated
+using ((select public.current_role()) is not null)
+with check ((select public.current_role()) is not null);
+
 revoke all on function public.set_student_account_active(uuid, boolean) from public, anon, authenticated;
 revoke all on function public.set_course_archived(uuid, boolean) from public, anon, authenticated;
 grant execute on function public.set_student_account_active(uuid, boolean) to authenticated;

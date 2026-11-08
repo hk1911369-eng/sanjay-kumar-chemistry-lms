@@ -39,7 +39,7 @@ INSERT INTO public.learning_concepts (
   id, subject_id, title, slug, description, grade_band, exam_tracks,
   estimated_minutes, sort_order, is_published
 )
-SELECT v.id::uuid, s.id, v.title, v.slug, v.description, 'HSC',
+SELECT v.id::uuid, s.id, v.title, v.slug, v.description, 'higher_secondary',
        ARRAY['HSC']::text[], v.minutes, v.sort_order, false
 FROM (VALUES
   ('30000000-0000-4000-8000-000000000001','chemistry','Atomic structure','atomic-structure','Atoms, subatomic particles and electronic configuration.',25,10),

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './responsive.css';
 import { cookies } from 'next/headers';
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || 'https://sanjay-kumar-chemistry-lms.onrender.com').replace(/\/$/, '');
 export const metadata: Metadata = {

@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { randomUUID } from 'node:crypto';
 import { isAllowedImageSignature } from '@/lib/image-signature.js';
-import { createClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { currentBangladeshBillingPeriod } from '@/lib/pricing';
 import { paymentReviewErrorCode } from '@/lib/payment-review-error.js';
@@ -13,9 +13,7 @@ type Provider = (typeof providers)[number];
 type PaymentKind = 'initial' | 'monthly';
 
 export async function submitManualPayment(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireRole(['student']);
 
   const { data: allowed } = await supabase.rpc('consume_app_rate_limit', { p_action: 'manual_payment' });
   if (!allowed) redirect('/student?payment_error=rate_limit');
@@ -140,11 +138,7 @@ export async function submitManualPayment(formData: FormData) {
 }
 
 export async function reviewManualPayment(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { supabase } = await requireRole(['admin']);
 
   const id = String(formData.get('submission_id') ?? '').trim();
   const decision = String(formData.get('decision') ?? '').trim();

@@ -66,6 +66,28 @@ export default async function TeacherLearningInsights() {
   const now = Date.now();
   const due = revisions.filter(task => new Date(task.scheduled_for).getTime() <= now);
   const lowMastery = mastery.filter(item => Number(item.evidence_count) >= 2 && Number(item.mastery_score) < 0.5);
+  const conceptGroups = new Map<string, { title: string; subject: string; total: number; learners: number; needsSupport: number }>();
+  for (const item of mastery) {
+    if (Number(item.evidence_count) < 2) continue;
+    const concept = Array.isArray(item.learning_concepts) ? item.learning_concepts[0] : item.learning_concepts;
+    const subject = Array.isArray(concept?.academic_subjects) ? concept.academic_subjects[0] : concept?.academic_subjects;
+    const score = Number(item.mastery_score);
+    const current = conceptGroups.get(item.concept_id) ?? {
+      title: concept?.title ?? 'Learning concept',
+      subject: subject?.name ?? 'Subject',
+      total: 0,
+      learners: 0,
+      needsSupport: 0,
+    };
+    current.total += score;
+    current.learners += 1;
+    if (score < 0.5) current.needsSupport += 1;
+    conceptGroups.set(item.concept_id, current);
+  }
+  const classConcepts = [...conceptGroups.entries()]
+    .map(([conceptId, value]) => ({ conceptId, ...value, averageMastery: value.total / value.learners }))
+    .sort((a, b) => a.averageMastery - b.averageMastery)
+    .slice(0, 12);
   const activeStudentCount = activeStudentIds.length;
 
   return <PortalLayout role={role as 'admin'|'teacher'|'staff'} active="learning-insights" title="Learning analytics" returnTo="/teacher/learning">
@@ -81,6 +103,26 @@ export default async function TeacherLearningInsights() {
         <article className="portal-card"><strong>{due.length}</strong><span>Revision tasks due</span></article>
         <article className="portal-card"><strong>{lowMastery.length}</strong><span>Low-mastery signals</span></article>
       </div>
+      <article className="portal-card">
+        <h2>Class topic heatmap</h2>
+        <p className="muted">Topics are ranked by average mastery across learners with at least two evidence points. The support count helps identify where a teacher-led review may be useful.</p>
+        {classConcepts.length === 0
+          ? <p className="muted">A class heatmap will appear when assigned learners have enough verified topic evidence.</p>
+          : <ul className="learning-os-list">{classConcepts.map(item => {
+              const average = Math.round(item.averageMastery * 100);
+              return <li key={item.conceptId}>
+                <b>{item.title}</b> <span className="muted">· {item.subject}</span>
+                <div className="learning-os-stats">
+                  <div className="learning-os-stat"><strong>{average}%</strong><span>Average mastery</span></div>
+                  <div className="learning-os-stat"><strong>{item.learners}</strong><span>Learners tracked</span></div>
+                  <div className="learning-os-stat"><strong>{item.needsSupport}</strong><span>Below 50%</span></div>
+                </div>
+                <div className="learning-os-meter" role="progressbar" aria-valuenow={average} aria-valuemin={0} aria-valuemax={100}>
+                  <span style={{ width: average + '%' }} />
+                </div>
+              </li>;
+            })}</ul>}
+      </article>
       {!activeStudentCount ? <article className="portal-card"><h2>No active learners yet</h2><p className="muted">When students are actively enrolled in your assigned courses and learning evidence is collected, their support signals will appear here.</p></article> :
         <div className="portal-grid">{activeStudentIds.map(studentId => {
           const student = studentById.get(studentId);

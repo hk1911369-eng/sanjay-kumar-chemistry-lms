@@ -110,10 +110,37 @@ The platform must support any subject and programme. "Chemistry" in the original
 
 ## Current implementation status
 
-- The first additive Supabase schema foundation has been applied.
-- New tables have RLS enabled; anonymous table access is revoked.
-- Mastery, learner profiles, mistake memory and revision tasks are read-only to client roles; trusted server-side processing will populate them.
-- Student learning events are limited to verified lesson completions in the student's own active enrolment; clients cannot submit assessment scores or fabricated study duration.
-- Lesson-completion goals advance automatically from verified learning events.
-- Existing course, lesson, enrolment and payment data has not been deleted or rewritten.
-- Dashboard UI, event instrumentation, AI services, prediction models, social features, virtual labs, parent access and tenant rollout are not yet complete.
+### Implemented foundation
+
+- Universal academic-subject catalogue and course-to-subject mapping; new courses can use any subject label supported by the catalogue.
+- Hierarchical concept graph, prerequisite edges with cycle protection, and lesson-to-concept mapping with cross-subject integrity checks.
+- Learner profile, concept mastery, learning-event ledger, mistake-memory and revision-task stores, all protected by RLS and least-privilege grants.
+- Student study goals with database-backed progress from verified learning activity.
+- Verified lesson-completion events, trusted quiz assessment events, and guarded simulation-completion events. Client analytics cannot manufacture assessment scores or arbitrary study duration.
+- Concept-tagged question bank and quiz builder. Quiz grading updates mastery, schedules targeted revision, stores wrong answers, aggregates recurring mistakes for reused questions, and resolves a stored mistake after a later correct answer.
+- Student Today dashboard with study goals, revision queue, topic mastery, upcoming quizzes/written exams, assignment deadlines and evidence-gated lesson recommendations.
+- Teacher/admin learning insights with assigned-course and subject-scoped access to due revisions, weak concepts, goals and repeated mistake patterns.
+- Initial multi-subject virtual lab catalogue: Physics (Ohm's law), Chemistry (acid-base titration), Biology (monohybrid inheritance), Mathematics (linear functions) and ICT (binary conversion). Labs are filtered to enrolled course subjects and completion is checked again by a database RPC.
+- Existing moderated lesson discussions and course discussions remain available as the first social-learning layer.
+
+### In progress
+
+- Expand virtual labs with more curriculum-aligned simulations, diagrams, guided experiment steps and teacher lesson links.
+- Improve mastery calculations, prerequisite-aware root-cause tracing and mistake clustering across more assessment types.
+- Add quiz, assignment and revision recommendations to the existing lesson recommendation engine.
+- Build class-level intervention summaries and evidence-based heat maps.
+- Add stronger accessibility and Bengali-language support across interactive learning experiences.
+
+### Not yet implemented
+
+- AI tutor / academic twin with Bengali and English modes.
+- AI question and lesson generation with teacher review and publishing controls.
+- Calibrated HSC and admission-readiness prediction models. These remain deliberately disabled until enough verified historical outcomes exist.
+- Full social network features such as student follows, reputation, mentor badges and moderation tooling.
+- Verified parent/guardian portal and consent workflow.
+- Exam War Room with goal-based revision plans and mock-test orchestration.
+- Installable offline-first PWA with conflict-safe progress sync and approved offline assets.
+- Multi-tenant SaaS, white-label themes and custom institute domains. This requires tenant-scoped RLS and Storage isolation before any tenant switching is exposed.
+- Bengali voice tutor.
+
+**Important:** This is a phased build, not a claim that every advisor feature is finished. Current analytics and recommendations are evidence-based foundations; they are not AI predictions and do not claim a guaranteed GPA or admission probability.

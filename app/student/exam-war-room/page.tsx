@@ -29,10 +29,12 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
   const targetIds=(targets??[]).map(target=>target.id);
   const {data:tasks}=targetIds.length
     ? await db.from('revision_tasks').select('id,source_id,title,scheduled_for,priority,status')
-      .eq('student_id',user.id).eq('source_type','exam_plan').in('source_id',targetIds).order('scheduled_for')
+      .eq('student_id',user.id).eq('source_type','exam_plan').in('source_id',targetIds).order('scheduled_for').limit(1000)
     : {data:[] as Task[]};
   const courseNames=new Map((courses??[]).map(course=>[course.id,course.title]));
-  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const dhakaDate=(value:Date)=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(value);
+  const minExamDate=dhakaDate(new Date(Date.now()+7*24*60*60*1000));
+  const maxExamDate=dhakaDate(new Date(Date.now()+365*24*60*60*1000));
 
   return <PortalLayout role="student" active="exam-war-room" title="Exam War Room" returnTo="/student">
     <section className="portal-content exam-war-room">
@@ -55,7 +57,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
             </select>
           </label>
           <label>Exam date
-            <input type="date" name="exam_date" min={today} required/>
+            <input type="date" name="exam_date" min={minExamDate} max={maxExamDate} required/>
             <small className="muted">Choose a date at least 7 days away, within the next year.</small>
           </label>
           <label>Daily study time (minutes)

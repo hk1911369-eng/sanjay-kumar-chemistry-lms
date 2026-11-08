@@ -9,11 +9,11 @@ type Course={
  live_price_bdt:number|null;recorded_price_bdt:number|null;offline_price_bdt:number|null;
  admission_fee_bdt:number|null;teaching_method:string|null;schedule_text:string|null;enrollment_open:boolean|null;
 };
-const groups=['HSC 2027','HSC 2028','Admission Batch'];
 const labels:Record<string,string>={live_recorded:'Live + recorded',recorded_only:'Recorded-only',offline:'Offline academy'};
 function price(value:number|null){return value===null?'Contact us':'৳'+Number(value).toLocaleString('en-BD');}
 export function CourseCatalogue({courses}:{courses:Course[]}){
  const [search,setSearch]=useState('');const [group,setGroup]=useState('all');const [mode,setMode]=useState('all');
+ const groups=useMemo(()=>[...new Set(courses.map(c=>c.programme_group).filter((value):value is string=>Boolean(value)))].sort((a,b)=>a.localeCompare(b)),[courses]);
  const filtered=useMemo(()=>courses.filter(c=>{
   const q=search.trim().toLowerCase();const hay=[c.title,c.description,c.programme_group,...(c.subjects??[])].filter(Boolean).join(' ').toLowerCase();
   return (!q||hay.includes(q))&&(group==='all'||c.programme_group===group)&&(mode==='all'||(c.delivery_modes??[]).includes(mode));

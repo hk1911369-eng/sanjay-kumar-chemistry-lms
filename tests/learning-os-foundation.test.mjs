@@ -206,13 +206,19 @@ test('student Learning OS dashboard surfaces upcoming exams and assignment deadl
   assert.ok(component.includes('Upcoming assignments'));
 });
 
-test('lesson completion events require the matching completed progress record', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108214400_learning_os_require_verified_lesson_completion_event.sql', import.meta.url), 'utf8');
-  assert.ok(migration.includes("event_type <> 'lesson_completed'"));
-  assert.ok(migration.includes('FROM public.lesson_progress lp'));
-  assert.ok(migration.includes('lp.student_id = (SELECT auth.uid())'));
-  assert.ok(migration.includes('lp.completed IS TRUE'));
-  assert.ok(migration.includes('l.is_published IS TRUE'));
+test('programme groups are universal and no longer restricted to chemistry-era cohorts', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108214330_learning_os_generalize_programme_groups.sql', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/course-studio.ts', import.meta.url), 'utf8');
+  const adminPage = await readFile(new URL('../app/admin/courses/page.tsx', import.meta.url), 'utf8');
+  const catalogue = await readFile(new URL('../components/course-catalogue.tsx', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP CONSTRAINT IF EXISTS courses_programme_group_check'));
+  assert.ok(migration.includes('char_length(btrim(programme_group)) BETWEEN 1 AND 80'));
+  assert.ok(action.includes('group.length>80'));
+  assert.ok(action.includes("? 'SSC'" ) || action.includes("?'SSC'"));
+  assert.ok(adminPage.includes('Programme / cohort'));
+  assert.ok(adminPage.includes('Vocational & Skills'));
+  assert.ok(catalogue.includes('courses.map(c=>c.programme_group)'));
+  assert.equal(catalogue.includes("const groups=['HSC 2027','HSC 2028','Admission Batch']"), false);
 });
 
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {

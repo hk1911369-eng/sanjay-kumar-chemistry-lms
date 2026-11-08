@@ -3,6 +3,13 @@ import Image from 'next/image';
 import {createPublicClient} from '@/lib/supabase/public';
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+ const db = createPublicClient();
+ const { data } = await db.from('courses').select('slug').eq('is_published', true).is('archived_at', null);
+ return (data ?? []).map(course => ({ slug: course.slug }));
+}
 const labels:Record<string,string>={live_recorded:'Live classes + recordings',recorded_only:'Recorded-only access',offline:'Offline academy classes'};
 export default async function CourseDetails({params}:{params:Promise<{slug:string}>}){
  const {slug}=await params;const db=createPublicClient();

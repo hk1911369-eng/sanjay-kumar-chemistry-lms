@@ -73,6 +73,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       <label>Payment method<select name="provider" required defaultValue=""><option value="" disabled>Select method</option>{(['bkash', 'nagad', 'rocket'] as const).map(p => <option key={p} value={p} disabled={!receiving.get(p)?.is_enabled}>{p.toUpperCase()}</option>)}</select></label>
       <label>Transaction ID<input name="transaction_id" minLength={5} maxLength={100} required placeholder="Enter transaction ID" autoComplete="off"/></label>
       <label>Sender mobile number<input name="sender_phone" inputMode="tel" pattern="(?:\\+?88)?01[3-9][0-9]{8}" maxLength={14} required placeholder="01XXXXXXXXX" autoComplete="tel"/></label>
+      <label>Payment screenshot / receipt (JPG, PNG or WebP; max 3 MB)<input name="payment_proof" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+      <p className="small-note">Your receipt is stored privately. Only authorised JMT Academy administrators can view it.</p>
       <button className="auth-submit" type="submit">Submit for admin verification</button>
     </form>;
   }

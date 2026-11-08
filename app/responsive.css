@@ -114,3 +114,24 @@ input,select,textarea,button{max-width:100%}
  .jmt-hero-visual{aspect-ratio:1.4/1}
  .jmt-floating-note{justify-self:start}
 }
+
+/* Compact mobile workspace navigation with safe-area support. */
+.portal-mobile-drawer,.student-bottom-nav{display:none}
+@media(max-width:760px){
+ .portal-navigation{display:none!important}
+ .portal-mobile-drawer{display:block;position:relative;align-self:center;flex:0 0 auto}
+ .portal-mobile-drawer>summary{display:flex;align-items:center;gap:6px;min-height:42px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--navy);font-size:12px;font-weight:800;list-style:none;cursor:pointer}
+ .portal-mobile-drawer>summary::-webkit-details-marker{display:none}
+ .portal-mobile-drawer-panel{position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:min(300px,calc(100vw - 28px));max-height:min(70vh,560px);overflow:auto;padding:8px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 18px 48px #071b3b30;display:grid;gap:3px}
+ .portal-mobile-drawer-panel a{display:flex;align-items:center;gap:10px;min-height:42px;padding:9px 11px;border-radius:9px;color:var(--ink);font-size:12px;font-weight:700;text-decoration:none}
+ .portal-mobile-drawer-panel a.is-active{background:#eaf3ff;color:var(--blue)}
+ .portal-topbar{display:flex;align-items:center;gap:10px}
+ .portal-topbar-title{min-width:0;flex:1}
+ .portal-topbar-actions{gap:6px}
+ .portal-role-student .portal-mobile-drawer{display:none}
+ .portal-role-student .portal-workspace{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+ .student-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:35;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff;box-shadow:0 -8px 24px #071b3b12}
+ .student-bottom-nav a{display:flex;min-width:0;min-height:48px;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:10px;color:#52627a;text-decoration:none;font-size:10px;font-weight:750}
+ .student-bottom-nav a.is-active{background:#eaf3ff;color:var(--blue)}
+ .student-bottom-nav svg{flex:0 0 auto}
+}

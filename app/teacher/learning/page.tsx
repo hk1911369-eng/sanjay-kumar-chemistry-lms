@@ -177,23 +177,29 @@ export default async function TeacherLearningInsights({ searchParams }: { search
               const score = Math.round(Number(item.mastery_score)*100);
               const assignedCourse = activeEnrollments.find((row:any) => row.student_id === studentId
                 && courseSubjectKeys.has(String(row.course_id) + ':' + String(concept?.subject_id ?? '')));
+              const alreadyPending = revisions.some((task:any) => task.student_id === studentId && task.concept_id === item.concept_id);
               return <li key={item.concept_id}>
                 {concept?.title ?? 'Learning concept'} · {score}% mastery · {item.evidence_count} evidence
-                {assignedCourse && <form action={assignTeacherRevisionTask} className="auth-form teacher-revision-assignment">
-                  <input type="hidden" name="student_id" value={studentId}/>
-                  <input type="hidden" name="course_id" value={assignedCourse.course_id}/>
-                  <input type="hidden" name="concept_id" value={item.concept_id}/>
-                  <label>Review date (Bangladesh time)
-                    <input type="date" name="scheduled_date" min={todayDhaka} defaultValue={todayDhaka} required/>
-                  </label>
-                  <label>Priority
-                    <select name="priority" defaultValue="2">
-                      <option value="1">Urgent</option><option value="2">High</option><option value="3">Normal</option>
-                      <option value="4">Low</option><option value="5">Optional</option>
-                    </select>
-                  </label>
-                  <button type="submit">Assign revision</button>
-                </form>}
+                {alreadyPending
+                  ? <small className="learning-os-muted">A revision is already pending for this concept.</small>
+                  : assignedCourse && <details className="teacher-revision-assignment">
+                      <summary>Assign targeted revision</summary>
+                      <form action={assignTeacherRevisionTask} className="auth-form">
+                        <input type="hidden" name="student_id" value={studentId}/>
+                        <input type="hidden" name="course_id" value={assignedCourse.course_id}/>
+                        <input type="hidden" name="concept_id" value={item.concept_id}/>
+                        <label>Review date (Bangladesh time)
+                          <input type="date" name="scheduled_date" min={todayDhaka} defaultValue={todayDhaka} required/>
+                        </label>
+                        <label>Priority
+                          <select name="priority" defaultValue="2">
+                            <option value="1">Urgent</option><option value="2">High</option><option value="3">Normal</option>
+                            <option value="4">Low</option><option value="5">Optional</option>
+                          </select>
+                        </label>
+                        <button type="submit">Assign revision</button>
+                      </form>
+                    </details>}
               </li>;
             })}</ul></div>}
             {studentMistakes.length > 0 && <div><b>Repeated mistake patterns</b><ul className="learning-os-list">{studentMistakes.slice(0,4).map(item => <li key={item.id}>{item.mistake_type.replaceAll('_',' ')} · {item.occurrence_count} occurrences</li>)}</ul></div>}

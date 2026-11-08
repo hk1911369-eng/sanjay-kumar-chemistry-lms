@@ -13,14 +13,19 @@ test('image proof validation checks actual JPEG, PNG and WebP signatures', () =>
   assert.equal(isAllowedImageSignature('image/svg+xml', Uint8Array.from([0x3c,0x73,0x76,0x67])), false);
 });
 
-test('payment proof bucket is private and storage policies scope students and admins', async () => {
+test('payment proof bucket is private with student-owned and admin-only access', async () => {
   const migration = await read('supabase/migrations/0040_private_manual_payment_proofs.sql');
   assert.match(migration, /values \('payment-proofs', 'payment-proofs', false/);
   assert.match(migration, /file_size_limit = 3145728/);
   assert.match(migration, /students upload own unsubmitted payment proofs/);
+  assert.match(migration, /students read own payment proofs/);
   assert.match(migration, /admins read payment proofs/);
   assert.match(migration, /current_role\(\).*admin/);
-  assert.match(migration, /validate_manual_payment_proof_path/);
+  const enforcement = await read('supabase/migrations/0041_enforce_payment_proof_ownership.sql');
+  assert.match(enforcement, /security definer/i);
+  assert.match(enforcement, /owner_id = auth\.uid\(\)::text/);
+  assert.match(enforcement, /metadata->>'mimetype'/);
+  assert.match(enforcement, /validate_manual_payment_proof_path/);
 });
 
 test('student payment form requires proof and server validates then uploads before insert', async () => {

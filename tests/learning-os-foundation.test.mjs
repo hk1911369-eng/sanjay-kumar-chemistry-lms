@@ -71,6 +71,29 @@ test('Learning OS foreign-key lookups have covering indexes', async () => {
   ]) assert.ok(migration.includes(index), index);
 });
 
+test('study goal progress is database-managed and client updates are revoked', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213328_learning_os_trusted_study_goal_progress.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('REVOKE UPDATE ON public.learner_study_goals'));
+  assert.ok(migration.includes('current_value = 0'));
+  assert.ok(migration.includes('NEW.current_value IS DISTINCT FROM 0::numeric'));
+  assert.ok(migration.includes('CREATE POLICY "students create own study goals"'));
+  assert.ok(migration.includes('CREATE POLICY "students delete own study goals"'));
+  assert.ok(migration.includes('SECURITY DEFINER'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.apply_learning_event_to_study_goals()'));
+  assert.ok(migration.includes('CREATE TRIGGER apply_learning_event_to_study_goals'));
+});
+
+test('study-session events advance study-session and minute goals; revision events advance revision goals', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213338_learning_os_count_study_session_minutes.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("NEW.event_type = 'study_session'"));
+  assert.ok(migration.includes("goal_type = 'study_sessions'"));
+  assert.ok(migration.includes("v_goal_type := 'study_minutes'"));
+  assert.ok(migration.includes('NEW.duration_seconds::numeric / 60'));
+  assert.ok(migration.includes("NEW.event_type = 'revision_completed'"));
+  assert.ok(migration.includes("goal_type = 'revision_tasks'"));
+  assert.ok(migration.includes('Asia/Dhaka'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

@@ -121,8 +121,7 @@ begin
       'billing_period', payment_row.billing_period
     ));
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.reject_manual_payment_submission(p_submission_id uuid, p_admin_note text)
  RETURNS void
@@ -171,8 +170,7 @@ AS $function$
                                                                                                                                                                                                                                                                                                                          'reason', trim(p_admin_note)
                                                                                                                                                                                                                                                                                                                              ));
                                                                                                                                                                                                                                                                                                                              END;
-                                                                                                                                                                                                                                                                                                                             $function$
-
+                                                                                                                                                                                                                                                                                                                             $function$;
 
 CREATE OR REPLACE FUNCTION public.set_course_archived(p_course_id uuid, p_archived boolean)
  RETURNS void
@@ -204,8 +202,7 @@ begin
     jsonb_build_object('archived', p_archived, 'publication_reset', p_archived)
   );
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.set_student_account_active(p_student_id uuid, p_is_active boolean)
  RETURNS void
@@ -235,5 +232,4 @@ begin
     jsonb_build_object('is_active', p_is_active)
   );
 end;
-$function$
-
+$function$;

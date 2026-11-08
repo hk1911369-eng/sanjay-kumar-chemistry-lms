@@ -1,4 +1,4 @@
--- Cancel every pending revision task owned by a cancelled Exam War Room plan.
+-- Cancel all pending revision tasks linked to a cancelled Exam War Room target.
 CREATE OR REPLACE FUNCTION public.cancel_exam_war_room_target(p_target_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
@@ -20,9 +20,7 @@ BEGIN
     AND student_id = v_student_id
     AND status = 'active';
   GET DIAGNOSTICS v_updated = ROW_COUNT;
-  IF v_updated = 0 THEN
-    RETURN false;
-  END IF;
+  IF v_updated = 0 THEN RETURN false; END IF;
 
   UPDATE public.revision_tasks
   SET status = 'cancelled', updated_at = now()
@@ -33,6 +31,5 @@ BEGIN
   RETURN true;
 END;
 $$;
-
 REVOKE ALL ON FUNCTION public.cancel_exam_war_room_target(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.cancel_exam_war_room_target(uuid) TO authenticated;

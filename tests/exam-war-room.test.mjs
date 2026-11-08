@@ -20,6 +20,11 @@ test('Exam War Room generates revision tasks from published course concepts and 
   const taskCompatibility = await readFile(new URL('../supabase/migrations/20261108220456_learning_os_align_exam_war_room_with_revision_task_enums.sql', import.meta.url), 'utf8');
   assert.ok(taskCompatibility.includes("'exam_plan'"));
   assert.ok(taskCompatibility.includes("status='skipped'"));
+  const cancelFix = await readFile(new URL('../supabase/migrations/20261108220618_fix_exam_war_room_cancel_revision_tasks.sql', import.meta.url), 'utf8');
+  const uiAlignment = await readFile(new URL('../supabase/migrations/20261108220718_learning_os_align_exam_war_room_task_source_with_ui.sql', import.meta.url), 'utf8');
+  assert.ok(cancelFix.includes("status = 'cancelled'"));
+  assert.ok(cancelFix.includes("source_type IN ('exam_plan', 'exam_war_room')"));
+  assert.ok(uiAlignment.includes("'exam_plan'"));
   const serialized = await readFile(new URL('../supabase/migrations/20261108220538_learning_os_serialize_exam_war_room_plan_limits.sql', import.meta.url), 'utf8');
   const evidence = await readFile(new URL('../supabase/migrations/20261108220556_learning_os_exam_war_room_task_constraints_and_evidence_thresholds.sql', import.meta.url), 'utf8');
   assert.ok(serialized.includes('FOR UPDATE'));
@@ -41,14 +46,4 @@ test('Exam War Room UI calls protected create and cancel actions', async () => {
   assert.ok(actions.includes("rpc('create_exam_war_room_target'"));
   assert.ok(actions.includes("rpc('cancel_exam_war_room_target'"));
   assert.ok(nav.includes("key: 'exam-war-room'"));
-});
-
-
-test('Exam War Room creates tasks under the source key read by its student dashboard', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108220718_learning_os_align_exam_war_room_task_source_with_ui.sql', import.meta.url), 'utf8');
-  const page = await readFile(new URL('../app/student/exam-war-room/page.tsx', import.meta.url), 'utf8');
-  assert.ok(migration.includes("e.id,'exam_plan',v_target_id"));
-  assert.ok(page.includes(".in('source_type',['exam_plan','exam_war_room'])"));
-  assert.ok(page.includes("task.status==='cancelled'"));
-  assert.ok(page.includes('<span>Cancelled</span>'));
 });

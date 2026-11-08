@@ -2,7 +2,6 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { normalizeBangladeshMobile } from '@/lib/validation';
 
 export async function saveLesson(formData: FormData) {
   const supabase = await createClient();
@@ -72,18 +71,6 @@ export async function publishAnnouncement(formData: FormData) {
   if (title.length < 3 || title.length > 180 || body.length < 3 || body.length > 10000) redirect('/admin?announcement_error=invalid');
   const { error } = await supabase.from('notices').insert({ title, body, created_by: user.id, published_at: publish ? new Date().toISOString() : null });
   redirect(error ? '/admin?announcement_error=save' : '/admin?announcement_success=1');
-}
-
-export async function updateStudentProfile(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const fullName = String(formData.get('full_name') ?? '').trim();
-  const rawPhone = String(formData.get('phone') ?? '').trim();
-  const phone = rawPhone ? normalizeBangladeshMobile(rawPhone) : null;
-  if (fullName.length < 2 || fullName.length > 100 || (rawPhone && !phone)) redirect('/student?profile_error=invalid');
-  const { error } = await supabase.from('profiles').update({ full_name: fullName, phone: phone || null, updated_at: new Date().toISOString() }).eq('id', user.id);
-  redirect(error ? '/student?profile_error=save' : '/student?profile_success=1');
 }
 
 export async function setCoursePublication(formData: FormData) {

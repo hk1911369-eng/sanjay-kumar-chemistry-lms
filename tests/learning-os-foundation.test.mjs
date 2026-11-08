@@ -95,7 +95,7 @@ test('study-session events advance study-session and minute goals; revision even
 });
 
 test('Learning OS goals count only verified lesson completions', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108213210_learning_os_verified_lesson_goals_and_events.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108213407_learning_os_verified_lesson_goals_and_events.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("event_type = 'lesson_completed'"));
   assert.ok(migration.includes('duration_seconds IS NULL'));
   assert.ok(migration.includes('lp.completed IS TRUE'));

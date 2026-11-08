@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('teacher analytics only exposes goals from assigned courses with active enrollment', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108214532_learning_os_staff_course_goal_visibility.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108214359_learning_os_staff_course_goal_visibility.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("current_role())::text IN ('teacher','staff')"));
   assert.ok(migration.includes('course_id IS NOT NULL'));
   assert.ok(migration.includes('a.teacher_id = (SELECT auth.uid())'));

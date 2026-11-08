@@ -273,7 +273,24 @@ test('quiz windows are available to teachers and start actions enforce the confi
   const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
   const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
   assert.ok(action.includes('parseDhakaDateTime'));
-  assert.ok(action.includes('roundTrip===normalized?parsed.toISOString():null'));
+  assert.ok(action.includes("select('id,starts_at,ends_at')"));
+  assert.ok(action.includes('quiz.starts_at'));
+  assert.ok(action.includes('quiz.ends_at'));
+  assert.ok(page.includes('Starts at (Bangladesh time, optional)'));
+  assert.ok(page.includes('Ends at (Bangladesh time, optional)'));
+});
+
+test('quizzes enforce scheduled start/end windows and reject invalid answer references', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108215856_learning_os_enforce_quiz_schedule_and_answer_integrity.sql', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
+  assert.ok(migration.includes('v_starts_at'));
+  assert.ok(migration.includes('v_ends_at'));
+  assert.ok(migration.includes('Quiz has not started'));
+  assert.ok(migration.includes('Quiz has ended'));
+  assert.ok(migration.includes('Answer refers to an unknown question or option'));
+  assert.ok(action.includes('parseDhakaDateTime'));
+  assert.ok(action.includes("normalized+'+06:00'"));
   assert.ok(action.includes("select('id,starts_at,ends_at')"));
   assert.ok(action.includes('quiz.starts_at'));
   assert.ok(action.includes('quiz.ends_at'));

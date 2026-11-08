@@ -291,6 +291,7 @@ test('quizzes enforce scheduled start/end windows and reject invalid answer refe
   assert.ok(migration.includes('Answer refers to an unknown question or option'));
   assert.ok(action.includes('parseDhakaDateTime'));
   assert.ok(action.includes("normalized+'+06:00'"));
+  assert.ok(action.includes('roundTrip===normalized?parsed.toISOString():null'));
   assert.ok(action.includes("select('id,starts_at,ends_at')"));
   assert.ok(action.includes('quiz.starts_at'));
   assert.ok(action.includes('quiz.ends_at'));

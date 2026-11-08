@@ -19,7 +19,15 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     const { data: profile, error } = await supabase.from('profiles').select('is_active').eq('id', user.id).maybeSingle();
-    if (!error && profile?.is_active !== true) {
+    if (error) {
+      const unavailable = NextResponse.json(
+        { error: 'Unable to verify account status. Please try again.' },
+        { status: 503 },
+      );
+      response.cookies.getAll().forEach(cookie => unavailable.cookies.set(cookie));
+      return unavailable;
+    }
+    if (profile?.is_active !== true) {
       const destination = request.nextUrl.clone();
       destination.pathname = '/account-disabled';
       destination.search = '';

@@ -17,6 +17,9 @@ test('student deactivation is reversible, audited and enforced at database level
   assert.ok(migration.includes('as restrictive for all to authenticated'));
   assert.ok(migration.includes('p.is_active is true'));
   assert.ok(middleware.includes("select('is_active')"));
+  assert.ok(middleware.includes('if (error)'));
+  assert.ok(middleware.includes('status: 503'));
+  assert.ok(middleware.includes('profile?.is_active !== true'));
   assert.ok(middleware.includes('/account-disabled'));
   assert.ok(disabled.includes('Your enrolment, payment and academic history have not been deleted'));
   assert.ok(management.includes('setStudentAccountActive'));

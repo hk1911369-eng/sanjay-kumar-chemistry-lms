@@ -44,6 +44,15 @@ test('Learning OS event ingestion cannot manufacture assessment scores or cross-
   assert.ok(migration.includes('e.student_id = revision_tasks.student_id'));
 });
 
+test('Learning OS staff visibility does not leak the whole academic twin across subjects', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108212228_learning_os_scope_academic_twin_staff_visibility.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('students and admins read learner profiles'));
+  assert.ok(migration.includes('students admins and subject-assigned staff read concept mastery'));
+  assert.ok(migration.includes('JOIN public.course_subjects cs'));
+  assert.ok(migration.includes('lc.subject_id = cs.subject_id'));
+  assert.ok(migration.includes('e.student_id = learner_concept_mastery.student_id'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

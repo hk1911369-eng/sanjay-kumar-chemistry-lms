@@ -119,9 +119,9 @@ The platform must support any subject and programme. "Chemistry" in the original
 - Verified lesson-completion events, trusted quiz assessment events, and guarded simulation-completion events. Client analytics cannot manufacture assessment scores or arbitrary study duration.
 - Concept-tagged question bank and quiz builder. Quiz grading updates mastery, schedules targeted revision, stores wrong answers, aggregates recurring mistakes for reused questions, and resolves a stored mistake after a later correct answer.
 - Student Today dashboard with study goals, revision queue, topic mastery, upcoming quizzes/written exams, assignment deadlines and evidence-gated lesson recommendations.
-- Teacher/admin learning insights with assigned-course and subject-scoped access to due revisions, weak concepts, goals and repeated mistake patterns.
-- Initial multi-subject virtual lab catalogue: Physics (Ohm's law), Chemistry (acid-base titration), Biology (monohybrid inheritance), Mathematics (linear functions) and ICT (binary conversion). Labs are filtered to enrolled course subjects and completion is checked again by a database RPC.
-- Existing moderated lesson discussions and course discussions remain available as the first social-learning layer.
+- Teacher/admin learning insights with assigned-course and subject-scoped access to due revisions, weak concepts, goals and repeated mistake patterns; result sets are paginated to avoid silent row-cap truncation.
+- Initial multi-subject virtual lab catalogue: Physics (Ohm's law), Chemistry (acid-base titration), Biology (monohybrid inheritance), Mathematics (linear functions) and ICT (binary conversion). Labs are filtered to enrolled course subjects; a trusted database RPC rechecks paid enrolment, course-subject match and duration bounds before recording completion.
+- Course-scoped lesson discussions, replies, teacher pinning and reactions provide the first social-learning layer; full reporting, blocking and moderation workflows remain future work.
 
 ### In progress
 

@@ -76,6 +76,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
           const pending=targetTasks.filter(task=>task.status==='pending');
           const completed=targetTasks.filter(task=>task.status==='completed');
           const skipped=targetTasks.filter(task=>task.status==='skipped');
+          const cancelled=targetTasks.filter(task=>task.status==='cancelled');
           return <article className="portal-card" key={target.id}>
             <div className="studio-heading"><div><span className="auth-kicker">{trackLabels[target.target_track]??target.target_track}</span>
               <h2>{courseNames.get(target.course_id)??'Course'} · {target.exam_date}</h2>
@@ -87,6 +88,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
               <div className="learning-os-stat"><strong>{pending.length}</strong><span>Pending</span></div>
               <div className="learning-os-stat"><strong>{completed.length}</strong><span>Completed</span></div>
               <div className="learning-os-stat"><strong>{skipped.length}</strong><span>Skipped</span></div>
+              <div className="learning-os-stat"><strong>{cancelled.length}</strong><span>Cancelled</span></div>
             </div>
             {targetTasks.length===0?<p className="muted">No concepts are mapped to this exam track yet. Your teacher can tag published concepts in the knowledge graph.</p>:
               <ul className="learning-os-list">{targetTasks.slice(0,30).map(task=><li key={task.id}><b>{task.title}</b><small className="muted"> · {new Date(task.scheduled_for).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} · Priority {task.priority}/5 · {task.status}</small></li>)}</ul>}

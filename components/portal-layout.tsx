@@ -15,6 +15,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'overview', label: 'My dashboard', href: '/student', icon: 'home' },
       { key: 'learning', label: 'Learning room', href: '/student#courses', icon: 'book-open' },
       { key: 'labs', label: 'Virtual labs', href: '/labs', icon: 'flask' },
+      { key: 'exam-war-room', label: 'Exam War Room', href: '/student/exam-war-room', icon: 'target' },
       { key: 'courses', label: 'Explore courses', href: '/courses', icon: 'book' },
       { key: 'announcements', label: 'Announcements', href: '/student#announcements', icon: 'bell' },
       { key: 'feedback', label: 'Teacher feedback', href: '/student#feedback', icon: 'pencil' },

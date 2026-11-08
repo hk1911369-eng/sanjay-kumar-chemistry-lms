@@ -83,39 +83,90 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   }));
   // Recommend only published lessons the student can currently access, tied to concepts
   // with enough real evidence to justify a weakness signal.
-  const weakConceptIds = conceptMastery
-    .filter((item:any) => Number(item.evidence_count) >= 3 && Number(item.mastery_score) <= 0.65)
-    .map((item:any) => item.concept_id);
+  const weakConcepts = conceptMastery
+    .filter((item:any) => Number(item.evidence_count) >= 3 && Number(item.mastery_score) <= 0.65);
+  const weakConceptIds = weakConcepts.map((item:any) => item.concept_id);
   const eligibleCourseIds = [...new Set((enrollments ?? [])
     .filter((item:any) => item.status === 'active' && item.admission_fee_paid
       && item.paid_through && item.paid_through >= periodEnd)
     .map((item:any) => item.course_id))];
-  let learningRecommendations: { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number }[] = [];
+  let learningRecommendations: { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null }[] = [];
   if (weakConceptIds.length && eligibleCourseIds.length) {
-    const { data: candidateLessons } = await supabase.from('lessons')
-      .select('id,title,course_id').in('course_id',eligibleCourseIds).eq('is_published',true).limit(300);
-    const lessonRows = candidateLessons ?? [];
-    if (lessonRows.length) {
-      const { data: mappings } = await supabase.from('lesson_concepts')
-        .select('lesson_id,concept_id').in('lesson_id',lessonRows.map((lesson:any)=>lesson.id))
-        .in('concept_id',weakConceptIds);
-      const masteryByConcept = new Map(conceptMastery.map((item:any)=>[item.concept_id,item]));
-      const lessonById = new Map(lessonRows.map((lesson:any)=>[lesson.id,lesson]));
-      const seen = new Set<string>();
-      for (const mapping of mappings ?? []) {
-        const lesson:any = lessonById.get(mapping.lesson_id);
-        const mastery:any = masteryByConcept.get(mapping.concept_id);
-        if (!lesson || !mastery || seen.has(lesson.id)) continue;
-        const concept = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : mastery.learning_concepts;
-        seen.add(lesson.id);
-        learningRecommendations.push({
-          lessonId:lesson.id, lessonTitle:lesson.title, courseId:lesson.course_id,
-          conceptTitle:concept?.title ?? 'Learning topic',
-          masteryScore:Number(mastery.mastery_score),
+    const { data: prerequisiteEdges } = await supabase.from('concept_prerequisites')
+      .select('concept_id,prerequisite_concept_id').in('concept_id',weakConceptIds);
+    const prerequisiteIds = [...new Set((prerequisiteEdges ?? []).map((edge:any) => edge.prerequisite_concept_id))];
+    const [{ data: prerequisiteConceptRows }, { data: prerequisiteMasteryRows }] = prerequisiteIds.length
+      ? await Promise.all([
+          supabase.from('learning_concepts').select('id,title').in('id',prerequisiteIds).eq('is_published',true),
+          supabase.from('learner_concept_mastery').select('concept_id,mastery_score,evidence_count')
+            .eq('student_id',user.id).in('concept_id',prerequisiteIds),
+        ])
+      : [{ data: [] as any[] }, { data: [] as any[] }];
+    const prerequisiteTitles = new Map((prerequisiteConceptRows ?? []).map((item:any) => [item.id,item.title]));
+    const prerequisiteMastery = new Map((prerequisiteMasteryRows ?? []).map((item:any) => [item.concept_id,item]));
+    const edgesByWeakConcept = new Map<string,string[]>();
+    for (const edge of prerequisiteEdges ?? []) {
+      const existing = edgesByWeakConcept.get(edge.concept_id) ?? [];
+      existing.push(edge.prerequisite_concept_id);
+      edgesByWeakConcept.set(edge.concept_id,existing);
+    }
+    const recommendationTargets = new Map<string,{conceptTitle:string;masteryScore:number|null;rootCauseFor:string|null}>();
+    for (const weak of weakConcepts) {
+      const weakRelation = Array.isArray(weak.learning_concepts) ? weak.learning_concepts[0] : weak.learning_concepts;
+      const weakTitle = weakRelation?.title ?? 'Learning topic';
+      const prerequisites = (edgesByWeakConcept.get(weak.concept_id) ?? [])
+        .filter((id:string) => prerequisiteTitles.has(id));
+      const needsPrerequisiteSupport = prerequisites.filter((id:string) => {
+        const evidence:any = prerequisiteMastery.get(id);
+        return !evidence || Number(evidence.evidence_count) < 3 || Number(evidence.mastery_score) <= 0.75;
+      });
+      if (needsPrerequisiteSupport.length) {
+        for (const prerequisiteId of needsPrerequisiteSupport) {
+          const evidence:any = prerequisiteMastery.get(prerequisiteId);
+          const current = recommendationTargets.get(prerequisiteId);
+          const cause = current?.rootCauseFor
+            ? (current.rootCauseFor.includes(weakTitle) ? current.rootCauseFor : current.rootCauseFor + '; ' + weakTitle)
+            : weakTitle;
+          recommendationTargets.set(prerequisiteId,{
+            conceptTitle:prerequisiteTitles.get(prerequisiteId) ?? 'Prerequisite topic',
+            masteryScore:evidence && Number(evidence.evidence_count) >= 3 ? Number(evidence.mastery_score) : null,
+            rootCauseFor:cause,
+          });
+        }
+      } else {
+        recommendationTargets.set(weak.concept_id,{
+          conceptTitle:weakTitle,
+          masteryScore:Number(weak.mastery_score),
+          rootCauseFor:null,
         });
       }
-      learningRecommendations.sort((a,b)=>a.masteryScore-b.masteryScore);
-      learningRecommendations=learningRecommendations.slice(0,6);
+    }
+    const recommendationConceptIds = [...recommendationTargets.keys()];
+    if (recommendationConceptIds.length) {
+      const { data: candidateLessons } = await supabase.from('lessons')
+        .select('id,title,course_id').in('course_id',eligibleCourseIds).eq('is_published',true).limit(300);
+      const lessonRows = candidateLessons ?? [];
+      if (lessonRows.length) {
+        const { data: mappings } = await supabase.from('lesson_concepts')
+          .select('lesson_id,concept_id').in('lesson_id',lessonRows.map((lesson:any)=>lesson.id))
+          .in('concept_id',recommendationConceptIds);
+        const lessonById = new Map(lessonRows.map((lesson:any)=>[lesson.id,lesson]));
+        const seen = new Set<string>();
+        for (const mapping of mappings ?? []) {
+          const lesson:any = lessonById.get(mapping.lesson_id);
+          const target = recommendationTargets.get(mapping.concept_id);
+          if (!lesson || !target || seen.has(lesson.id)) continue;
+          seen.add(lesson.id);
+          learningRecommendations.push({
+            lessonId:lesson.id, lessonTitle:lesson.title, courseId:lesson.course_id,
+            conceptTitle:target.conceptTitle,
+            masteryScore:target.masteryScore,
+            rootCauseFor:target.rootCauseFor,
+          });
+        }
+        learningRecommendations.sort((a,b)=>(a.masteryScore ?? -0.01)-(b.masteryScore ?? -0.01));
+        learningRecommendations=learningRecommendations.slice(0,6);
+      }
     }
   }
   const activeCourseIds = [...new Set((enrollments ?? []).filter((enrollment:any) => enrollment.status === 'active').map((enrollment:any) => enrollment.course_id))];

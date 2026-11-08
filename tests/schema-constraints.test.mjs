@@ -156,3 +156,15 @@ test('submission updates preserve student work and ownership while allowing boun
   assert.ok(migration.includes('NEW.marks > v_max_marks'));
   assert.ok(migration.includes("v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff')"));
 });
+
+ 
+test('student follow-up edits stay assigned-course scoped and visibility is admin-only', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108183448_scope_student_followup_updates.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('ALTER POLICY "assigned staff update student followups"'));
+  assert.ok(migration.includes('FROM public.course_assignments a'));
+  assert.ok(migration.includes('FROM public.enrollments e'));
+  assert.ok(migration.includes('NEW.visible_to_student IS DISTINCT FROM OLD.visible_to_student'));
+  assert.ok(migration.includes("v_role IS DISTINCT FROM 'admin'"));
+  assert.ok(migration.includes('NEW.created_by IS DISTINCT FROM OLD.created_by'));
+  assert.ok(migration.includes("v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff')"));
+});

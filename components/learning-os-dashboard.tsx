@@ -25,9 +25,9 @@ const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames, upcomingExams, upcomingAssignments }: {
-  goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; courseNames: Map<string, string>;
-  upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
+export function LearningOSDashboard({ goals, revisionTasks, mastery, recommendations, courseNames, upcomingExams, upcomingAssignments }: {
+  goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; recommendations: Recommendation[];
+  courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
   const averageMastery = mastery.length

@@ -11,6 +11,7 @@ test('LXP recommendations require evidence and currently paid course access', as
   assert.ok(page.includes(".eq('is_published',true)"));
   assert.ok(page.includes("from('lesson_concepts')"));
   assert.ok(component.includes('Recommended next steps'));
+  assert.ok(component.includes('recommendations: Recommendation[]'));
   assert.ok(component.includes('Recommendations are based on evidence, not guesses.'));
   assert.ok(component.includes('/learn/'));
 });

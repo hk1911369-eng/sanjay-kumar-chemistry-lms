@@ -144,3 +144,15 @@ test('admins can correct attendance while teachers remain scoped to enrolled stu
   assert.ok(migration.includes('FROM public.enrollments e'));
   assert.ok(migration.includes('FROM public.course_assignments a'));
 });
+
+ 
+test('submission updates preserve student work and ownership while allowing bounded grading', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108183319_protect_student_submission_integrity.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('guard_assignment_submission_update'));
+  assert.ok(migration.includes('guard_written_exam_submission_update'));
+  assert.ok(migration.includes('NEW.answer_text IS DISTINCT FROM OLD.answer_text'));
+  assert.ok(migration.includes('NEW.answers IS DISTINCT FROM OLD.answers'));
+  assert.ok(migration.includes('NEW.student_id IS DISTINCT FROM OLD.student_id'));
+  assert.ok(migration.includes('NEW.marks > v_max_marks'));
+  assert.ok(migration.includes("v_role NOT IN ('admin', 'teacher', 'staff')"));
+});

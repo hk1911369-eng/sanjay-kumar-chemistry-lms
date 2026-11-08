@@ -261,3 +261,55 @@ export async function toggleLessonBookmark(formData: FormData) {
   revalidatePath('/learn/' + courseId);
   redirect('/learn/' + courseId + '#lesson-' + lessonId);
 }
+
+
+const examTargetTracks = new Set([
+  'primary','ssc','hsc','medical','engineering','university','olympiad','vocational','general',
+]);
+
+export async function createExamWarRoomTarget(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'student') redirect('/portal');
+
+  const courseId = String(formData.get('course_id') ?? '').trim();
+  const targetTrack = String(formData.get('target_track') ?? '').trim().toLowerCase();
+  const examDate = String(formData.get('exam_date') ?? '').trim();
+  const dailyMinutes = Number(formData.get('daily_minutes'));
+  const targetScore = Number(formData.get('target_score') ?? 80);
+  if (!/^[0-9a-f-]{36}$/i.test(courseId)
+    || !examTargetTracks.has(targetTrack)
+    || !/^\\d{4}-\\d{2}-\\d{2}$/.test(examDate)
+    || !Number.isInteger(dailyMinutes) || dailyMinutes < 15 || dailyMinutes > 600
+    || !Number.isFinite(targetScore) || targetScore < 1 || targetScore > 100) {
+    redirect('/student?exam_plan_error=invalid#exam-war-room');
+  }
+
+  const { error } = await supabase.rpc('create_exam_war_room_target', {
+    p_course_id: courseId,
+    p_target_track: targetTrack,
+    p_exam_date: examDate,
+    p_daily_minutes: dailyMinutes,
+    p_target_score: targetScore,
+  });
+  if (error) redirect('/student?exam_plan_error=unavailable#exam-war-room');
+  revalidatePath('/student');
+  redirect('/student?exam_plan_success=1#exam-war-room');
+}
+
+export async function cancelExamWarRoomTarget(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'student') redirect('/portal');
+  const targetId = String(formData.get('target_id') ?? '').trim();
+  if (!/^[0-9a-f-]{36}$/i.test(targetId)) redirect('/student?exam_plan_error=cancel#exam-war-room');
+
+  const { data, error } = await supabase.rpc('cancel_exam_war_room_target', { p_target_id: targetId });
+  if (error || data !== true) redirect('/student?exam_plan_error=cancel#exam-war-room');
+  revalidatePath('/student');
+  redirect('/student?exam_plan_success=cancelled#exam-war-room');
+}

@@ -44,12 +44,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const studentNames = new Map((studentsData ?? []).map(s => [s.id, s.full_name] as const));
   const courseNames = new Map((courseData ?? []).map(c => [c.id, c.title] as const));
   const auditActorNames = new Map((auditActors??[]).map(actor=>[actor.id,actor.full_name] as const));
+  const proofPaths = [...new Set((submissions ?? []).map(item => item.proof_storage_path).filter((path): path is string => Boolean(path)))];
   const proofLinks = new Map<string,string>();
-  for (const submission of submissions ?? []) {
-    if (!submission.proof_storage_path) continue;
-    const { data, error } = await supabase.storage.from('payment-proofs').createSignedUrl(submission.proof_storage_path, 600);
+  if (proofPaths.length) {
+    const { data: signedProofs, error } = await supabase.storage.from('payment-proofs').createSignedUrls(proofPaths, 600);
     if (error) console.error('Payment proof signing failed', { code: error.name ?? 'unknown' });
-    else if (data?.signedUrl) proofLinks.set(submission.id, data.signedUrl);
+    else for (const item of signedProofs ?? []) {
+      if (item.path && item.signedUrl) proofLinks.set(item.path, item.signedUrl);
+    }
   }
 
   return <PortalLayout role="admin" active="overview" title="Admin dashboard" returnTo="/admin">
@@ -65,7 +67,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       <h2 id="payment-reviews">Pending payment reviews</h2>
       {(submissions ?? []).length === 0 ? <p className="muted">No pending payment submissions.</p> : <div className="portal-grid review-grid">{submissions!.map(p => <article className="portal-card" key={p.id}>
         <span className="auth-kicker">{p.provider.toUpperCase()} · {p.payment_kind === 'initial' ? 'ADMISSION + FIRST MONTH' : p.payment_kind === 'monthly' ? 'MONTHLY TUITION' : 'PREVIOUS PAYMENT'} · PENDING REVIEW</span><h3>{courseNames.get(p.course_id) ?? 'JMT Academy course'}</h3>
-        <p><b>Student:</b> {studentNames.get(p.student_id) || p.student_id.slice(0, 8)}</p><p><b>Transaction ID:</b> <code>{p.transaction_id}</code></p><p><b>Learning format:</b> {p.delivery_mode==='live_recorded'?'Live + recorded':p.delivery_mode==='recorded_only'?'Recorded only':p.delivery_mode==='offline'?'Offline':'Legacy / not recorded'}</p><p><b>Fee breakdown:</b> {p.fee_monthly_bdt!==null&&p.fee_monthly_bdt!==undefined?`Course ৳${p.fee_monthly_bdt} + admission ৳${p.fee_admission_bdt??0}`:'Historic fee record'}</p><p><b>Billing month:</b> {p.billing_period}</p><p><b>Sender mobile:</b> {p.sender_phone ?? (p.sender_phone_last4 ? `Ending ${p.sender_phone_last4}` : 'Not supplied')}</p><p><b>Amount:</b> ৳{p.amount_bdt}</p><p><b>Payment proof:</b> {proofLinks.has(p.id)?<a href={proofLinks.get(p.id)} target="_blank" rel="noopener noreferrer">View private screenshot</a>:'Not attached (legacy submission)'}</p><p className="muted small-note">Submitted: {new Date(p.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
+        <p><b>Student:</b> {studentNames.get(p.student_id) || p.student_id.slice(0, 8)}</p><p><b>Transaction ID:</b> <code>{p.transaction_id}</code></p><p><b>Learning format:</b> {p.delivery_mode==='live_recorded'?'Live + recorded':p.delivery_mode==='recorded_only'?'Recorded only':p.delivery_mode==='offline'?'Offline':'Legacy / not recorded'}</p><p><b>Fee breakdown:</b> {p.fee_monthly_bdt!==null&&p.fee_monthly_bdt!==undefined?`Course ৳${p.fee_monthly_bdt} + admission ৳${p.fee_admission_bdt??0}`:'Historic fee record'}</p><p><b>Billing month:</b> {p.billing_period}</p><p><b>Sender mobile:</b> {p.sender_phone ?? (p.sender_phone_last4 ? `Ending ${p.sender_phone_last4}` : 'Not supplied')}</p><p><b>Amount:</b> ৳{p.amount_bdt}</p><p><b>Payment proof:</b> {proofLinks.has(p.proof_storage_path)?<a href={proofLinks.get(p.proof_storage_path)} target="_blank" rel="noopener noreferrer">View private screenshot</a>:'Not attached (legacy submission)'}</p><p className="muted small-note">Submitted: {new Date(p.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
         <PaymentReviewForm submissionId={p.id}/>
       </article>)}</div>}
       <h2 id="payment-settings">Payment receiving settings</h2>

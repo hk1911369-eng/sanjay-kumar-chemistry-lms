@@ -51,3 +51,16 @@ test('reusable quiz questions aggregate recurring errors and resolve after a cor
   assert.ok(action.includes('question_bank_id:q.id'));
   assert.equal(action.includes('source_bank_question_id:q.id'), false);
 });
+
+
+test('quiz submission enforces schedule, paid access and question-option integrity', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108215856_learning_os_enforce_quiz_schedule_and_answer_integrity.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("public.current_role() IS DISTINCT FROM 'student'::public.app_role"));
+  assert.ok(migration.includes("q.published"));
+  assert.ok(migration.includes('q.starts_at'));
+  assert.ok(migration.includes('q.ends_at'));
+  assert.ok(migration.includes('e.paid_through'));
+  assert.ok(migration.includes('jsonb_each_text(p_answers)'));
+  assert.ok(migration.includes('jsonb_array_length(x.options)'));
+  assert.ok(migration.includes('FOR UPDATE'));
+});

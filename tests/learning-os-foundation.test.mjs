@@ -94,6 +94,18 @@ test('study-session events advance study-session and minute goals; revision even
   assert.ok(migration.includes('Asia/Dhaka'));
 });
 
+test('Learning knowledge graph rejects cross-subject and circular links at database level', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213401_learning_graph_integrity_guards.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('guard_concept_prerequisite_edge'));
+  assert.ok(migration.includes('v_concept_subject IS DISTINCT FROM v_prerequisite_subject'));
+  assert.ok(migration.includes('WITH RECURSIVE reachable'));
+  assert.ok(migration.includes('Prerequisite relationship would create a cycle'));
+  assert.ok(migration.includes('guard_lesson_concept_subject'));
+  assert.ok(migration.includes('Lesson and concept must belong to the same course subject'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_concept_prerequisite_edge()'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_lesson_concept_subject()'));
+});
+
 test('Learning OS goals count only verified lesson completions', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213407_learning_os_verified_lesson_goals_and_events.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("event_type = 'lesson_completed'"));

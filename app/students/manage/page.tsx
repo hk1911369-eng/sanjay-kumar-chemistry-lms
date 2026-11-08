@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { createStudentFollowup, markStudentAttendance, updateStudentFollowupStatus, updateAccountRole } from '@/app/actions/student-management';
+import { createStudentFollowup, markStudentAttendance, updateStudentFollowupStatus, updateAccountRole, setStudentAccountActive } from '@/app/actions/student-management';
 import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
 type StudentProfile = {
@@ -11,7 +11,7 @@ type StudentProfile = {
   guardian_name: string | null; guardian_phone: string | null; college_name: string | null;
   location: string | null; avatar_path: string | null; admission_date: string | null;
   date_of_birth: string | null; gender: string | null; blood_group: string | null;
-  emergency_contact: string | null; created_at: string; role: string;
+  emergency_contact: string | null; created_at: string; role: string; is_active: boolean;
 };
 
 function monthLabel(period: string) {
@@ -41,7 +41,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   if (q) {
     const normalized = q.replace(/[^0-9]/g,'');
     const lookups = await Promise.all([
-      supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').ilike('student_code',q).limit(30),
+      supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role,is_active').eq('role','student').ilike('student_code',q).limit(30),
       supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').ilike('full_name','%'+q.replace(/[%_,()]/g,' ')+'%').limit(30),
       ...(normalized.length >= 8 ? [
         supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').eq('phone',normalized.slice(-11)).limit(30),
@@ -91,7 +91,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
       <h1>Student records & search</h1>
       <p className="muted">Search using Student ID, student mobile, guardian mobile or student name. Phone searches accept local Bangladesh numbers.</p>
       {params.saved==='followup'&&<p className="form-success">Student follow-up saved.</p>}
-      {params.saved==='attendance'&&<p className="form-success">Attendance saved.</p>}{params.saved==='role'&&<p className="form-success">Account role updated.</p>}
+      {params.saved==='attendance'&&<p className="form-success">Attendance saved.</p>}{params.saved==='role'&&<p className="form-success">Account role updated.</p>}{params.saved==='account'&&<p className="form-success">Student account status updated. The change was recorded in the admin audit log.</p>}
       {params.error&&<p className="form-error">The record could not be saved. Check the student, assigned course and entered details.</p>}
       <form method="get" className="auth-form portal-card" style={{gridTemplateColumns:'1fr auto',alignItems:'end'}}>
         <label>Student ID / student or guardian phone / name<input name="q" defaultValue={q} placeholder="e.g. SKC-2026-000001 or 01XXXXXXXXX" autoComplete="off"/></label>
@@ -110,7 +110,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
             {photo?<Image src={photo} alt="Student profile" width={86} height={86} unoptimized style={{width:86,height:86,objectFit:'cover',borderRadius:18,border:'1px solid var(--line)'}}/>:<div style={{width:86,height:86,borderRadius:18,background:'#eaf3ff',display:'grid',placeItems:'center',fontSize:30}}>👤</div>}
             <div style={{flex:1,minWidth:220}}>
               <span className="auth-kicker">STUDENT PROFILE</span><h2 style={{margin:'4px 0'}}>{student.full_name}</h2>
-              <b>{student.student_code??'ID pending'}</b><p className="muted" style={{margin:'4px 0'}}>Account type: {student.role} · Admitted: {student.admission_date??'Not recorded'} · {student.college_name??'College not added'}</p>
+              <b>{student.student_code??'ID pending'}</b><p className="muted" style={{margin:'4px 0'}}>Account type: {student.role} · Account status: {student.is_active?'Active':'Inactive'} · Admitted: {student.admission_date??'Not recorded'} · {student.college_name??'College not added'}</p>
             </div>
           </div>
           <div className="portal-grid" style={{marginTop:16}}>
@@ -146,6 +146,12 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
           {studentAttendance.length===0?<p className="muted">No attendance records.</p>:<div className="table-scroll"><table><thead><tr><th>Date</th><th>Course</th><th>Status</th><th>Note</th></tr></thead><tbody>{studentAttendance.slice(0,10).map(a=><tr key={a.id}><td>{a.attendance_date}</td><td>{courseNames.get(a.course_id)??'Course'}</td><td>{a.status}</td><td>{a.note??'—'}</td></tr>)}</tbody></table></div>}
           <h3>Teacher / staff follow-up history</h3>
           {studentNotes.length===0?<p className="muted">No remarks or follow-ups yet.</p>:studentNotes.slice(0,10).map(note=><div key={note.id} className="payment-instructions"><b>{note.category.toUpperCase()} · {note.severity.toUpperCase()}</b> · {note.follow_up_status}<p>{note.details}</p><p className="muted">Guardian called: {note.guardian_contacted?'Yes':'No'}{note.guardian_call_outcome?' · '+note.guardian_call_outcome:''} · {new Date(note.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>{role==='admin'||note.created_by===user.id?<form action={updateStudentFollowupStatus} className="auth-form payment-form"><input type="hidden" name="followup_id" value={note.id}/><label>Follow-up status<select name="follow_up_status" defaultValue={note.follow_up_status}><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select></label><button className="auth-submit">Update status</button></form>:null}</div>)}
+          {role==='admin'&&<form action={setStudentAccountActive} className="auth-form portal-card" style={{marginTop:16}}>
+            <input type="hidden" name="profile_id" value={student.id}/>
+            <input type="hidden" name="is_active" value={student.is_active?'false':'true'}/>
+            <b>Student account access</b><p className="muted">{student.is_active?'This student can sign in and use their permitted workspace.':'This account is inactive and protected routes are blocked. History is retained.'}</p>
+            <button className={student.is_active?'quiet-button':'auth-submit'}>{student.is_active?'Deactivate student account':'Reactivate student account'}</button>
+          </form>}
           {role==='admin'&&<form action={updateAccountRole} className="auth-form portal-card" style={{marginTop:16}}><input type="hidden" name="profile_id" value={student.id}/><b>Admin account management</b><label>Account role<select name="role" defaultValue={student.role}><option value="student">Student</option><option value="teacher">Teacher</option><option value="staff">Staff</option></select></label><button className="auth-submit">Save account role</button></form>}
           {studentEnrollments.map(enrollment=><div key={enrollment.id} className="portal-grid" style={{marginTop:14}}>
             <form action={markStudentAttendance} className="auth-form portal-card">

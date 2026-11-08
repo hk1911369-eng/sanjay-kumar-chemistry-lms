@@ -1,3 +1,4 @@
+export const metadata = { title: 'Apply', robots: { index: false, follow: false } };
 import Link from 'next/link';
 import {redirect} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';

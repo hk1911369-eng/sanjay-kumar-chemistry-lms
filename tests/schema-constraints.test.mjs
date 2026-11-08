@@ -26,7 +26,7 @@ test('student submission policies require an active student role', async () => {
   ]) {
     assert.ok(migration.includes(policy), policy);
   }
-  assert.equal((migration.match(/public\.current_role\(\)\) = 'student'/g) ?? []).length, 9);
+  assert.equal((migration.match(/public\.current_role\(\)\) = 'student'/g) ?? []).length, 12);
   assert.ok(migration.includes('to authenticated'));
   assert.equal(migration.includes('to public'), false);
 });

@@ -30,8 +30,8 @@ export async function saveAcademyCourse(fd:FormData){
  if(saved.error||!saved.data)redirect('/admin/courses?error=save');
  const courseId=saved.data.id;const {data:valid}=teachers.length?await db.from('profiles').select('id').in('id',teachers).in('role',['teacher','staff']):{data:[] as {id:string}[]};
  if(teachers.length&&(valid?.length??0)!==teachers.length)redirect('/admin/courses?error=teachers');
- const {error:delError}=await db.from('course_assignments').delete().eq('course_id',courseId);if(delError)redirect('/admin/courses?error=assignments');
- if(teachers.length){const {error}=await db.from('course_assignments').insert(teachers.map(teacher_id=>({course_id:courseId,teacher_id,assigned_by:user.id})));if(error)redirect('/admin/courses?error=assignments');}
+ const {error:assignmentError}=await db.rpc('replace_course_assignments',{p_course_id:courseId,p_teacher_ids:teachers});
+ if(assignmentError)redirect('/admin/courses?error=assignments');
  revalidatePath('/admin');revalidatePath('/admin/courses');revalidatePath('/courses');revalidatePath('/');revalidatePath('/courses/'+slug);
  redirect('/admin/courses?saved=1'+(id?'&updated=1':''));
 }

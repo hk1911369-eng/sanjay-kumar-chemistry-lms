@@ -18,8 +18,9 @@ test('payment proof bucket is private with student-owned and admin-only access',
   assert.match(migration, /values \('payment-proofs', 'payment-proofs', false/);
   assert.match(migration, /file_size_limit = 3145728/);
   assert.match(migration, /students upload own unsubmitted payment proofs/);
-  assert.match(migration, /students read own payment proofs/);
   assert.match(migration, /admins read payment proofs/);
+  const studentRead = await read('supabase/migrations/0042_students_read_own_payment_proofs.sql');
+  assert.match(studentRead, /students read own payment proofs/);
   assert.match(migration, /current_role\(\).*admin/);
   const enforcement = await read('supabase/migrations/0041_enforce_payment_proof_ownership.sql');
   assert.match(enforcement, /security definer/i);

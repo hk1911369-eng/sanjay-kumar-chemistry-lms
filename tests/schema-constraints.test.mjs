@@ -37,3 +37,11 @@ test('RLS hardening removes the permissive active-account catch-all policy', asy
   assert.ok(migration.includes("schemaname IN ('public', 'storage')"));
   assert.ok(migration.includes('DROP POLICY'));
 });
+
+test('SECURITY DEFINER functions use an explicit trusted search path', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108122640_harden_security_definer_search_paths.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('p.prosecdef'));
+  assert.ok(migration.includes('pg_catalog.oidvectortypes'));
+  assert.ok(migration.includes('search_path TO pg_catalog, public, pg_temp'));
+  assert.ok(migration.includes("p.proname <> 'rls_auto_enable'"));
+});

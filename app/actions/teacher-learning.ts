@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 function parseDhakaDate(value: string): string | null {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const localDateTime = value + 'T09:00:00';
   const parsed = new Date(localDateTime + '+06:00');
   if (Number.isNaN(parsed.getTime())) return null;

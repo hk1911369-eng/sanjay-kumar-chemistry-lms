@@ -1,3 +1,4 @@
+export const metadata = { title: 'Register', robots: { index: false, follow: false } };
 import Link from 'next/link';
 import { signUp } from '@/app/actions/auth';
 export default async function Register({searchParams}:{searchParams:Promise<{error?:string;message?:string}>}) {

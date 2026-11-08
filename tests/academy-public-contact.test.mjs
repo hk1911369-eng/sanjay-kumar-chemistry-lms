@@ -18,6 +18,6 @@ test('public contact page displays Facebook and formats Bangladesh WhatsApp link
   const page = await read('app/contact/page.tsx');
   assert.match(page, /facebook_url/);
   assert.match(page, /Visit our Facebook page/);
-  assert.match(page, /replace\(\/\^0\/, '880'\)/);
+  assert.match(page, /replace\(\/\^0\/,'880'\)/);
   assert.match(page, /https:\/\/wa\.me\//);
 });

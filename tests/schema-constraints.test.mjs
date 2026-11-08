@@ -244,3 +244,12 @@ test('manual payment validation runs once before insert', async () => {
   assert.ok(migration.includes('ON public.manual_payment_submissions'));
   assert.ok(migration.includes('validate_manual_payment_before_insert'));
 });
+
+
+test('internal trigger functions cannot be executed through client roles', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108205040_revoke_client_execution_of_new_trigger_functions.sql', import.meta.url), 'utf8');
+  for (const fn of ['assign_student_code','guard_assignment_submission_update','guard_student_followup_update','guard_written_exam_submission_update','protect_student_identity_fields']) {
+    assert.ok(migration.includes(`public.${fn}()`), fn);
+  }
+  assert.ok(migration.includes('FROM PUBLIC, anon, authenticated'));
+});

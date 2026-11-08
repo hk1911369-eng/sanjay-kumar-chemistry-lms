@@ -62,6 +62,15 @@ test('course studio writes universal subject links whenever a course is created 
   assert.ok(action.includes("codePointAt(0)"), 'non-Latin subject names receive stable valid slugs');
 });
 
+test('Learning OS foreign-key lookups have covering indexes', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108212724_learning_os_cover_foreign_key_indexes.sql', import.meta.url), 'utf8');
+  for (const index of [
+    'learner_concept_mastery_concept_idx','learner_mistake_memory_concept_idx',
+    'learner_study_goals_course_idx','learning_concepts_parent_idx',
+    'learning_events_concept_idx','learning_events_lesson_idx','revision_tasks_concept_idx',
+  ]) assert.ok(migration.includes(index), index);
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

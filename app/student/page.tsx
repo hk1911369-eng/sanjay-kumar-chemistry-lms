@@ -75,7 +75,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const learningGoals = goalResult.data ?? [];
   const revisionTasks = revisionResult.data ?? [];
   const conceptMastery = masteryResult.data ?? [];
-  const courseNames = new Map((enrollments ?? []).map((enrollment:any) => {
+  const courseNames = new Map((enrollments ?? []).filter((enrollment:any) => enrollment.status === 'active').map((enrollment:any) => {
     const course = (courses ?? []).find((item:any) => item.id === enrollment.course_id);
     return [enrollment.course_id, course?.title ?? 'Your course'];
   }));

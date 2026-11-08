@@ -5,20 +5,30 @@ umask 077
 : "${JMT_BACKUP_DATABASE_URL:?Set JMT_BACKUP_DATABASE_URL in your shell or secret manager}"
 : "${JMT_BACKUP_TARGET:?Set JMT_BACKUP_TARGET to test or production}"
 
-if [[ "$JMT_BACKUP_TARGET" != "test" && "$JMT_BACKUP_TARGET" != "production" ]]; then
-  echo "JMT_BACKUP_TARGET must be test or production." >&2
-  exit 2
-fi
-
-if [[ "$JMT_BACKUP_TARGET" == "production" && "${JMT_BACKUP_PRODUCTION_APPROVED:-}" != "1" ]]; then
-  echo "Production backup requires JMT_BACKUP_PRODUCTION_APPROVED=1." >&2
-  exit 2
-fi
-
-if [[ -n "${JMT_PRODUCTION_DB_HOST:-}" && "$JMT_BACKUP_TARGET" == "test" && "$JMT_BACKUP_DATABASE_URL" == *"$JMT_PRODUCTION_DB_HOST"* ]]; then
-  echo "Refusing: a test backup target points at the configured production host." >&2
-  exit 2
-fi
+case "$JMT_BACKUP_TARGET" in
+  test)
+    : "${JMT_TEST_DB_HOST:?Set the expected test database host}"
+    if [[ "$JMT_BACKUP_DATABASE_URL" != *"$JMT_TEST_DB_HOST"* ]]; then
+      echo "Refusing: backup URL does not match JMT_TEST_DB_HOST." >&2
+      exit 2
+    fi
+    ;;
+  production)
+    : "${JMT_PRODUCTION_DB_HOST:?Set the expected production database host}"
+    if [[ "$JMT_BACKUP_DATABASE_URL" != *"$JMT_PRODUCTION_DB_HOST"* ]]; then
+      echo "Refusing: backup URL does not match JMT_PRODUCTION_DB_HOST." >&2
+      exit 2
+    fi
+    if [[ "${JMT_BACKUP_PRODUCTION_APPROVED:-}" != "1" ]]; then
+      echo "Production backup requires JMT_BACKUP_PRODUCTION_APPROVED=1." >&2
+      exit 2
+    fi
+    ;;
+  *)
+    echo "JMT_BACKUP_TARGET must be test or production." >&2
+    exit 2
+    ;;
+esac
 
 command -v pg_dump >/dev/null 2>&1 || { echo "pg_dump is required (install PostgreSQL client tools)." >&2; exit 127; }
 

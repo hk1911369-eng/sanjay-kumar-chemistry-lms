@@ -16,6 +16,8 @@ test('virtual lab simulations cover multiple subjects and are interactive', asyn
   for (const id of ['physics','chemistry','biology','maths','ict']) assert.ok(source.includes("id: '"+id+"'"));
   assert.ok(source.includes('onChange='));
   assert.ok(source.includes('Educational simulations only'));
+  assert.ok(source.includes('visibleLabs'));
+  assert.ok(source.includes('selectedCourses'));
 });
 
 test('virtual lab completion is recorded through a paid-enrollment-checked database RPC', async () => {
@@ -26,6 +28,9 @@ test('virtual lab completion is recorded through a paid-enrollment-checked datab
   assert.ok(migration.includes("public.current_role() IS DISTINCT FROM 'student'::public.app_role"));
   assert.ok(migration.includes('e.admission_fee_paid IS TRUE'));
   assert.ok(migration.includes('e.paid_through>=v_period_end'));
+  assert.ok(migration.includes('course_subjects cs'));
+  assert.ok(migration.includes('academic_subjects s'));
+  assert.ok(migration.includes('Simulation subject is not part of this course'));
   assert.ok(action.includes("rpc('record_simulation_completion'"));
   assert.ok(component.includes('recordSimulationCompletion'));
   assert.ok(component.includes('hasInteracted'));

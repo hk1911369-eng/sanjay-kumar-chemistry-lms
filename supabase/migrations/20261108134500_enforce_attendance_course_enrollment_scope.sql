@@ -1,0 +1,57 @@
+ALTER POLICY "assigned staff mark attendance"
+ON public.student_attendance
+USING (
+  public.current_role() = 'admin'
+  OR (
+    public.current_role()::text IN ('teacher', 'staff')
+    AND EXISTS (
+      SELECT 1 FROM public.course_assignments a
+      WHERE a.course_id = student_attendance.course_id
+        AND a.teacher_id = (SELECT auth.uid())
+    )
+    AND EXISTS (
+      SELECT 1 FROM public.enrollments e
+      WHERE e.course_id = student_attendance.course_id
+        AND e.student_id = student_attendance.student_id
+    )
+  )
+)
+WITH CHECK (
+  marked_by = (SELECT auth.uid())
+  AND (
+    public.current_role() = 'admin'
+    OR (
+      public.current_role()::text IN ('teacher', 'staff')
+      AND EXISTS (
+        SELECT 1 FROM public.course_assignments a
+        WHERE a.course_id = student_attendance.course_id
+          AND a.teacher_id = (SELECT auth.uid())
+      )
+      AND EXISTS (
+        SELECT 1 FROM public.enrollments e
+        WHERE e.course_id = student_attendance.course_id
+          AND e.student_id = student_attendance.student_id
+      )
+    )
+  )
+);
+
+ALTER POLICY "attendance scoped read"
+ON public.student_attendance
+USING (
+  public.current_role() = 'admin'
+  OR student_id = (SELECT auth.uid())
+  OR (
+    public.current_role()::text IN ('teacher', 'staff')
+    AND EXISTS (
+      SELECT 1 FROM public.course_assignments a
+      WHERE a.course_id = student_attendance.course_id
+        AND a.teacher_id = (SELECT auth.uid())
+    )
+    AND EXISTS (
+      SELECT 1 FROM public.enrollments e
+      WHERE e.course_id = student_attendance.course_id
+        AND e.student_id = student_attendance.student_id
+    )
+  )
+);

@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
+import { enforceAuthRateLimit } from '@/lib/auth-rate-limit';
 
 function getAppUrl() {
   const configured = process.env.APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
@@ -25,6 +26,7 @@ export async function signIn(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
   if (!email || password.length < 8) redirect('/login?error=invalid');
+  if (!await enforceAuthRateLimit('sign_in', email)) redirect('/login?error=' + encodeURIComponent('Too many sign-in attempts. Please wait 15 minutes and try again.'));
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect('/login?error=' + encodeURIComponent(safeMessage(error.message)));
@@ -38,6 +40,7 @@ export async function signUp(formData: FormData) {
   const phone = rawPhone ? normalizeBangladeshMobile(rawPhone) : null;
   const password = String(formData.get('password') ?? '');
   if (fullName.length < 2 || !email || password.length < 8 || (rawPhone && !phone)) redirect('/register?error=invalid');
+  if (!await enforceAuthRateLimit('sign_up', email)) redirect('/register?error=' + encodeURIComponent('Too many registration attempts. Please wait before trying again.'));
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email, password,

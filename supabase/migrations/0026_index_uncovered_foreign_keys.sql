@@ -1,0 +1,36 @@
+-- 0026: add indexes for foreign-key columns not already covered by a leading index.
+-- These indexes improve joins and parent-row updates/deletes as academy data grows.
+create index if not exists academy_settings_updated_by_idx on public.academy_settings (updated_by);
+create index if not exists assignment_submissions_graded_by_idx on public.assignment_submissions (graded_by);
+create index if not exists assignments_chapter_id_idx on public.assignments (chapter_id);
+create index if not exists assignments_created_by_idx on public.assignments (created_by);
+create index if not exists audit_logs_actor_id_idx on public.audit_logs (actor_id);
+create index if not exists course_applications_course_id_idx on public.course_applications (course_id);
+create index if not exists course_applications_reviewed_by_idx on public.course_applications (reviewed_by);
+create index if not exists course_assignments_assigned_by_idx on public.course_assignments (assigned_by);
+create index if not exists enrollments_course_id_idx on public.enrollments (course_id);
+create index if not exists finance_entries_recorded_by_idx on public.finance_entries (recorded_by);
+create index if not exists lesson_bookmarks_student_id_idx on public.lesson_bookmarks (student_id);
+create index if not exists lesson_discussion_reactions_user_id_idx on public.lesson_discussion_reactions (user_id);
+create index if not exists lesson_discussions_author_id_idx on public.lesson_discussions (author_id);
+create index if not exists lesson_discussions_course_id_idx on public.lesson_discussions (course_id);
+create index if not exists lesson_progress_lesson_id_idx on public.lesson_progress (lesson_id);
+create index if not exists lesson_resources_course_id_idx on public.lesson_resources (course_id);
+create index if not exists lesson_resources_uploaded_by_idx on public.lesson_resources (uploaded_by);
+create index if not exists lessons_course_id_idx on public.lessons (course_id);
+create index if not exists live_classes_created_by_idx on public.live_classes (created_by);
+create index if not exists manual_payment_submissions_course_id_idx on public.manual_payment_submissions (course_id);
+create index if not exists manual_payment_submissions_reviewed_by_idx on public.manual_payment_submissions (reviewed_by);
+create index if not exists notices_created_by_idx on public.notices (created_by);
+create index if not exists payment_events_order_id_idx on public.payment_events (order_id);
+create index if not exists payment_orders_course_id_idx on public.payment_orders (course_id);
+create index if not exists payment_orders_student_id_idx on public.payment_orders (student_id);
+create index if not exists question_bank_created_by_idx on public.question_bank (created_by);
+create index if not exists quizzes_chapter_id_idx on public.quizzes (chapter_id);
+create index if not exists quizzes_course_id_idx on public.quizzes (course_id);
+create index if not exists quizzes_created_by_idx on public.quizzes (created_by);
+create index if not exists student_attendance_marked_by_idx on public.student_attendance (marked_by);
+create index if not exists student_followups_course_id_idx on public.student_followups (course_id);
+create index if not exists student_followups_created_by_idx on public.student_followups (created_by);
+create index if not exists written_exam_submissions_graded_by_idx on public.written_exam_submissions (graded_by);
+create index if not exists written_exams_created_by_idx on public.written_exams (created_by);

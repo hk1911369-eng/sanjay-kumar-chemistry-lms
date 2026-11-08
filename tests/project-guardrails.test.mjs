@@ -3,15 +3,21 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('catalogue migration seeds exactly the three authorized ৳700 courses', async () => {
-  const sql = await read('supabase/migrations/0003_hsc_admission_configuration.sql');
-  const guard = await read('supabase/migrations/0005_auth_roles_and_course_guardrails.sql');
-  assert.match(sql, /HSC 2027 Chemistry/);
-  assert.match(sql, /HSC 2028 Chemistry/);
-  assert.match(sql, /Admission Chemistry/);
-  assert.match(sql, /700, false/);
-  assert.match(guard, /new\.price_bdt <> 700/);
-  assert.match(guard, /hsc-2027-chemistry.*hsc-2028-chemistry.*admission-chemistry/s);
+test('courses are created only by admins and are not seeded by new feature migrations', async () => {
+  const action = await read('app/actions/course-studio.ts');
+  const migrations = [
+    'supabase/migrations/0015_jmt_academy_course_studio.sql',
+    'supabase/migrations/0016_course_applications.sql',
+    'supabase/migrations/0021_secure_discussions_and_rate_limits.sql',
+  ];
+  assert.match(action, /me\?\.role!=='admin'/);
+  assert.match(action, /HSC 2027/);
+  assert.match(action, /HSC 2028/);
+  assert.match(action, /Admission Batch/);
+  for (const path of migrations) {
+    const sql = await read(path);
+    assert.doesNotMatch(sql, /insert\s+into\s+public\.courses/i);
+  }
 });
 
 test('payment submission is student-owned and review is admin-only through RPC', async () => {
@@ -63,4 +69,72 @@ test('learning page selects the chapter id before rendering chapter labels', asy
   const page = await read('app/learn/[courseId]/page.tsx');
   assert.match(page, /select\('[^']*chapter_id[^']*'\)/);
   assert.match(page, /l\.chapter_id/);
+});
+
+test('lesson discussion identity and pin privileges are enforced in the database', async () => {
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  const action = await read('app/actions/learning.ts');
+  const page = await read('app/learn/[courseId]/page.tsx');
+  assert.match(migration, /new\.author_name := coalesce\(v_name, 'Member'\)/);
+  assert.match(migration, /Only assigned teachers and admins can pin discussions/);
+  assert.match(migration, /Discussion identity and location fields cannot be changed/);
+  assert.match(migration, /authors and assigned teachers update discussion body or pin/);
+  assert.match(action, /consume_app_rate_limit.*lesson_discussion/s);
+  assert.match(action, /pinLessonDiscussion/);
+  assert.match(page, /Teacher/);
+  assert.match(page, /Pin comment/);
+});
+
+test('manual payment submission is throttled by authenticated user', async () => {
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  const action = await read('app/actions/payments.ts');
+  assert.match(migration, /manual_payment/);
+  assert.match(migration, /interval '15 minutes'/);
+  assert.match(action, /consume_app_rate_limit.*manual_payment/s);
+});
+
+test('authentication attempts are throttled before Supabase Auth calls', async () => {
+  const action = await read('app/actions/auth.ts');
+  const limiter = await read('lib/auth-rate-limit.ts');
+  const migration = await read('supabase/migrations/0021_secure_discussions_and_rate_limits.sql');
+  assert.match(action, /enforceAuthRateLimit\('sign_in'/);
+  assert.match(action, /enforceAuthRateLimit\('sign_up'/);
+  assert.match(limiter, /supabaseAdmin\(\)/);
+  assert.match(migration, /consume_auth_rate_limit/);
+  assert.match(migration, /grant execute on function public\.consume_auth_rate_limit.*service_role/i);
+});
+
+test('lesson file signed URLs are created only after an explicit resource request', async () => {
+  const page = await read('app/learn/[courseId]/page.tsx');
+  const action = await read('app/actions/learning.ts');
+  const component = await read('components/lesson-resource-access.tsx');
+  assert.doesNotMatch(page, /createSignedUrl/);
+  assert.match(action, /createSignedUrl\([\s\S]*?, 300/);
+  assert.match(component, /getLessonResourceUrl/);
+  assert.match(component, /onClick=\{\(\) => open\('preview'\)\}/);
+});
+
+test('authentication throttling uses the visitor IP rather than a proxy IP', async () => {
+  const limiter = await read('lib/auth-rate-limit.ts');
+  assert.match(limiter, /get\('cf-connecting-ip'\)/);
+  assert.match(limiter, /filter\(Boolean\)\[0\]/);
+  assert.doesNotMatch(limiter, /filter\(Boolean\)\.at\(-1\)/);
+});
+
+test('discussion reactions are scoped to members of the related course', async () => {
+  const migration = await read('supabase/migrations/0028_scope_discussion_reactions.sql');
+  assert.match(migration, /course members read discussion reactions/);
+  assert.match(migration, /course members add own discussion reactions/);
+  assert.match(migration, /a\.teacher_id = \(select auth\.uid\(\)\)/);
+  assert.match(migration, /e\.student_id = \(select auth\.uid\(\)\)/);
+  assert.match(migration, /e\.status = 'active'/);
+  assert.match(migration, /e\.admission_fee_paid = true/);
+  assert.match(migration, /e\.paid_through >=/);
+  assert.doesNotMatch(migration, /to public/i);
+});
+
+test('lesson downloads do not depend on popup windows after an async request', async () => {
+  const component = await read('components/lesson-resource-access.tsx');
+  assert.match(component, /window\.location\.assign\(result\.url\)/);
+  assert.doesNotMatch(component, /window\.open\(result\.url/);
 });

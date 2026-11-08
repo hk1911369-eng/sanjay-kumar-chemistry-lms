@@ -1,10 +1,11 @@
 import { PortalLayout } from '@/components/portal-layout';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { LessonResourceAccess } from '@/components/lesson-resource-access';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 import {
-  markLessonComplete, postLessonDiscussion, toggleLessonReaction, toggleLessonBookmark,
+  markLessonComplete, postLessonDiscussion, toggleLessonReaction, toggleLessonBookmark, pinLessonDiscussion,
 } from '@/app/actions/learning';
 
 type Resource = {
@@ -48,19 +49,18 @@ export default async function LearningPage({
     supabase.from('lesson_resources').select('id,lesson_id,file_name,mime_type,file_size,resource_type,caption,downloadable,storage_path').in('lesson_id', lessonIds).order('created_at'),
     supabase.from('lesson_discussions').select('id,lesson_id,parent_id,author_id,author_name,body,is_pinned,created_at').in('lesson_id', lessonIds).order('created_at'),
   ]) : [{ data: [] as Resource[] }, { data: [] as any[] }];
+  const authorIds = [...new Set((discussions ?? []).map((d: any) => d.author_id))];
+  const { data: authorProfiles } = authorIds.length
+    ? await supabase.from('profiles').select('id,role').in('id', authorIds)
+    : { data: [] as any[] };
+  const authorRoles = new Map((authorProfiles ?? []).map((p: any) => [p.id, p.role]));
   const discussionIds = (discussions ?? []).map(d => d.id);
   const { data: reactions } = discussionIds.length
     ? await supabase.from('lesson_discussion_reactions').select('discussion_id,user_id,reaction').in('discussion_id', discussionIds)
     : { data: [] as any[] };
 
-  const resources = await Promise.all((rawResources ?? []).map(async (r: Resource) => {
-    const [{ data: preview }, { data: download }] = await Promise.all([
-      supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600),
-      r.downloadable
-        ? supabase.storage.from('lesson-materials').createSignedUrl(r.storage_path, 3600, { download: 'JMT-Academy-' + r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT-Academy').replace(/[^a-zA-Z0-9._-]+/g, '-') })
-        : Promise.resolve({ data: null }),
-    ]);
-    return { ...r, file_name: r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT Academy'), previewUrl: preview?.signedUrl ?? null, downloadUrl: download?.signedUrl ?? null };
+  const resources = (rawResources ?? []).map((r: Resource) => ({
+    ...r, file_name: r.file_name.replace(/sanjay[-_ ]*kumar[-_ ]*chemistry/ig, 'JMT Academy'),
   }));
 
   const done = new Set((progress ?? []).filter(p => p.completed).map(p => p.lesson_id));
@@ -85,7 +85,7 @@ export default async function LearningPage({
         <p className="muted">{course.description}</p>
         {query.progress_saved && <p className="form-success">Lesson progress saved.</p>}
         {query.progress_error && <p className="form-error">Progress could not be saved.</p>}
-        {discussionError && <p className="form-error">That action could not be completed. Please try again.</p>}
+        {discussionError && <p className="form-error">{discussionError === 'rate_limit' ? 'You have posted too many comments. Please wait a minute and try again.' : 'That action could not be completed. Please try again.'}</p>}
         <div className="portal-stats">
           <article><b>{done.size}</b><span>Lessons completed</span></article>
           <article><b>{lessons?.length ?? 0}</b><span>Published lessons</span></article>
@@ -121,14 +121,7 @@ export default async function LearningPage({
                       <span>{r.resource_type.toUpperCase()} · {(Number(r.file_size) / 1024 / 1024).toFixed(1)} MB</span>
                       {r.caption && <small>{r.caption}</small>}
                     </div>
-                    {r.resource_type === 'video' && r.previewUrl && <div className="resource-video-shell jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video className="resource-video" controls playsInline preload="metadata" src={r.previewUrl}>Your browser does not support video playback.</video></div>}
-                    {r.resource_type === 'pdf' && r.previewUrl && <iframe className="pdf-preview" src={r.previewUrl} title={r.file_name}/>}
-                    {r.resource_type === 'image' && r.previewUrl && <a href={r.previewUrl} target="_blank" rel="noreferrer"><img className="resource-image" src={r.previewUrl} alt={r.file_name}/></a>}
-                    {r.previewUrl && r.resource_type !== 'video' && <div className="resource-links">
-                      <a href={r.previewUrl} target="_blank" rel="noreferrer">Open / preview</a>
-                      {r.downloadable && r.downloadUrl && <a href={r.downloadUrl} target="_blank" rel="noreferrer">Download file ↓</a>}
-                    </div>}
-                    {r.resource_type === 'video' && r.downloadable && r.downloadUrl && <p><a href={r.downloadUrl} target="_blank" rel="noreferrer">Download video ↓</a></p>}
+                    <LessonResourceAccess resource={{ id: r.id, file_name: r.file_name, resource_type: r.resource_type, downloadable: r.downloadable }}/>
                   </div>)}
                 </section>}
 
@@ -155,7 +148,7 @@ export default async function LearningPage({
                     const love = reactionSummary(d.id, 'love');
                     const helpful = reactionSummary(d.id, 'helpful');
                     return <div className="discussion-post" key={d.id}>
-                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b><small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small></div>
+                      <div className="discussion-author"><b>{d.author_name || 'Member'}</b>{['teacher','staff'].includes(authorRoles.get(d.author_id) ?? '') && <span className="status-approved">Teacher</span>}<small>{new Date(d.created_at).toLocaleString('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' })}{d.is_pinned ? ' · Pinned' : ''}</small>{isStaff && <form action={pinLessonDiscussion}><input type="hidden" name="discussion_id" value={d.id}/><input type="hidden" name="course_id" value={courseId}/><input type="hidden" name="pinned" value={String(!d.is_pinned)}/><button className="quiet-button">{d.is_pinned ? 'Unpin' : 'Pin comment'}</button></form>}</div>
                       <p>{d.body}</p>
                       <div className="reaction-row">
                         {(['like','love','helpful'] as const).map(kind => {
@@ -169,7 +162,7 @@ export default async function LearningPage({
                         })}
                       </div>
                       {replies.map(reply => <div className="discussion-reply" key={reply.id}>
-                        <b>{reply.author_name || 'Member'}</b><p>{reply.body}</p>
+                        <b>{reply.author_name || 'Member'}</b>{['teacher','staff'].includes(authorRoles.get(reply.author_id) ?? '') && <span className="status-approved">Teacher</span>}<p>{reply.body}</p>
                       </div>)}
                       <details className="reply-details"><summary>Reply to this comment</summary>
                         <form action={postLessonDiscussion} className="discussion-form">

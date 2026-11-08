@@ -3,6 +3,7 @@ import Image from 'next/image';
 import {createPublicClient} from '@/lib/supabase/public';
 
 export const revalidate = 300;
+export const metadata = { alternates: { canonical: '/' }, openGraph: { url: '/' } };
 
 export default async function Home(){
  const db=createPublicClient();

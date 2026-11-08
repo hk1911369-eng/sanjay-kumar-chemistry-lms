@@ -83,3 +83,12 @@ test('manual payment reads do not retain a duplicate permissive policy', async (
   assert.ok(migration.includes('DROP POLICY IF EXISTS "student reads own manual payment"'));
   assert.ok(migration.includes('public.manual_payment_submissions'));
 });
+ 
+test('anonymous course browsing does not depend on authenticated role helpers', async () => {
+  const roleMigration = await readFile(new URL('../supabase/migrations/20261108130758_scope_course_role_visibility_to_authenticated.sql', import.meta.url), 'utf8');
+  const adminMigration = await readFile(new URL('../supabase/migrations/20261108130808_scope_course_admin_policies_to_authenticated.sql', import.meta.url), 'utf8');
+  assert.ok(roleMigration.includes('ALTER POLICY "courses visible by role"'));
+  assert.ok(roleMigration.includes('TO authenticated'));
+  assert.ok(adminMigration.includes('ALTER POLICY "admins manage courses"'));
+  assert.ok(adminMigration.includes('TO authenticated'));
+});

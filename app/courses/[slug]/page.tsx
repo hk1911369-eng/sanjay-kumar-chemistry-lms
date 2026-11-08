@@ -6,9 +6,16 @@ export const revalidate = 300;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
- const db = createPublicClient();
- const { data } = await db.from('courses').select('slug').eq('is_published', true).is('archived_at', null);
- return (data ?? []).map(course => ({ slug: course.slug }));
+ try {
+  const db = createPublicClient();
+  const { data, error } = await db.from('courses').select('slug').eq('is_published', true).is('archived_at', null);
+  if (error) return [];
+  return (data ?? []).map(course => ({ slug: course.slug }));
+ } catch {
+  // Keep the build resilient when the public database is temporarily unavailable.
+  // dynamicParams remains enabled, so published slugs can render on demand.
+  return [];
+ }
 }
 const labels:Record<string,string>={live_recorded:'Live classes + recordings',recorded_only:'Recorded-only access',offline:'Offline academy classes'};
 export default async function CourseDetails({params}:{params:Promise<{slug:string}>}){

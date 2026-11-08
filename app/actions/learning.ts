@@ -20,8 +20,7 @@ export async function saveLesson(formData: FormData) {
   if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
   const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
-  const { data: last } = await supabase.from('lessons').select('position').eq('course_id', courseId).order('position', { ascending: false }).limit(1).maybeSingle();
-  const payload = { course_id: courseId, chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString(), position: (last?.position ?? 0) + 1 };
+  const payload = { course_id: courseId, chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() };
   const result = lessonId
     ? await supabase.from('lessons').update({ chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() }).eq('id', lessonId).eq('course_id', courseId)
     : await supabase.from('lessons').insert(payload);
@@ -99,8 +98,7 @@ export async function saveChapter(formData: FormData) {
   if (!courseId || title.length < 1 || title.length > 180) redirect('/teacher?chapter_error=invalid');
   const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?chapter_error=forbidden');
-  const { data: last } = await supabase.from('chapters').select('sort_order').eq('course_id', courseId).order('sort_order', {ascending:false}).limit(1).maybeSingle();
-  const { error } = await supabase.from('chapters').insert({ course_id: courseId, title, description, sort_order: (last?.sort_order ?? 0)+1, published: formData.get('published') === 'on' });
+  const { error } = await supabase.from('chapters').insert({ course_id: courseId, title, description, published: formData.get('published') === 'on' });
   redirect(error ? '/teacher?chapter_error=save' : '/teacher?chapter_success=1');
 }
 

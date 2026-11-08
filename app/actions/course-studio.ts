@@ -9,7 +9,7 @@ export async function saveAcademyCourse(fd:FormData){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
  const {data:me}=await db.from('profiles').select('role').eq('id',user.id).single();if(me?.role!=='admin')redirect('/portal');
  const id=String(fd.get('course_id')??'');const title=String(fd.get('title')??'').trim();const group=String(fd.get('programme_group')??'');
- const subjects=String(fd.get('subjects')??'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);
+ const subjects=[...new Set(String(fd.get('subjects')??'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20);
  const selected=fd.getAll('delivery_modes').map(String).filter(x=>modes.includes(x));
  const live=money(fd.get('live_price_bdt')),recorded=money(fd.get('recorded_price_bdt')),offline=money(fd.get('offline_price_bdt')),admission=money(fd.get('admission_fee_bdt'));
  const capacityText=String(fd.get('capacity')??'').trim();const capacity=capacityText?Number(capacityText):null;
@@ -28,7 +28,26 @@ export async function saveAcademyCourse(fd:FormData){
  capacity,enrollment_open:fd.get('enrollment_open')==='on',is_published:fd.get('is_published')==='on',...(imagePath?{cover_image_path:imagePath}:{})};
  const saved=id?await db.from('courses').update(payload).eq('id',id).select('id').maybeSingle():await db.from('courses').insert(payload).select('id').single();
  if(saved.error||!saved.data)redirect('/admin/courses?error=save');
- const courseId=saved.data.id;const {data:valid}=teachers.length?await db.from('profiles').select('id').in('id',teachers).in('role',['teacher','staff']):{data:[] as {id:string}[]};
+ const courseId=saved.data.id;
+ const subjectRows=subjects.map(name=>{
+  const base=name.normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const slug=base||'subject-'+Array.from(name).map(char=>char.codePointAt(0)?.toString(16)??'0').join('-');
+  return {name,slug,description:''};
+ });
+ const {error:subjectError}=await db.from('academic_subjects').upsert(subjectRows,{onConflict:'slug',ignoreDuplicates:true});
+ if(subjectError)redirect('/admin/courses?error=subjects');
+ const {data:catalog,error:catalogError}=await db.from('academic_subjects').select('id,slug').in('slug',subjectRows.map(row=>row.slug));
+ if(catalogError||!catalog||catalog.length!==subjectRows.length)redirect('/admin/courses?error=subjects');
+ const subjectIdBySlug=new Map(catalog.map(row=>[row.slug,row.id]));
+ const subjectLinks=subjectRows.map((row,index)=>({course_id:courseId,subject_id:subjectIdBySlug.get(row.slug),is_primary:index===0}));
+ const {error:subjectLinkError}=await db.from('course_subjects').upsert(subjectLinks,{onConflict:'course_id,subject_id'});
+ if(subjectLinkError)redirect('/admin/courses?error=subjects');
+ const {data:oldLinks}=await db.from('course_subjects').select('subject_id').eq('course_id',courseId);
+ const currentIds=new Set(subjectLinks.map(row=>row.subject_id));
+ const staleIds=(oldLinks??[]).map(row=>row.subject_id).filter(id=>!currentIds.has(id));
+ if(staleIds.length)await db.from('course_subjects').delete().eq('course_id',courseId).in('subject_id',staleIds);
+
+ const {data:valid}=teachers.length?await db.from('profiles').select('id').in('id',teachers).in('role',['teacher','staff']):{data:[] as {id:string}[]};
  if(teachers.length&&(valid?.length??0)!==teachers.length)redirect('/admin/courses?error=teachers');
  const {error:assignmentError}=await db.rpc('replace_course_assignments',{p_course_id:courseId,p_teacher_ids:teachers});
  if(assignmentError)redirect('/admin/courses?error=assignments');

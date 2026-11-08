@@ -3,10 +3,13 @@ import Link from 'next/link';
 import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import {
-  createAcademicSubject, createLearningConcept, addConceptPrerequisite, mapLessonToConcept,
-} from '@/app/actions/learning-graph';
+  saveAcademicSubject, saveLearningConcept, saveConceptPrerequisite, mapLessonToConcept,
+} from '@/app/actions/learning-os';
 
-type SearchParams = Promise<{ saved?: string; error?: string }>;
+type SearchParams = Promise<{
+  saved?: string; error?: string; subject_saved?: string; concept_saved?: string;
+  prerequisite_saved?: string; lesson_mapped?: string;
+}>;
 
 const messages: Record<string,string> = {
   subject: 'Could not save that subject. Check the name and try again.',
@@ -16,6 +19,8 @@ const messages: Record<string,string> = {
   prerequisite_subject: 'A prerequisite must be from the same subject.',
   lesson_map: 'Could not connect the lesson and concept.',
   lesson_subject: 'That lesson belongs to a different subject.',
+  subject_mismatch: 'That lesson belongs to a different subject.',
+  cycle: 'That prerequisite would create a circular learning path.',
 };
 const savedMessages: Record<string,string> = {
   subject: 'Subject saved.', concept: 'Concept added to the knowledge graph.',
@@ -63,7 +68,8 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <Link className="quiet-button" href="/admin/courses">Course studio</Link>
       </div>
       {params.error && <p className="form-error">{messages[params.error] ?? 'The request could not be completed.'}</p>}
-      {params.saved && <p className="form-success">{savedMessages[params.saved] ?? 'Saved.'}</p>}
+      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped) &&
+        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : 'lesson_map')] ?? 'Saved.'}</p>}
 
       <div className="learning-graph-stats">
         <article className="portal-card"><strong>{subjects.length}</strong><span>Subjects</span></article>
@@ -76,7 +82,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <article className="portal-card">
           <h2>Add a subject</h2>
           <p className="muted">Examples: Physics, Biology, Mathematics, English, ICT or any future subject.</p>
-          <form action={createAcademicSubject} className="auth-form">
+          <form action={saveAcademicSubject} className="auth-form">
             <label>Subject name<input name="name" required minLength={2} maxLength={100} placeholder="e.g. Mathematics"/></label>
             <label>Description<textarea name="description" maxLength={1000} rows={2}/></label>
             <button className="auth-submit">Save subject</button>
@@ -87,13 +93,14 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
           <h2>Add a concept</h2>
           <p className="muted">Concepts form the building blocks used by lessons, assessments and adaptive revision.</p>
           {subjects.length === 0 ? <p className="muted">Add a subject first.</p> :
-            <form action={createLearningConcept} className="auth-form">
+            <form action={saveLearningConcept} className="auth-form">
               <label>Subject<select name="subject_id" required>{subjects.map(subject => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label>
               <label>Concept title<input name="title" required minLength={2} maxLength={180} placeholder="e.g. Linear equations"/></label>
               <label>Parent concept (optional)<select name="parent_id" defaultValue=""><option value="">Top-level concept</option>{concepts.map(concept => <option key={concept.id} value={concept.id}>{subjectNames.get(concept.subject_id)} · {concept.title}</option>)}</select></label>
               <label>Curriculum level<select name="grade_band" defaultValue="general"><option value="primary">Primary</option><option value="secondary">Secondary</option><option value="higher_secondary">Higher secondary</option><option value="university">University</option><option value="general">General</option></select></label>
               <label>Exam tracks (comma separated)<input name="exam_tracks" placeholder="HSC, Medical, Engineering, Olympiad"/></label>
               <label>Estimated study time (minutes)<input name="estimated_minutes" type="number" min="1" max="1440" defaultValue="20"/></label>
+              <label>Sort order<input name="sort_order" type="number" min="0" max="100000" defaultValue="0"/></label>
               <label>Description<textarea name="description" maxLength={4000} rows={3}/></label>
               <label className="toggle-label"><input type="checkbox" name="is_published"/> Publish concept to learners</label>
               <button className="auth-submit">Create concept</button>
@@ -105,7 +112,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <h2>Connect prerequisite concepts</h2>
         <p className="muted">Choose the concept students want to learn, then choose what they should understand first. The database rejects cross-subject links and circular dependencies.</p>
         {concepts.length < 2 ? <p className="muted">Create at least two concepts first.</p> :
-          <form action={addConceptPrerequisite} className="learning-graph-form">
+          <form action={saveConceptPrerequisite} className="learning-graph-form">
             <label>Concept to learn<select name="concept_id" required>{concepts.map(concept => <option key={concept.id} value={concept.id}>{subjectNames.get(concept.subject_id)} · {concept.title}</option>)}</select></label>
             <label>Prerequisite<select name="prerequisite_concept_id" required>{concepts.map(concept => <option key={concept.id} value={concept.id}>{subjectNames.get(concept.subject_id)} · {concept.title}</option>)}</select></label>
             <button className="auth-submit">Add prerequisite</button>
@@ -116,7 +123,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
       </article>
 
       <article className="portal-card">
-        <h2>Map lessons to concepts</h2>
+        <h2>Map a lesson to a concept</h2>
         <p className="muted">This connection lets the Learning OS understand which concepts each lesson teaches. Only same-subject course mappings are accepted.</p>
         {!lessons.length || !concepts.length ? <p className="muted">Create a course, add its subject, create concepts and add lessons to enable mapping.</p> :
           <form action={mapLessonToConcept} className="learning-graph-form">

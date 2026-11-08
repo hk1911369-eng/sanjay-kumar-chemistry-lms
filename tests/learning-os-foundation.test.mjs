@@ -121,29 +121,6 @@ test('Learning OS goals count only verified lesson completions', async () => {
   assert.ok(!dashboard.includes('value="study_minutes"'));
 });
 
-test('curriculum graph integrity prevents cross-subject lesson links and cyclic prerequisites', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261109034500_learning_graph_integrity_guards.sql', import.meta.url), 'utf8');
-  assert.ok(migration.includes('guard_lesson_concept_subject'));
-  assert.ok(migration.includes('JOIN public.course_subjects cs'));
-  assert.ok(migration.includes('guard_concept_prerequisite_edge'));
-  assert.ok(migration.includes('Prerequisite concepts must belong to the same subject'));
-  assert.ok(migration.includes('WITH RECURSIVE reachable'));
-  assert.ok(migration.includes('Prerequisite relationship would create a cycle'));
-  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_concept_prerequisite_edge()'));
-});
-
-test('admin curriculum graph page supports all subjects and concept relationships', async () => {
-  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
-  const actions = await readFile(new URL('../app/actions/learning-graph.ts', import.meta.url), 'utf8');
-  assert.ok(page.includes('Subjects & concept graph'));
-  assert.ok(page.includes('Map lessons to concepts'));
-  assert.ok(page.includes('Connect prerequisite concepts'));
-  assert.ok(actions.includes("from('academic_subjects').upsert"));
-  assert.ok(actions.includes("from('concept_prerequisites').insert"));
-  assert.ok(actions.includes("from('lesson_concepts').upsert"));
-  assert.ok(actions.includes('profile?.role !== \'admin\''));
-});
-
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

@@ -13,7 +13,7 @@ test('LXP recommendations require evidence and currently paid course access', as
   assert.ok(page.includes("from('concept_prerequisites')"));
   assert.ok(page.includes('needsPrerequisiteSupport'));
   assert.ok(page.includes('rootCauseFor'));
-  assert.ok(page.includes(' : mastery.learning_concepts;'), 'single-object PostgREST relations retain the concept title');
+  assert.ok(page.includes(' : weak.learning_concepts;'), 'single-object PostgREST relations retain the weak concept title');
   assert.ok(component.includes(' : item.learning_concepts;'), 'single-object PostgREST relations render concept titles');
   assert.ok(component.includes(' : concept?.academic_subjects;'), 'single-object subject relations render subject names');
   assert.ok(component.includes('Recommended next steps'));

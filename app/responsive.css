@@ -1,48 +1,47 @@
 /* Responsive layout fixes for phones, tablets and narrow desktop windows */
-html,body{max-width:100%;overflow-x:clip}
+html,body{width:100%;max-width:100%;overflow-x:clip}
 body{min-width:320px}
 img,video,iframe{max-width:100%}
 main,section,article,header,footer,nav,div{min-width:0}
-.jmt-home{width:100%;overflow-x:clip}
+.jmt-home{width:100%;max-width:100%;overflow-x:clip}
 .jmt-home nav{width:100%;gap:16px}
 .jmt-home .brand{flex:0 1 auto;min-width:0}
 .jmt-home .brand>span:last-child{min-width:0}
 .jmt-home .navlinks{min-width:0}
 .jmt-hero-copy,.jmt-hero-visual,.jmt-section-heading>div{min-width:0}
 .jmt-hero-copy h1,.jmt-section-heading h2,.jmt-formats h2,.jmt-cta h2{overflow-wrap:anywhere}
-.jmt-hero-visual{width:100%;min-width:0}
-.jmt-visual-placeholder{padding:18px;min-width:0}
-.jmt-visual-placeholder span{font-size:clamp(54px,12vw,85px);letter-spacing:clamp(3px,1vw,8px)}
-.jmt-visual-placeholder b{max-width:100%;overflow-wrap:anywhere;line-height:1.5}
-.jmt-floating-note{max-width:calc(100% - 24px)}
+.jmt-hero-visual{width:100%;min-width:0;position:relative}
 .catalogue-grid,.jmt-format-grid,.grid,.portal-grid{min-width:0}
 .catalogue-card,.catalogue-card-body,.portal-card,.card{min-width:0;overflow-wrap:anywhere}
 .catalogue-card img,.catalogue-cover{display:block;max-width:100%}
 .table-scroll{max-width:100%;overscroll-behavior-x:contain}
 .auth-card,.receipt-card{max-width:100%}
 input,select,textarea,button{max-width:100%}
-@media(max-width:800px){
- .jmt-hero{grid-template-columns:minmax(0,1fr);padding:clamp(34px,7vw,55px) clamp(18px,6vw,7%);gap:28px;min-height:0}
- .jmt-hero-copy h1{font-size:clamp(39px,9vw,58px);letter-spacing:-1.5px;overflow-wrap:normal}
- .jmt-hero-copy>p{font-size:clamp(14px,3.8vw,17px)}
- .jmt-hero-visual,.jmt-hero-visual>img,.jmt-visual-placeholder{height:auto;min-height:0;aspect-ratio:1.45/1}
- .jmt-hero-visual{overflow:hidden}
- .jmt-hero-visual>img{width:100%;height:100%;object-fit:cover}
- .jmt-visual-placeholder{display:flex;align-items:center;justify-content:center;padding:18px}
- .jmt-floating-note{position:relative;right:auto;bottom:auto;width:max-content;max-width:calc(100% - 24px);margin:-22px auto 12px;padding:11px 15px}
+
+/* Switch to a stacked hero and two-column catalogue before tablet widths become cramped. */
+@media(max-width:960px){
+ .jmt-hero{grid-template-columns:minmax(0,1fr);padding:clamp(34px,6vw,55px) clamp(18px,6vw,7%);gap:24px;min-height:0}
+ .jmt-hero-copy h1{font-size:clamp(39px,7vw,58px);letter-spacing:-1.5px;overflow-wrap:normal}
+ .jmt-hero-copy>p{font-size:clamp(14px,2vw,17px)}
+ .jmt-hero-visual{height:auto;min-height:0;aspect-ratio:1.55/1;overflow:hidden;border-radius:26px}
+ .jmt-hero-visual>img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+ .jmt-visual-placeholder{width:100%;height:100%;min-height:0;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px;border-radius:inherit}
+ .jmt-visual-placeholder span{font-size:clamp(54px,12vw,85px);letter-spacing:clamp(3px,1vw,8px)}
+ .jmt-visual-placeholder b{max-width:100%;overflow-wrap:anywhere;line-height:1.5;text-align:center}
+ .jmt-floating-note{position:absolute;right:14px;bottom:14px;z-index:2;width:max-content;max-width:calc(100% - 28px);margin:0;padding:11px 15px}
  .jmt-program-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:18px 12px}
  .jmt-program-strip div{padding:0 5px}
- .jmt-program-strip b{font-size:clamp(10px,2.8vw,13px);line-height:1.25}
- .jmt-program-strip span{font-size:clamp(8px,2.3vw,10px);line-height:1.35}
+ .jmt-program-strip b{font-size:clamp(10px,1.6vw,13px);line-height:1.25}
+ .jmt-program-strip span{font-size:clamp(8px,1.2vw,10px);line-height:1.35}
  .jmt-home .section{padding:44px clamp(18px,6vw,7%)}
- .jmt-section-heading{gap:12px}
- .jmt-section-heading h2{font-size:clamp(27px,6vw,36px);line-height:1.15}
+ .jmt-section-heading{gap:12px;align-items:flex-start}
+ .jmt-section-heading h2{font-size:clamp(27px,4vw,36px);line-height:1.15}
  .jmt-formats{padding:44px clamp(18px,6vw,7%)}
- .jmt-format-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+ .jmt-format-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .jmt-cta{padding:50px 18px}
- .catalogue-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
 }
-@media(max-width:600px){
+@media(max-width:700px){
  .jmt-home nav{height:auto;min-height:68px;padding:9px 13px;gap:8px;justify-content:space-between}
  .jmt-home .brand{gap:8px;font-size:11px;line-height:1.2;flex:0 1 auto}
  .jmt-home .brand small{font-size:7px;letter-spacing:1px;line-height:1.5}
@@ -53,11 +52,15 @@ input,select,textarea,button{max-width:100%}
  .jmt-hero-actions{display:grid;grid-template-columns:1fr;gap:8px}
  .jmt-hero-actions .btn,.jmt-secondary{width:100%;text-align:center;padding:13px 14px}
  .jmt-benefits{display:grid;grid-template-columns:1fr;gap:9px;margin-top:23px;font-size:12px}
- .jmt-hero-visual,.jmt-hero-visual>img,.jmt-visual-placeholder{aspect-ratio:1.25/1}
+ .jmt-hero-visual{aspect-ratio:1.55/1}
  .jmt-floating-note{font-size:13px}
  .jmt-floating-note span{font-size:10px}
  .jmt-program-strip{padding:15px 8px}
  .jmt-program-strip div{overflow-wrap:anywhere}
+ .jmt-home .section{padding:40px 18px}
+ .jmt-formats{padding:40px 18px}
+ .jmt-format-grid,.catalogue-grid{grid-template-columns:minmax(0,1fr)}
+ .catalogue-cover,.catalogue-placeholder{height:165px}
  .jmt-home footer{padding:24px 18px;overflow-wrap:anywhere}
  .portal-layout{display:block}
  .portal-content{width:100%;max-width:100%}
@@ -75,7 +78,7 @@ input,select,textarea,button{max-width:100%}
  .jmt-program-strip div:last-child{border:0;padding-bottom:0}
  .receipt-grid{grid-template-columns:1fr}
 }
-@media(min-width:801px) and (max-width:1100px){
+@media(min-width:961px) and (max-width:1100px){
  .jmt-hero{gap:28px;padding-left:5%;padding-right:5%}
  .jmt-hero-copy h1{font-size:clamp(42px,5vw,62px)}
  .jmt-hero-visual,.jmt-hero-visual>img,.jmt-visual-placeholder{height:300px;min-height:300px}

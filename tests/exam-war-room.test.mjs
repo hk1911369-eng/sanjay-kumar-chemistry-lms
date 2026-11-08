@@ -30,7 +30,7 @@ test('Exam War Room UI calls protected create and cancel actions', async () => {
   const nav=await readFile(new URL('../components/portal-layout.tsx',import.meta.url),'utf8');
   assert.ok(page.includes('createExamWarRoomTarget'));
   assert.ok(page.includes('cancelExamWarRoomTarget'));
-  assert.ok(page.includes(".eq('source_type','exam_plan')"));
+  assert.ok(page.includes(".in('source_type',['exam_plan','exam_war_room'])"));
   assert.ok(actions.includes("rpc('create_exam_war_room_target'"));
   assert.ok(actions.includes("rpc('cancel_exam_war_room_target'"));
   assert.ok(nav.includes("key: 'exam-war-room'"));

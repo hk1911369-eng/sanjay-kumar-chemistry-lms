@@ -7,7 +7,7 @@ const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 test('new student IDs use JMT prefix without rewriting historical IDs', async () => {
   const migration = await read('supabase/migrations/0039_jmt_student_code_prefix.sql');
   assert.match(migration, /'JMT-'/);
-  assert.doesNotMatch(migration, /update public\\.profiles/i);
+  assert.doesNotMatch(migration, /update public\.profiles/i);
 });
 
 test('public pages use a non-session Supabase client and can be revalidated', async () => {
@@ -15,7 +15,7 @@ test('public pages use a non-session Supabase client and can be revalidated', as
     const source = await read(path);
     assert.match(source, /createPublicClient/);
     assert.match(source, /export const revalidate = 300/);
-    assert.doesNotMatch(source, /createClient from '@\\/lib\\/supabase\\/server'/);
+    assert.doesNotMatch(source, /createClient from '@\/lib\/supabase\/server'/);
   }
   const client = await read('lib/supabase/public.ts');
   assert.match(client, /persistSession: false/);

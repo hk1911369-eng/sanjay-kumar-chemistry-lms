@@ -80,11 +80,11 @@ export async function createQuiz(formData:FormData) {
  if(!courseId||title.length<3||duration<1||duration>300||lines.length>30000||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=quiz');
  let questions:any[];
  try { questions=JSON.parse(lines); } catch { redirect('/academic?error=quiz_format'); }
- if(!Array.isArray(questions)||questions.length<1||questions.length>50||questions.some(q=>!q||typeof q!=='object'||typeof q.question_text!=='string'||q.question_text.trim().length<2||!Array.isArray(q.options)||q.options.length<2||q.options.length>6||!Number.isInteger(q.correct_option)||q.correct_option<0||q.correct_option>=q.options.length||!Number.isFinite(Number(q.marks))||Number(q.marks)<=0)) redirect('/academic?error=quiz_format');
+ if(!Array.isArray(questions)||questions.length<1||questions.length>50||questions.some(q=>!q||typeof q!=='object'||typeof q.question_text!=='string'||q.question_text.trim().length<2||!Array.isArray(q.options)||q.options.length<2||q.options.length>6||!Number.isInteger(q.correct_option)||q.correct_option<0||q.correct_option>=q.options.length||!Number.isFinite(Number(q.marks))||Number(q.marks)<=0||(q.concept_id!==undefined&&q.concept_id!==null&&(typeof q.concept_id!=='string'||! /^[0-9a-f-]{36}$/i.test(q.concept_id))))) redirect('/academic?error=quiz_format');
  const total=questions.reduce((s,q)=>s+Number(q.marks),0);
  const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!quiz) redirect('/academic?error=quiz');
- const rows=questions.map((q,i)=>({quiz_id:quiz.id,question_text:q.question_text.trim(),options:q.options,marks:Number(q.marks),position:i+1}));
+ const rows=questions.map((q,i)=>({quiz_id:quiz.id,concept_id:q.concept_id||null,question_text:q.question_text.trim(),options:q.options,marks:Number(q.marks),position:i+1}));
  const inserted=await supabase.from('quiz_questions').insert(rows).select('id');
  if(inserted.error||!inserted.data) { await supabase.from('quizzes').delete().eq('id',quiz.id); redirect('/academic?error=quiz'); }
  const keys=inserted.data.map((row,i)=>({question_id:row.id,correct_option:questions[i].correct_option}));
@@ -131,9 +131,10 @@ export async function createBankQuestion(formData:FormData) {
  const topic=String(formData.get('topic')||'').trim();
  const chapter=String(formData.get('chapter_label')||'').trim();
  const explanation=String(formData.get('explanation')||'').trim();
+ const conceptId=String(formData.get('concept_id')||'').trim()||null;
  const difficulty=String(formData.get('difficulty')||'medium');
- if(!courseId||question.length<2||options.some(x=>!x)||!Number.isInteger(correct)||correct<0||correct>3||!Number.isFinite(marks)||marks<=0||!['easy','medium','hard'].includes(difficulty)||topic.length>120||chapter.length>120||explanation.length>4000||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=bank_question');
- const {error}=await supabase.from('question_bank').insert({course_id:courseId,question_text:question,options,correct_option:correct,marks,topic,chapter_label:chapter,difficulty,explanation,created_by:user.id});
+ if(!courseId||question.length<2||options.some(x=>!x)||!Number.isInteger(correct)||correct<0||correct>3||!Number.isFinite(marks)||marks<=0||!['easy','medium','hard'].includes(difficulty)||topic.length>120||chapter.length>120||explanation.length>4000||(conceptId&&!/^[0-9a-f-]{36}$/i.test(conceptId))||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=bank_question');
+ const {error}=await supabase.from('question_bank').insert({course_id:courseId,concept_id:conceptId,question_text:question,options,correct_option:correct,marks,topic,chapter_label:chapter,difficulty,explanation,created_by:user.id});
  redirect(error?'/academic?error=bank_question':'/academic?saved=bank_question');
 }
 
@@ -144,14 +145,14 @@ export async function createQuizFromBank(formData:FormData) {
  const duration=Number(formData.get('duration_minutes')||30);
  const ids=formData.getAll('question_ids').map(x=>String(x)).filter(Boolean);
  if(!courseId||title.length<3||title.length>180||duration<1||duration>300||ids.length<1||ids.length>50||new Set(ids).size!==ids.length||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=bank_quiz');
- const {data:bank,error:bankError}=await supabase.from('question_bank').select('id,question_text,options,correct_option,marks').eq('course_id',courseId).in('id',ids);
+ const {data:bank,error:bankError}=await supabase.from('question_bank').select('id,question_text,options,correct_option,marks,concept_id').eq('course_id',courseId).in('id',ids);
  if(bankError||!bank||bank.length!==ids.length) redirect('/academic?error=bank_quiz');
  const byId=new Map(bank.map((q:any)=>[q.id,q]));
  const ordered=ids.map(id=>byId.get(id)).filter(Boolean) as any[];
  const total=ordered.reduce((sum,q)=>sum+Number(q.marks),0);
  const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!quiz) redirect('/academic?error=bank_quiz');
- const inserted=await supabase.from('quiz_questions').insert(ordered.map((q:any,i:number)=>({quiz_id:quiz.id,question_text:q.question_text,options:q.options,marks:q.marks,position:i+1}))).select('id');
+ const inserted=await supabase.from('quiz_questions').insert(ordered.map((q:any,i:number)=>({quiz_id:quiz.id,concept_id:q.concept_id,question_text:q.question_text,options:q.options,marks:q.marks,position:i+1}))).select('id');
  if(inserted.error||!inserted.data||inserted.data.length!==ordered.length){await supabase.from('quizzes').delete().eq('id',quiz.id);redirect('/academic?error=bank_quiz');}
  const keys=inserted.data.map((row:any,i:number)=>({question_id:row.id,correct_option:ordered[i].correct_option}));
  const saved=await supabase.from('quiz_answer_keys').insert(keys);

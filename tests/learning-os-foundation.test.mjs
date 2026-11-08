@@ -238,6 +238,27 @@ test('verified lesson completion uses one non-bypassable event insert policy', a
   assert.ok(migration.includes('lp.completed IS TRUE'));
 });
 
+test('quiz question concepts feed trusted mastery and mistake memory evidence', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108214832_learning_os_quiz_concept_evidence_and_mistake_memory.sql', import.meta.url), 'utf8');
+  const patch = await readFile(new URL('../supabase/migrations/20261108215000_learning_os_quiz_evidence_conflict_aliases.sql', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
+  assert.ok(migration.includes('ADD COLUMN IF NOT EXISTS concept_id'));
+  assert.ok(migration.includes('guard_question_bank_concept'));
+  assert.ok(migration.includes('guard_quiz_question_concept'));
+  assert.ok(migration.includes('capture_quiz_learning_evidence'));
+  assert.ok(migration.includes("'exam_submitted'"));
+  assert.ok(migration.includes('learner_concept_mastery'));
+  assert.ok(migration.includes('learner_mistake_memory'));
+  assert.ok(migration.includes('source_question_id'));
+  assert.ok(patch.includes('existing.mastery_score'));
+  assert.ok(patch.includes('existing.occurrence_count'));
+  assert.ok(action.includes("concept_id:conceptId"));
+  assert.ok(action.includes("concept_id:q.concept_id"));
+  assert.ok(page.includes('Knowledge graph concept (optional)'));
+  assert.ok(page.includes('questionConcepts'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

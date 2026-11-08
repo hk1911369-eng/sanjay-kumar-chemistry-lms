@@ -71,7 +71,7 @@ test('desktop portal layout keeps the sidebar scrollable and dashboard grids flu
   const css = await readFile(new URL('../app/responsive.css', import.meta.url), 'utf8');
   assert.ok(css.includes('@media(min-width:761px)'));
   assert.ok(css.includes('grid-template-columns:minmax(220px,258px) minmax(0,1fr)'));
-  assert.ok(css.includes('overflow-y:auto'));
+  assert.ok(css.includes('.portal-navigation{\n    min-width:0;\n    min-height:0;\n    overflow-y:auto;'));
   assert.ok(css.includes('grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))'));
   assert.ok(css.includes('.portal-workspace{'));
   assert.ok(css.includes('overflow-x:clip'));

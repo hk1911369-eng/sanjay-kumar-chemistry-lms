@@ -240,9 +240,11 @@ test('student identity field guard rejects missing roles and uses a trusted sear
 
 test('manual payment validation runs once before insert', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108204938_remove_duplicate_manual_payment_validation_trigger.sql', import.meta.url), 'utf8');
+  const original = await readFile(new URL('../supabase/migrations/0004_secure_manual_payment_workflow.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('DROP TRIGGER IF EXISTS validate_manual_payment_submission'));
   assert.ok(migration.includes('ON public.manual_payment_submissions'));
-  assert.ok(migration.includes('validate_manual_payment_before_insert'));
+  assert.ok(original.includes('CREATE TRIGGER validate_manual_payment_before_insert'));
+  assert.ok(original.includes('EXECUTE FUNCTION public.validate_manual_payment_submission()'));
 });
 
 

@@ -21,7 +21,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF v_role NOT IN ('admin', 'teacher', 'staff') THEN
+  IF v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff') THEN
     RAISE EXCEPTION 'Submission update not permitted' USING ERRCODE = '42501';
   END IF;
 

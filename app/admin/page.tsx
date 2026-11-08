@@ -18,7 +18,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     supabase.from('manual_payment_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
     supabase.from('enrollments').select('*',{count:'exact',head:true}).eq('status','active'),
     supabase.from('courses').select('id,title,slug,monthly_fee_bdt,admission_fee_bdt,is_published,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt,programme_group').is('archived_at',null).order('programme_group').order('title'),
-    supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,fee_monthly_bdt,fee_admission_bdt,amount_bdt,transaction_id,sender_phone,sender_phone_last4,status,created_at').eq('status', 'pending_review').order('created_at', { ascending: true }).limit(100),
+    supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,fee_monthly_bdt,fee_admission_bdt,amount_bdt,transaction_id,sender_phone,sender_phone_last4,proof_storage_path,status,created_at').eq('status', 'pending_review').order('created_at', { ascending: true }).limit(100),
     supabase.from('private_payment_settings').select('provider,receiving_number,is_enabled').order('provider'),
     supabase.from('profiles').select('id,full_name,role').in('role',['teacher','staff']).order('full_name'),
     supabase.from('course_assignments').select('id,course_id,teacher_id'),
@@ -32,6 +32,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   if(submissionResult.error){
     const fallback=await supabase.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,sender_phone,sender_phone_last4,status,created_at').eq('status','pending_review').order('created_at',{ascending:true}).limit(100);
     submissions=fallback.data;
+  }
+  const proofPaths = [...new Set((submissions ?? []).map(p => p.proof_storage_path).filter((path): path is string => Boolean(path)))];
+  const proofLinks = new Map<string,string>();
+  if (proofPaths.length) {
+    const signed = await supabase.storage.from('payment-proofs').createSignedUrls(proofPaths, 600);
+    for (const item of signed.data ?? []) if (item.path && item.signedUrl) proofLinks.set(item.path, item.signedUrl);
   }
   const studentIds = [...new Set((submissions ?? []).map(p => p.student_id))];
   const courseIds = [...new Set((submissions ?? []).map(p => p.course_id))];
@@ -59,6 +65,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       {(submissions ?? []).length === 0 ? <p className="muted">No pending payment submissions.</p> : <div className="portal-grid review-grid">{submissions!.map(p => <article className="portal-card" key={p.id}>
         <span className="auth-kicker">{p.provider.toUpperCase()} · {p.payment_kind === 'initial' ? 'ADMISSION + FIRST MONTH' : p.payment_kind === 'monthly' ? 'MONTHLY TUITION' : 'PREVIOUS PAYMENT'} · PENDING REVIEW</span><h3>{courseNames.get(p.course_id) ?? 'JMT Academy course'}</h3>
         <p><b>Student:</b> {studentNames.get(p.student_id) || p.student_id.slice(0, 8)}</p><p><b>Transaction ID:</b> <code>{p.transaction_id}</code></p><p><b>Learning format:</b> {p.delivery_mode==='live_recorded'?'Live + recorded':p.delivery_mode==='recorded_only'?'Recorded only':p.delivery_mode==='offline'?'Offline':'Legacy / not recorded'}</p><p><b>Fee breakdown:</b> {p.fee_monthly_bdt!==null&&p.fee_monthly_bdt!==undefined?`Course ৳${p.fee_monthly_bdt} + admission ৳${p.fee_admission_bdt??0}`:'Historic fee record'}</p><p><b>Billing month:</b> {p.billing_period}</p><p><b>Sender mobile:</b> {p.sender_phone ?? (p.sender_phone_last4 ? `Ending ${p.sender_phone_last4}` : 'Not supplied')}</p><p><b>Amount:</b> ৳{p.amount_bdt}</p><p className="muted small-note">Submitted: {new Date(p.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
+        {p.proof_storage_path && proofLinks.get(p.proof_storage_path) ? <p><a href={proofLinks.get(p.proof_storage_path)} target="_blank" rel="noreferrer">View private payment receipt ↗</a></p> : <p className="muted small-note">No readable receipt attached.</p>}
         <PaymentReviewForm submissionId={p.id}/>
       </article>)}</div>}
       <h2 id="payment-settings">Payment receiving settings</h2>

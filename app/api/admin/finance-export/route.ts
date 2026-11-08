@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { buildCsv } from '@/lib/csv';
+import { fetchAllPages } from '@/lib/pagination';
 
 export async function GET(request: Request) {
   const db = await createClient();
@@ -19,11 +20,21 @@ export async function GET(request: Request) {
   const startDate = `${month}-01`;
   const nextMonth = new Date(Date.UTC(year,monthNumber,1)).toISOString().slice(0,10);
 
-  const [{ data: payments, error: paymentError }, { data: entries, error: entryError }] = await Promise.all([
-    db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,delivery_mode,amount_bdt,transaction_id,reviewed_at').eq('status','approved').gte('reviewed_at',start).lt('reviewed_at',end).order('reviewed_at'),
-    db.from('finance_entries').select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id').gte('entry_date',startDate).lt('entry_date',nextMonth).order('entry_date'),
+  const [paymentsResult, entriesResult] = await Promise.all([
+    fetchAllPages((from, to) => db.from('manual_payment_submissions')
+      .select('id,student_id,course_id,provider,payment_kind,delivery_mode,amount_bdt,transaction_id,reviewed_at')
+      .eq('status','approved').gte('reviewed_at',start).lt('reviewed_at',end)
+      .order('reviewed_at').range(from, to)),
+    fetchAllPages((from, to) => db.from('finance_entries')
+      .select('id,entry_type,category,description,amount_bdt,payment_method,reference,entry_date,course_id,student_id')
+      .gte('entry_date',startDate).lt('entry_date',nextMonth)
+      .order('entry_date').range(from, to)),
   ]);
-  if(paymentError||entryError) return NextResponse.json({error:'Finance ledger is not ready. Confirm the finance database migration has been applied.'},{status:503});
+  const payments = paymentsResult.data;
+  const entries = entriesResult.data;
+  if (paymentsResult.error || entriesResult.error || !payments || !entries) {
+    return NextResponse.json({error:'Finance ledger is not ready. Confirm the finance database migration has been applied.'},{status:503});
+  }
 
   const studentIds=[...new Set([...(payments??[]).map(x=>x.student_id),...(entries??[]).map(x=>x.student_id).filter((x):x is string=>Boolean(x))])];
   const courseIds=[...new Set([...(payments??[]).map(x=>x.course_id),...(entries??[]).map(x=>x.course_id).filter((x):x is string=>Boolean(x))])];

@@ -19,22 +19,25 @@ export async function saveAcademyProfile(formData: FormData) {
   const email=String(formData.get('contact_email')??'').trim().toLowerCase();
   const address=String(formData.get('physical_address')??'').trim();
   const mapUrl=String(formData.get('google_maps_url')??'').trim();
+  const facebookUrl=String(formData.get('facebook_url')??'').trim();
   const hours=String(formData.get('support_hours')??'').trim();
   const phone=phoneRaw?normalizeBangladeshMobile(phoneRaw):null;
   const whatsapp=whatsappRaw?normalizeBangladeshMobile(whatsappRaw):null;
-  let validMapUrl=true;
-  if(mapUrl){try{const parsed=new URL(mapUrl);validMapUrl=parsed.protocol==='https:';}catch{validMapUrl=false;}}
+  const isHttpsUrl=(value:string)=>{if(!value)return true;try{return new URL(value).protocol==='https:';}catch{return false;}};
+  let validFacebookUrl=true;
+  if(facebookUrl){try{const parsed=new URL(facebookUrl);validFacebookUrl=parsed.protocol==='https:'&&(parsed.hostname==='facebook.com'||parsed.hostname.endsWith('.facebook.com')||parsed.hostname==='fb.com'||parsed.hostname.endsWith('.fb.com'));}catch{validFacebookUrl=false;}}
   if(academyName.length<2||academyName.length>100||tagline.length>180
     ||(phoneRaw&&!phone)||(whatsappRaw&&!whatsapp)
     ||(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    ||address.length>500||hours.length>180||!validMapUrl){
+    ||address.length>500||hours.length>180||!isHttpsUrl(mapUrl)||!validFacebookUrl){
     redirect('/admin/settings?error=invalid');
   }
   const {error}=await db.from('academy_settings').upsert({
     id:1,academy_name:academyName,tagline:tagline||'Online & Offline Learning',
     contact_phone:phone,whatsapp_phone:whatsapp,contact_email:email||null,
     physical_address:address||null,google_maps_url:mapUrl||null,
-    support_hours:hours||null,updated_by:user.id,updated_at:new Date().toISOString(),
+    facebook_url:facebookUrl||null,support_hours:hours||null,
+    updated_by:user.id,updated_at:new Date().toISOString(),
   },{onConflict:'id'});
   if(error) redirect('/admin/settings?error=save');
   revalidatePath('/');revalidatePath('/about');revalidatePath('/contact');revalidatePath('/courses');

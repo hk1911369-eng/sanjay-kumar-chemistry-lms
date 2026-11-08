@@ -149,6 +149,25 @@ test('student dashboard keeps achieved goals visible until their period ends', a
   assert.ok(dashboard.includes('Current goals'));
 });
 
+test('spaced repetition schedules mapped concepts and advances intervals after each review', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108214010_learning_os_adaptive_spaced_revision_scheduler.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('revision_tasks_one_pending_concept'));
+  assert.ok(migration.includes("NEW.event_type = 'lesson_completed'"));
+  assert.ok(migration.includes("now() + interval '1 day'"));
+  assert.ok(migration.includes('ON CONFLICT (student_id, concept_id)'));
+  assert.ok(migration.includes('v_completed_count <= 1 THEN 3'));
+  assert.ok(migration.includes('v_completed_count = 2 THEN 7'));
+  assert.ok(migration.includes('v_completed_count = 3 THEN 14'));
+  assert.ok(migration.includes('ELSE 30'));
+  assert.ok(migration.includes("event_type, source_id, occurred_at"));
+  assert.ok(migration.includes("'revision_completed'"));
+});
+
+test('the broad student learning-event insert policy is removed', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213855_learning_os_remove_permissive_learning_event_insert_policy.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "students record own learning events"'));
+});
+
 test('student dashboard completes revision tasks through the guarded database RPC', async () => {
   const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
   assert.ok(action.includes("rpc('complete_revision_task', { p_task_id: taskId })"));

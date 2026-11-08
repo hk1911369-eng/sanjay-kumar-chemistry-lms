@@ -39,6 +39,7 @@ test('teacher revision assignments are scoped to paid learners and mapped concep
   const migration = await readFile(new URL('../supabase/migrations/20261108221622_add_secure_teacher_revision_assignment.sql', import.meta.url), 'utf8');
   assert.ok(page.includes('assignTeacherRevisionTask'));
   assert.ok(page.includes('courseSubjectKeys'));
+  assert.ok(page.includes('alreadyPending'));
   assert.ok(page.includes('name="student_id"'));
   assert.ok(action.includes("rpc('assign_teacher_revision_task'"));
   assert.ok(migration.includes("v_role NOT IN ('admin', 'teacher', 'staff')"));

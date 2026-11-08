@@ -104,7 +104,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
         const lesson:any = lessonById.get(mapping.lesson_id);
         const mastery:any = masteryByConcept.get(mapping.concept_id);
         if (!lesson || !mastery || seen.has(lesson.id)) continue;
-        const concept = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : null;
+        const concept = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : mastery.learning_concepts;
         seen.add(lesson.id);
         learningRecommendations.push({
           lessonId:lesson.id, lessonTitle:lesson.title, courseId:lesson.course_id,

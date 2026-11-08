@@ -6,7 +6,7 @@ test('Exam War Room targets are private to the student and administrators', asyn
   const migration=await readFile(new URL('../supabase/migrations/20261108220330_learning_os_exam_war_room_targets_and_revision_plans.sql',import.meta.url),'utf8');
   assert.ok(migration.includes('ALTER TABLE public.learner_exam_targets ENABLE ROW LEVEL SECURITY'));
   assert.ok(migration.includes('student_id=(SELECT auth.uid())'));
-  assert.ok( /current_role\\(\\) IS DISTINCT FROM 'student'::public\\.app_role/.test(migration));
+  assert.ok(migration.includes("public.current_role() IS DISTINCT FROM 'student'::public.app_role"));
   assert.ok(migration.includes('e.admission_fee_paid IS TRUE'));
   assert.ok(migration.includes('e.paid_through>=v_period_end'));
 });

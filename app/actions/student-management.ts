@@ -4,24 +4,19 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { isValidAttendanceDate } from '@/lib/attendance-date';
+import { requireRole } from '@/lib/auth/require-role';
 
 const categories = ['homework','attendance','academic','illness','discipline','guardian_call','other'] as const;
 const severities = ['low','normal','high','urgent'] as const;
 const attendanceStatuses = ['present','absent','late','excused'] as const;
 
 async function getActor() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (!['admin','teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
-  return { supabase, user, role: profile!.role };
+  const actor = await requireRole(['admin','teacher','staff']);
+  return { supabase: actor.supabase, user: actor.user, role: actor.role };
 }
 
 export async function updateStudentDetails(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireRole(['student']);
   const fullName = String(formData.get('full_name') ?? '').trim();
   const phoneRaw = String(formData.get('phone') ?? '').trim();
   const guardianPhoneRaw = String(formData.get('guardian_phone') ?? '').trim();
@@ -120,11 +115,7 @@ export async function updateStudentFollowupStatus(formData: FormData) {
 }
 
 export async function updateAccountRole(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (actor?.role !== 'admin') redirect('/portal');
+  const { supabase } = await requireRole(['admin']);
   const studentId = String(formData.get('profile_id') ?? '');
   const nextRole = String(formData.get('role') ?? '');
   if (!studentId || !['student','teacher','staff'].includes(nextRole)) redirect('/students/manage?error=role');

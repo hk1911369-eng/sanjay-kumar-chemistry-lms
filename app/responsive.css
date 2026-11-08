@@ -195,3 +195,19 @@ input,select,textarea,button{max-width:100%}
     overscroll-behavior-x:contain;
   }
 }
+
+
+/* Learning OS student dashboard */
+.learning-os-panel { margin: 1.5rem 0 2rem; }
+.learning-os-panel > h2 { margin-top: 0; }
+.learning-os-stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(135px,1fr)); gap: .75rem; margin: 1rem 0; }
+.learning-os-stat { padding: .9rem; border: 1px solid var(--border,#e5e7eb); border-radius: 12px; background: var(--surface,#fff); }
+.learning-os-stat strong { display: block; font-size: 1.45rem; }
+.learning-os-columns { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 1rem; }
+.learning-os-goal-form { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,180px),1fr)); align-items: end; gap: .75rem; margin: 1rem 0; }
+.learning-os-list { display: grid; gap: .65rem; padding: 0; list-style: none; }
+.learning-os-list li { padding: .75rem; border: 1px solid var(--border,#e5e7eb); border-radius: 10px; }
+.learning-os-meter { height: 8px; overflow: hidden; border-radius: 999px; background: var(--border,#e5e7eb); margin-top: .45rem; }
+.learning-os-meter span { display: block; height: 100%; background: var(--accent,#2563eb); border-radius: inherit; }
+.learning-os-muted { color: var(--muted,#64748b); font-size: .9rem; }
+@media (max-width: 760px) { .learning-os-goal-form { grid-template-columns: 1fr; } }

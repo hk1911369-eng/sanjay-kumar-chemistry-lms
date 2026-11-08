@@ -3,6 +3,46 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
+export async function createStudyGoal(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'student') redirect('/portal');
+
+  const goalType = String(formData.get('goal_type') ?? '');
+  const targetValue = Number(formData.get('target_value'));
+  const courseId = String(formData.get('course_id') ?? '').trim() || null;
+  const allowedTypes = ['study_minutes','practice_questions','study_sessions','revision_tasks','mastery_score'];
+  if (!allowedTypes.includes(goalType) || !Number.isFinite(targetValue) || targetValue <= 0 || targetValue > 100000) {
+    redirect('/student?goal_error=invalid#learning-os');
+  }
+
+  if (courseId) {
+    const { data: enrollment } = await supabase.from('enrollments').select('id')
+      .eq('student_id', user.id).eq('course_id', courseId).eq('status', 'active').maybeSingle();
+    if (!enrollment) redirect('/student?goal_error=course#learning-os');
+  }
+
+  const periodStart = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  const [year, month, day] = periodStart.split('-').map(Number);
+  const periodEnd = new Date(Date.UTC(year, month - 1, day + 6)).toISOString().slice(0, 10);
+  const { error } = await supabase.from('learner_study_goals').insert({
+    student_id: user.id,
+    course_id: courseId,
+    goal_type: goalType,
+    target_value: targetValue,
+    current_value: 0,
+    period_start: periodStart,
+    period_end: periodEnd,
+  });
+  if (error) redirect('/student?goal_error=save#learning-os');
+  revalidatePath('/student');
+  redirect('/student?goal_success=1#learning-os');
+}
+
 export async function saveLesson(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -38,6 +78,12 @@ export async function markLessonComplete(formData: FormData) {
   const { data: lesson } = await supabase.from('lessons').select('id').eq('id', lessonId).eq('course_id', courseId).eq('is_published', true).maybeSingle();
   if (!lesson) redirect('/student?learning_error=unavailable');
   const { error } = await supabase.from('lesson_progress').upsert({ student_id: user.id, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'student_id,lesson_id' });
+  if (!error) {
+    await supabase.from('learning_events').insert({
+      student_id: user.id, course_id: courseId, lesson_id: lessonId,
+      event_type: 'lesson_completed', occurred_at: new Date().toISOString(),
+    });
+  }
   redirect(error ? `/learn/${courseId}?progress_error=1` : `/learn/${courseId}?progress_saved=1`);
 }
 

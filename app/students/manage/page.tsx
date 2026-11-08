@@ -56,15 +56,18 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   }
 
   const studentIds = profiles.map(p=>p.id);
+  const enrollmentFields = role === 'admin'
+    ? 'id,student_id,course_id,status,starts_at,admission_fee_paid,paid_through'
+    : 'id,student_id,course_id,status,starts_at';
   const [{data:enrollments},{data:attendance},{data:followups}] = await Promise.all([
-    studentIds.length ? supabase.from('enrollments').select('id,student_id,course_id,status,starts_at,admission_fee_paid,paid_through').in('student_id',studentIds) : Promise.resolve({data:[] as any[]}),
+    studentIds.length ? supabase.from('enrollments').select(enrollmentFields).in('student_id',studentIds) : Promise.resolve({data:[] as any[]}),
     studentIds.length ? supabase.from('student_attendance').select('id,student_id,course_id,attendance_date,status,note').in('student_id',studentIds).order('attendance_date',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
     studentIds.length ? supabase.from('student_followups').select('id,student_id,course_id,category,severity,details,guardian_contacted,guardian_call_outcome,follow_up_status,follow_up_date,created_at,created_by').in('student_id',studentIds).order('created_at',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
   ]);
-  const paymentCalendars=await Promise.all(studentIds.map(async id=>{
+  const paymentCalendars = role === 'admin' ? await Promise.all(studentIds.map(async id=>{
     const {data}=await supabase.rpc('get_student_payment_calendar',{p_student_id:id});
     return [id,data??[]] as const;
-  }));
+  })) : [];
   const paymentMap=new Map(paymentCalendars);
   const courseIds=[...new Set([...(enrollments??[]).map(e=>e.course_id),...paymentCalendars.flatMap(([,items])=>items.map((p:any)=>p.course_id))])];
   const {data:courses}=courseIds.length ? await supabase.from('courses').select('id,title').in('id',courseIds) : {data:[] as any[]};
@@ -112,6 +115,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
             <div><b>Location</b><p>{student.location??'Not supplied'}</p><b>Date of birth / gender</b><p>{student.date_of_birth??'—'} / {student.gender??'—'}</p><b>Blood group</b><p>{student.blood_group??'—'}</p></div>
             <div><b>Emergency contact</b><p>{student.emergency_contact??'—'}</p><b>Account created</b><p>{new Date(student.created_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p></div>
           </div>
+          {role === 'admin' && <>
           <h3>Courses & monthly payment calendar</h3>
           {studentEnrollments.length===0?<p className="muted">No course enrollment yet.</p>:studentEnrollments.map(enrollment=>{
             const coursePayments=calendar.filter((p:any)=>p.course_id===enrollment.course_id);
@@ -133,7 +137,9 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
             </div>;
           })}
           {studentEnrollments.length===0&&calendar.length>0&&<><h3>Admission / payment requests</h3><div className="table-scroll"><table><thead><tr><th>Course</th><th>Type</th><th>Month</th><th>Amount</th><th>Status</th></tr></thead><tbody>{calendar.map((payment:any,index:number)=><tr key={index}><td>{courseNames.get(payment.course_id)??'Chemistry course'}</td><td>{payment.payment_kind}</td><td>{monthLabel(payment.billing_period)}</td><td>৳{payment.amount_bdt}</td><td>{payment.payment_status}</td></tr>)}</tbody></table></div></>}
-                    <h3>Attendance (recent)</h3>
+          </>}
+          {role !== 'admin' && <><h3>Enrolled courses</h3>{studentEnrollments.length===0?<p className="muted">No course enrollment yet.</p>:studentEnrollments.map(enrollment=><p key={enrollment.id}><b>{courseNames.get(enrollment.course_id)??'Course'}</b> · {enrollment.status}</p>)}</>}
+          <h3>Attendance (recent)</h3>
           {studentAttendance.length===0?<p className="muted">No attendance records.</p>:<div className="table-scroll"><table><thead><tr><th>Date</th><th>Course</th><th>Status</th><th>Note</th></tr></thead><tbody>{studentAttendance.slice(0,10).map(a=><tr key={a.id}><td>{a.attendance_date}</td><td>{courseNames.get(a.course_id)??'Course'}</td><td>{a.status}</td><td>{a.note??'—'}</td></tr>)}</tbody></table></div>}
           <h3>Teacher / staff follow-up history</h3>
           {studentNotes.length===0?<p className="muted">No remarks or follow-ups yet.</p>:studentNotes.slice(0,10).map(note=><div key={note.id} className="payment-instructions"><b>{note.category.toUpperCase()} · {note.severity.toUpperCase()}</b> · {note.follow_up_status}<p>{note.details}</p><p className="muted">Guardian called: {note.guardian_contacted?'Yes':'No'}{note.guardian_call_outcome?' · '+note.guardian_call_outcome:''} · {new Date(note.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>{role==='admin'||note.created_by===user.id?<form action={updateStudentFollowupStatus} className="auth-form payment-form"><input type="hidden" name="followup_id" value={note.id}/><label>Follow-up status<select name="follow_up_status" defaultValue={note.follow_up_status}><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select></label><button className="auth-submit">Update status</button></form>:null}</div>)}
@@ -162,7 +168,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
           </div>)}
         </article>;
       })}
-      <p className="muted small-note">Private student records are restricted by database policies. Teachers and staff only see students enrolled in courses assigned to their account. Payment calendar omits wallet transaction IDs and sender numbers.</p>
+      <p className="muted small-note">Private student records are restricted by database policies. Teachers and staff only see students enrolled in courses assigned to their account. Financial details and payment calendars are available to admins only.</p>
     </section>
   </PortalLayout>;
 }

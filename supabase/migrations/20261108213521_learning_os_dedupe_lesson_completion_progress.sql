@@ -1,4 +1,4 @@
--- Prevent duplicate completion events for the same learner and lesson.
+-- A lesson can count once per learner, regardless of repeated completion submissions.
 CREATE UNIQUE INDEX IF NOT EXISTS learning_events_one_lesson_completion
   ON public.learning_events(student_id, lesson_id)
   WHERE event_type = 'lesson_completed' AND lesson_id IS NOT NULL;
@@ -25,4 +25,3 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.increment_lesson_completion_goals() FROM PUBLIC, anon, authenticated;

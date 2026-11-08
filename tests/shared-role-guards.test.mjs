@@ -26,4 +26,9 @@ test('sensitive server actions use shared active-role guards', async () => {
   assert.ok(payments.includes("requireRole(['admin'])"));
   assert.ok(learning.includes('requireCourseStaff'));
   assert.ok(learning.includes('requireAdmin'));
+  const studentPolicies = await read('supabase/migrations/0048_student_submission_role_guards.sql');
+  for (const table of ['assignment_submissions','course_applications','lesson_bookmarks','lesson_progress','manual_payment_submissions','quiz_attempts','written_exam_submissions']) {
+    assert.ok(studentPolicies.includes('public.' + table), table);
+  }
+  assert.ok(studentPolicies.includes("'student'::public.app_role"));
 });

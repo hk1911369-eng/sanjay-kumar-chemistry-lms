@@ -200,3 +200,13 @@ test('authenticated profile updates are limited to approved profile fields', asy
   }
   assert.ok(migration.includes('GRANT UPDATE'));
 });
+
+ 
+test('student course applications cannot supply internal admin review notes', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108184201_prevent_student_application_admin_note_spoofing.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('ALTER POLICY "students submit own course applications"'));
+  assert.ok(migration.includes('admin_note IS NULL'));
+  assert.ok(migration.includes('reviewed_by IS NULL'));
+  assert.ok(migration.includes('reviewed_at IS NULL'));
+  assert.ok(migration.includes("status = 'submitted'"));
+});

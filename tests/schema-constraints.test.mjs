@@ -168,3 +168,13 @@ test('student follow-up edits stay assigned-course scoped and visibility is admi
   assert.ok(migration.includes('NEW.created_by IS DISTINCT FROM OLD.created_by'));
   assert.ok(migration.includes("v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff')"));
 });
+
+ 
+test('health endpoint verifies Supabase connectivity and returns an uncached failure status', async () => {
+  const route = await readFile(new URL('../app/api/health/route.ts', import.meta.url), 'utf8');
+  assert.ok(route.includes("supabase.from('courses').select('id').limit(1)"));
+  assert.ok(route.includes("status: 'degraded'"));
+  assert.ok(route.includes("status: 503"));
+  assert.ok(route.includes("Cache-Control': 'no-store'"));
+  assert.ok(route.includes("dynamic = 'force-dynamic'"));
+});

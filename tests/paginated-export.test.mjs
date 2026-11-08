@@ -34,6 +34,7 @@ test('student register uses an admin-checked SQL join and paginates the RPC', as
   assert.ok(migration.includes("m.status::text = 'approved'"));
   assert.ok(route.includes("rpc('get_student_register_export')"));
   assert.ok(route.includes('fetchAllPages'));
+  assert.ok(route.includes("order('student_id')"));
   assert.equal(route.includes('.limit(5000)'), false);
   assert.equal(route.includes('.limit(10000)'), false);
   assert.equal(route.includes('.limit(20000)'), false);

@@ -229,6 +229,15 @@ test('public platform metadata presents JMT Academy as multi-subject, not Chemis
   assert.equal(layout.includes('HSC 2027, HSC 2028 and Admission Batch students'), false);
 });
 
+test('verified lesson completion uses one non-bypassable event insert policy', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108214859_learning_os_consolidate_verified_event_insert_policy.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "students record verified lesson completion events"'));
+  assert.ok(migration.includes("event_type <> 'lesson_completed' OR duration_seconds IS NULL"));
+  assert.ok(migration.includes('lesson_id IS NOT NULL'));
+  assert.ok(migration.includes('FROM public.lesson_progress lp'));
+  assert.ok(migration.includes('lp.completed IS TRUE'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

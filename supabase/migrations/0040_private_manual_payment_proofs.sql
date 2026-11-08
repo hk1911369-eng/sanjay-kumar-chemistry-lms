@@ -27,6 +27,15 @@ with check (
   and (select public.current_role())::text = 'student'
 );
 
+drop policy if exists "students read own payment proofs" on storage.objects;
+create policy "students read own payment proofs"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'payment-proofs'
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+  and (select public.current_role())::text = 'student'
+);
+
 drop policy if exists "admins read payment proofs" on storage.objects;
 create policy "admins read payment proofs"
 on storage.objects for select to authenticated
@@ -47,25 +56,3 @@ using (
   )
 );
 
-create or replace function public.validate_manual_payment_proof_path()
-returns trigger
-language plpgsql
-set search_path = public, pg_temp
-as $$
-begin
-  if auth.uid() is null
-    or new.proof_storage_path is null
-    or left(new.proof_storage_path, length(auth.uid()::text) + 1) <> (auth.uid()::text || '/') then
-    raise exception 'A private payment proof uploaded to your own account is required'
-      using errcode = '42501';
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists validate_manual_payment_proof_path on public.manual_payment_submissions;
-create trigger validate_manual_payment_proof_path
-before insert on public.manual_payment_submissions
-for each row execute function public.validate_manual_payment_proof_path();
-
-revoke all on function public.validate_manual_payment_proof_path() from public, anon, authenticated;

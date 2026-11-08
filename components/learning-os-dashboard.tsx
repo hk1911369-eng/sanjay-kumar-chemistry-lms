@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
+import { cancelExamWarRoomTarget, completeRevisionTask, createExamWarRoomTarget, createStudyGoal } from '@/app/actions/learning';
 
 type Goal = {
   id: string; goal_type: string; target_value: number; current_value: number;
@@ -21,14 +21,19 @@ type UpcomingExam = {
 type UpcomingAssignment = {
   id:string; title:string; course_id:string; due_at:string; max_marks:number;
 };
+type ExamTarget = {
+  id:string; course_id:string; target_track:string; exam_date:string; daily_minutes:number;
+  target_score:number; status:string; plan_generated_at:string|null;
+};
 
 const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments }: {
+export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments, examTargets, examCourseNames }: {
   goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; mistakes: Mistake[]; recommendations: Recommendation[];
   courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
+  examTargets: ExamTarget[]; examCourseNames: Map<string, string>;
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
   const averageMastery = mastery.length
@@ -65,6 +70,52 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
       </label>
       <button type="submit">Create weekly goal</button>
     </form>
+
+    <section id="exam-war-room" className="learning-os-exam-war-room">
+      <h3>Exam War Room</h3>
+      <p className="learning-os-muted">Choose an exam target and a realistic daily study budget. JMT will schedule revision around published concepts in your paid course; you can have up to three active plans.</p>
+      {examTargets.length > 0 && <ul className="learning-os-list">{examTargets.map(target => (
+        <li key={target.id}>
+          <b>{target.target_track.toUpperCase()} · {examCourseNames.get(target.course_id) ?? 'Course'}</b>
+          <small className="learning-os-muted">Exam date {new Date(target.exam_date + 'T00:00:00+06:00').toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})} · {target.daily_minutes} study minutes/day · target {target.target_score}%</small>
+          {target.plan_generated_at && <small className="learning-os-muted">Plan generated {new Date(target.plan_generated_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}. Generated revisions appear in your revision queue.</small>}
+          <form action={cancelExamWarRoomTarget}>
+            <input type="hidden" name="target_id" value={target.id}/>
+            <button type="submit">Cancel plan</button>
+          </form>
+        </li>
+      ))}</ul>}
+      {examCourseNames.size === 0
+        ? <p className="learning-os-muted">An active, paid course is required before an exam plan can be generated.</p>
+        : examTargets.length >= 3
+          ? <p className="learning-os-muted">You already have three active plans. Cancel one before creating another.</p>
+          : <form action={createExamWarRoomTarget} className="auth-form learning-os-goal-form">
+              <label>Course
+                <select name="course_id" required defaultValue="">
+                  <option value="" disabled>Select a paid active course</option>
+                  {Array.from(examCourseNames.entries()).map(([id,title]) => <option value={id} key={id}>{title}</option>)}
+                </select>
+              </label>
+              <label>Exam track
+                <select name="target_track" defaultValue="hsc" required>
+                  <option value="primary">Primary</option><option value="ssc">SSC</option><option value="hsc">HSC</option>
+                  <option value="medical">Medical admission</option><option value="engineering">Engineering admission</option>
+                  <option value="university">University admission</option><option value="olympiad">Olympiad</option>
+                  <option value="vocational">Vocational</option><option value="general">General</option>
+                </select>
+              </label>
+              <label>Exam date
+                <input name="exam_date" type="date" required/>
+              </label>
+              <label>Daily study budget (minutes)
+                <input name="daily_minutes" type="number" min="15" max="600" step="5" defaultValue="120" required/>
+              </label>
+              <label>Target score (%)
+                <input name="target_score" type="number" min="1" max="100" step="1" defaultValue="80" required/>
+              </label>
+              <button type="submit">Generate my exam plan</button>
+            </form>}
+    </section>
 
     <div className="learning-os-columns">
       <div>

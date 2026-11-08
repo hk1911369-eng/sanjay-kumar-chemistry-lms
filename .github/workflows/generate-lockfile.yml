@@ -1,6 +1,8 @@
 name: Generate npm lockfile
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - build/reproducible-ci-eslint-lockfile
@@ -10,6 +12,7 @@ permissions:
 
 jobs:
   lockfile:
+    if: github.event_name == 'push' || github.event.pull_request.head.ref == 'build/reproducible-ci-eslint-lockfile'
     runs-on: ubuntu-latest
     steps:
       - name: Check out lockfile branch

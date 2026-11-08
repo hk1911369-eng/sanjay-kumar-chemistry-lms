@@ -20,6 +20,13 @@ test('Exam War Room generates revision tasks from published course concepts and 
   const taskCompatibility = await readFile(new URL('../supabase/migrations/20261108220456_learning_os_align_exam_war_room_with_revision_task_enums.sql', import.meta.url), 'utf8');
   assert.ok(taskCompatibility.includes("'exam_plan'"));
   assert.ok(taskCompatibility.includes("status='skipped'"));
+  const serialized = await readFile(new URL('../supabase/migrations/20261108220538_learning_os_serialize_exam_war_room_plan_limits.sql', import.meta.url), 'utf8');
+  const evidence = await readFile(new URL('../supabase/migrations/20261108220556_learning_os_exam_war_room_task_constraints_and_evidence_thresholds.sql', import.meta.url), 'utf8');
+  assert.ok(serialized.includes('FOR UPDATE'));
+  assert.ok(serialized.includes('public.profiles'));
+  assert.ok(evidence.includes('evidence_count >= 3'));
+  assert.ok(evidence.includes("'exam_war_room'"));
+  assert.ok(evidence.includes('revision_tasks_source_type_check'));
   assert.ok(migration.includes('v_daily_slots'));
   assert.ok(migration.includes('You can have up to three active exam plans'));
 });

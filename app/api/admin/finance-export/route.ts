@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-function csvCell(value: unknown) {
-  const raw = value == null ? '' : String(value);
-  const safe = /^[=+@\-\t\r]/.test(raw) ? "'" + raw : raw;
-  return '"' + safe.replace(/"/g, '""') + '"';
-}
+import { buildCsv } from '@/lib/csv';
 
 export async function GET(request: Request) {
   const db = await createClient();
@@ -49,7 +44,7 @@ export async function GET(request: Request) {
     const signedAmount=row.entry_type==='expense'||row.entry_type==='refund'?-Number(row.amount_bdt):Number(row.amount_bdt);
     rows.push([row.entry_date,row.entry_type,row.category,row.description,student?.full_name,student?.student_code,row.course_id?courseMap.get(row.course_id):'',row.payment_method,signedAmount,row.reference]);
   }
-  const body='\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
+  const body=buildCsv(rows);
   return new NextResponse(body,{headers:{
     'Content-Type':'text/csv; charset=utf-8',
     'Content-Disposition':`attachment; filename="jmt-academy-finance-${month}.csv"`,

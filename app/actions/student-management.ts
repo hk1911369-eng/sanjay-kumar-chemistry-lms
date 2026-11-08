@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
+import { isValidAttendanceDate } from '@/lib/attendance-date';
 
 const categories = ['homework','attendance','academic','illness','discipline','guardian_call','other'] as const;
 const severities = ['low','normal','high','urgent'] as const;
@@ -96,7 +97,7 @@ export async function markStudentAttendance(formData: FormData) {
   const attendanceDate = String(formData.get('attendance_date') ?? '');
   const note = String(formData.get('note') ?? '').trim();
   if (!studentId || !courseId || !attendanceStatuses.includes(status as typeof attendanceStatuses[number]) ||
-      !/^\\d{4}-\\d{2}-\\d{2}$/.test(attendanceDate) || note.length > 500) {
+      !isValidAttendanceDate(attendanceDate) || note.length > 500) {
     redirect('/students/manage?error=attendance');
   }
   const { error } = await supabase.from('student_attendance').upsert({

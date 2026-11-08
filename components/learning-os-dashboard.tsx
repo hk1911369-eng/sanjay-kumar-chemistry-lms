@@ -2,7 +2,7 @@ import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
 
 type Goal = {
   id: string; goal_type: string; target_value: number; current_value: number;
-  period_start: string; period_end: string; course_id: string | null;
+  period_start: string; period_end: string; course_id: string | null; status: 'active' | 'completed';
 };
 type RevisionTask = {
   id: string; title: string; scheduled_for: string; priority: number; course_id: string;
@@ -29,7 +29,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
     <h2>Today dashboard</h2>
     <p className="learning-os-muted">A subject-independent view of your study goals, revision queue and topic mastery. Insights improve as you complete lessons and assessments.</p>
     <div className="learning-os-stats">
-      <div className="learning-os-stat"><strong>{goals.length}</strong><span>Active goals</span></div>
+      <div className="learning-os-stat"><strong>{goals.length}</strong><span>Current goals</span></div>
       <div className="learning-os-stat"><strong>{dueCount}</strong><span>Revision due</span></div>
       <div className="learning-os-stat"><strong>{mastery.length}</strong><span>Topics tracked</span></div>
       <div className="learning-os-stat"><strong>{averageMastery === null ? '—' : averageMastery + '%'}</strong><span>Average mastery</span></div>
@@ -61,7 +61,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
           <ul className="learning-os-list">{goals.map(goal => {
             const progress = Math.min(100, Math.round(Number(goal.current_value) / Number(goal.target_value) * 100));
             return <li key={goal.id}>
-              <b>{goalLabels[goal.goal_type] ?? goal.goal_type}</b> · {goal.current_value} / {goal.target_value}
+              <b>{goalLabels[goal.goal_type] ?? goal.goal_type}</b> · {goal.current_value} / {goal.target_value} {goal.status === 'completed' ? '· Completed' : ''}
               <div className="learning-os-meter" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                 <span style={{ width: progress + '%' }}/>
               </div>

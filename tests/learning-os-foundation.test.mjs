@@ -140,6 +140,15 @@ test('Learning OS goals count only verified lesson completions', async () => {
   assert.ok(!dashboard.includes('value="study_minutes"'));
 });
 
+test('student dashboard keeps achieved goals visible until their period ends', async () => {
+  const page = await readFile(new URL('../app/student/page.tsx', import.meta.url), 'utf8');
+  assert.ok(page.includes(".in('status',['active','completed'])"));
+  assert.ok(page.includes("period_end,course_id,status"));
+  const dashboard = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
+  assert.ok(dashboard.includes("goal.status === 'completed'"));
+  assert.ok(dashboard.includes('Current goals'));
+});
+
 test('student dashboard completes revision tasks through the guarded database RPC', async () => {
   const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
   assert.ok(action.includes("rpc('complete_revision_task', { p_task_id: taskId })"));

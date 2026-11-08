@@ -68,7 +68,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const attendanceRows=attendance??[];
   const attendanceSummary={present:attendanceRows.filter(a=>a.status==='present').length,absent:attendanceRows.filter(a=>a.status==='absent').length,late:attendanceRows.filter(a=>a.status==='late').length,excused:attendanceRows.filter(a=>a.status==='excused').length};
   const [goalResult, revisionResult, masteryResult] = await Promise.all([
-    supabase.from('learner_study_goals').select('id,goal_type,target_value,current_value,period_start,period_end,course_id').eq('student_id',user.id).eq('status','active').order('period_end',{ascending:true}).limit(8),
+    supabase.from('learner_study_goals').select('id,goal_type,target_value,current_value,period_start,period_end,course_id,status').eq('student_id',user.id).in('status',['active','completed']).order('period_end',{ascending:true}).limit(8),
     supabase.from('revision_tasks').select('id,title,scheduled_for,priority,course_id,concept_id').eq('student_id',user.id).eq('status','pending').order('scheduled_for',{ascending:true}).limit(8),
     supabase.from('learner_concept_mastery').select('concept_id,mastery_score,confidence,evidence_count,next_review_at,learning_concepts(title,academic_subjects(name))').eq('student_id',user.id).order('mastery_score',{ascending:true}).limit(12),
   ]);

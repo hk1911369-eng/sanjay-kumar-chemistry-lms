@@ -17,6 +17,9 @@ test('Exam War Room generates revision tasks from published course concepts and 
   assert.ok(migration.includes('lc.is_published IS TRUE'));
   assert.ok(migration.includes('public.learner_concept_mastery'));
   assert.ok(migration.includes("'exam_war_room'"));
+  const taskCompatibility = await readFile(new URL('../supabase/migrations/20261108220456_learning_os_align_exam_war_room_with_revision_task_enums.sql', import.meta.url), 'utf8');
+  assert.ok(taskCompatibility.includes("'exam_plan'"));
+  assert.ok(taskCompatibility.includes("status='skipped'"));
   assert.ok(migration.includes('v_daily_slots'));
   assert.ok(migration.includes('You can have up to three active exam plans'));
 });
@@ -27,6 +30,7 @@ test('Exam War Room UI calls protected create and cancel actions', async () => {
   const nav=await readFile(new URL('../components/portal-layout.tsx',import.meta.url),'utf8');
   assert.ok(page.includes('createExamWarRoomTarget'));
   assert.ok(page.includes('cancelExamWarRoomTarget'));
+  assert.ok(page.includes(".eq('source_type','exam_plan')"));
   assert.ok(actions.includes("rpc('create_exam_war_room_target'"));
   assert.ok(actions.includes("rpc('cancel_exam_war_room_target'"));
   assert.ok(nav.includes("key: 'exam-war-room'"));

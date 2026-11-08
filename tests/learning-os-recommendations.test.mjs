@@ -14,6 +14,9 @@ test('LXP recommendations require evidence and currently paid course access', as
   assert.ok(component.includes(' : item.learning_concepts;'), 'single-object PostgREST relations render concept titles');
   assert.ok(component.includes(' : concept?.academic_subjects;'), 'single-object subject relations render subject names');
   assert.ok(component.includes('Recommended next steps'));
+  assert.ok(page.includes("from('learner_mistake_memory')"));
+  assert.ok(component.includes('My mistake memory'));
+  assert.ok(component.includes('Correct answer:'));
   assert.ok(component.includes('recommendations: Recommendation[]'));
   assert.ok(component.includes('Recommendations are based on evidence, not guesses.'));
   assert.ok(component.includes('/learn/'));

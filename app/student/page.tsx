@@ -67,14 +67,16 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const activeCount = (enrollments ?? []).filter(e => e.status === 'active').length;
   const attendanceRows=attendance??[];
   const attendanceSummary={present:attendanceRows.filter(a=>a.status==='present').length,absent:attendanceRows.filter(a=>a.status==='absent').length,late:attendanceRows.filter(a=>a.status==='late').length,excused:attendanceRows.filter(a=>a.status==='excused').length};
-  const [goalResult, revisionResult, masteryResult] = await Promise.all([
+  const [goalResult, revisionResult, masteryResult, mistakeResult] = await Promise.all([
     supabase.from('learner_study_goals').select('id,goal_type,target_value,current_value,period_start,period_end,course_id,status').eq('student_id',user.id).in('status',['active','completed']).order('period_end',{ascending:true}).limit(8),
     supabase.from('revision_tasks').select('id,title,scheduled_for,priority,course_id,concept_id').eq('student_id',user.id).eq('status','pending').order('scheduled_for',{ascending:true}).limit(8),
     supabase.from('learner_concept_mastery').select('concept_id,mastery_score,confidence,evidence_count,next_review_at,learning_concepts(title,academic_subjects(name))').eq('student_id',user.id).order('mastery_score',{ascending:true}).limit(12),
+    supabase.from('learner_mistake_memory').select('id,course_id,source_type,mistake_type,prompt_snapshot,response_snapshot,correct_answer_snapshot,explanation_snapshot,occurrence_count,last_seen_at').eq('student_id',user.id).is('resolved_at',null).order('last_seen_at',{ascending:false}).limit(8),
   ]);
   const learningGoals = goalResult.data ?? [];
   const revisionTasks = revisionResult.data ?? [];
   const conceptMastery = masteryResult.data ?? [];
+  const mistakeMemory = mistakeResult.data ?? [];
   const courseNames = new Map((enrollments ?? []).filter((enrollment:any) => enrollment.status === 'active').map((enrollment:any) => {
     const course = (courses ?? []).find((item:any) => item.id === enrollment.course_id);
     return [enrollment.course_id, course?.title ?? 'Your course'];
@@ -153,7 +155,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       {params.learning_error && <p className="form-error">{params.learning_error==='payment_due'?'Your current month tuition must be approved before opening lessons. Offline students receive the recorded library as part of their paid offline course.':'Course access is available only after payment approval.'}</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
       <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>{applications?.length ?? 0}</b><span>Course applications</span></article></div>
-      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} recommendations={learningRecommendations} courseNames={courseNames} upcomingExams={upcomingExams} upcomingAssignments={upcomingAssignments} />
+      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} mistakes={mistakeMemory} recommendations={learningRecommendations} courseNames={courseNames} upcomingExams={upcomingExams} upcomingAssignments={upcomingAssignments} />
       <h2 id="profile">Student profile</h2>
       {avatarUrl&&<p><Image src={avatarUrl} alt="Your profile" width={100} height={100} unoptimized style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
       <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">

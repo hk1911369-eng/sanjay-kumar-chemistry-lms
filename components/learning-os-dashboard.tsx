@@ -9,6 +9,7 @@ type RevisionTask = {
   id: string; title: string; scheduled_for: string; priority: number; course_id: string;
 };
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number };
+type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };
 type Mastery = {
   concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
   learning_concepts?: { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
@@ -25,8 +26,8 @@ const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, recommendations, courseNames, upcomingExams, upcomingAssignments }: {
-  goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; recommendations: Recommendation[];
+export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments }: {
+  goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; mistakes: Mistake[]; recommendations: Recommendation[];
   courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
@@ -42,6 +43,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, recommendat
       <div className="learning-os-stat"><strong>{goals.length}</strong><span>Current goals</span></div>
       <div className="learning-os-stat"><strong>{dueCount}</strong><span>Revision due</span></div>
       <div className="learning-os-stat"><strong>{mastery.length}</strong><span>Topics tracked</span></div>
+      <div className="learning-os-stat"><strong>{mistakes.length}</strong><span>Mistakes to revisit</span></div>
       <div className="learning-os-stat"><strong>{averageMastery === null ? '—' : averageMastery + '%'}</strong><span>Average mastery</span></div>
     </div>
 
@@ -113,6 +115,17 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, recommendat
           </li>)}</ul>}
       </div>
     </div>
+
+    <h3>My mistake memory</h3>
+    {mistakes.length === 0
+      ? <p className="learning-os-muted">Your quiz mistakes will be saved here after concept-mapped quizzes are completed. Repeated patterns help target revision; they do not reduce your grade.</p>
+      : <div className="learning-os-columns">{mistakes.map(mistake => <details className="learning-os-stat" key={mistake.id}>
+          <summary><b>{mistake.prompt_snapshot}</b><small className="learning-os-muted"> · {mistake.occurrence_count} occurrence{mistake.occurrence_count===1?'':'s'} · {courseNames.get(mistake.course_id)??'Course'}</small></summary>
+          <p><b>Your answer:</b> {mistake.response_snapshot}</p>
+          <p><b>Correct answer:</b> {mistake.correct_answer_snapshot||'Review the answer with your teacher.'}</p>
+          {mistake.explanation_snapshot&&<p><b>Explanation:</b> {mistake.explanation_snapshot}</p>}
+          <small className="learning-os-muted">Last seen {new Date(mistake.last_seen_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})} · {mistake.source_type}</small>
+        </details>)}</div>}
 
     <h3>Recommended next steps</h3>
     {recommendations.length === 0

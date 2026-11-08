@@ -39,5 +39,7 @@ test('course archive hides and disables new enrolment without deleting records',
   assert.ok(page.includes('archivedCourses'));
   assert.ok(page.includes('Restore course'));
   assert.ok(page.includes('Archive course'));
-  assert.equal(action.includes(".delete()"), false);
+  const archiveAction = action.slice(action.indexOf('export async function setCourseArchived'));
+  assert.ok(archiveAction.includes("rpc('set_course_archived'"));
+  assert.equal(archiveAction.includes(".delete()"), false);
 });

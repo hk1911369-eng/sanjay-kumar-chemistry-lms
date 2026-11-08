@@ -16,6 +16,17 @@ export async function updateSession(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile, error } = await supabase.from('profiles').select('is_active').eq('id', user.id).maybeSingle();
+    if (!error && profile?.is_active !== true) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = '/account-disabled';
+      destination.search = '';
+      const redirect = NextResponse.redirect(destination);
+      response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+      return redirect;
+    }
+  }
   return response;
 }

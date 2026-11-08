@@ -3,6 +3,11 @@ import Image from 'next/image';
 import {createPublicClient} from '@/lib/supabase/public';
 
 export const revalidate = 300;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+ const { slug } = await params;
+ const canonical = '/courses/' + encodeURIComponent(slug);
+ return { title: 'Course details', alternates: { canonical }, openGraph: { url: canonical } };
+}
 const labels:Record<string,string>={live_recorded:'Live classes + recordings',recorded_only:'Recorded-only access',offline:'Offline academy classes'};
 export default async function CourseDetails({params}:{params:Promise<{slug:string}>}){
  const {slug}=await params;const db=createPublicClient();

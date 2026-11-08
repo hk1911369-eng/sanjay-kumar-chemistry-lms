@@ -9,7 +9,7 @@ export default async function CourseStudio({searchParams}:{searchParams:Promise<
  const p=await searchParams;const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
  const {data:me}=await db.from('profiles').select('role').eq('id',user.id).single();if(me?.role!=='admin')redirect('/portal');
  const [{data:courses},{data:teachers},{data:assignments}]=await Promise.all([
- db.from('courses').select('id,title,slug,description,programme_group,subjects,cover_image_path,teaching_method,schedule_text,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt,admission_fee_bdt,enrollment_open,is_published,capacity').is('archived_at',null).order('programme_group').order('title'),
+ db.from('courses').select('id,title,slug,description,programme_group,subjects,cover_image_path,teaching_method,schedule_text,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt,admission_fee_bdt,enrollment_open,is_published,capacity,archived_at').order('programme_group').order('title'),
  db.from('profiles').select('id,full_name,role').in('role',['teacher','staff']).order('full_name'),
  db.from('course_assignments').select('course_id,teacher_id')]);
  const assigned=new Map<string,string[]>();for(const a of assignments??[])assigned.set(a.course_id,[...(assigned.get(a.course_id)??[]),a.teacher_id]);

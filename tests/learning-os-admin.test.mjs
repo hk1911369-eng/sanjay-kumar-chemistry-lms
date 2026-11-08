@@ -27,3 +27,14 @@ test('lesson concepts can only be mapped when course and concept subjects match'
   assert.ok(actions.includes("from('course_subjects').select('course_id')"));
   assert.ok(actions.includes("error=subject_mismatch"));
 });
+
+test('teacher workspace surfaces evidence-based learning signals within RLS scope', async () => {
+  const page = await read('app/students/manage/page.tsx');
+  assert.ok(page.includes("from('learning_events')"));
+  assert.ok(page.includes("from('learner_concept_mastery')"));
+  assert.ok(page.includes("from('learner_mistake_memory')"));
+  assert.ok(page.includes("from('revision_tasks')"));
+  assert.ok(page.includes('Number(item.evidence_count)>=3'));
+  assert.ok(page.includes('Number(item.mastery_score)<0.55'));
+  assert.ok(page.includes('These are learning signals, not exam-result predictions'));
+});

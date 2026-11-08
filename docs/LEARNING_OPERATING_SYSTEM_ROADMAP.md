@@ -55,7 +55,7 @@ The platform must support any subject and programme. "Chemistry" in the original
 
 - Today dashboard: goals, due revision, upcoming exams, weak concepts and next action.
 - Student activity instrumentation for lessons, practice, revision and simulations.
-- Personal study-goal creation and completion tracking.
+- Personal lesson-completion goal creation and database-backed progress tracking.
 - Chapter/topic heat map based on evidence, not arbitrary colors.
 - Teacher intervention queue for students who need support.
 
@@ -113,6 +113,7 @@ The platform must support any subject and programme. "Chemistry" in the original
 - The first additive Supabase schema foundation has been applied.
 - New tables have RLS enabled; anonymous table access is revoked.
 - Mastery, learner profiles, mistake memory and revision tasks are read-only to client roles; trusted server-side processing will populate them.
-- Student event insertion is restricted to the student's own active enrollment and cannot write assessment scores.
+- Student learning events are limited to verified lesson completions in the student's own active enrolment; clients cannot submit assessment scores or fabricated study duration.
+- Lesson-completion goals advance automatically from verified learning events.
 - Existing course, lesson, enrolment and payment data has not been deleted or rewritten.
 - Dashboard UI, event instrumentation, AI services, prediction models, social features, virtual labs, parent access and tenant rollout are not yet complete.

@@ -13,8 +13,7 @@ type Mastery = {
 };
 
 const goalLabels: Record<string, string> = {
-  study_minutes: 'Study minutes', practice_questions: 'Practice questions',
-  study_sessions: 'Study sessions', revision_tasks: 'Revision tasks', mastery_score: 'Mastery target',
+  lesson_completions: 'Lesson completions',
 };
 
 export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames }: {
@@ -39,12 +38,8 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
     <h3>Set a 7-day study target</h3>
     <form action={createStudyGoal} className="auth-form learning-os-goal-form">
       <label>Goal type
-        <select name="goal_type" defaultValue="study_minutes" required>
-          <option value="study_minutes">Study minutes</option>
-          <option value="practice_questions">Practice questions</option>
-          <option value="study_sessions">Study sessions</option>
-          <option value="revision_tasks">Revision tasks</option>
-          <option value="mastery_score">Mastery score</option>
+        <select name="goal_type" defaultValue="lesson_completions" required>
+          <option value="lesson_completions">Lesson completions</option>
         </select>
       </label>
       <label>Target

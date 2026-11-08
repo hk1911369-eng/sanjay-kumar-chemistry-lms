@@ -94,6 +94,21 @@ test('study-session events advance study-session and minute goals; revision even
   assert.ok(migration.includes('Asia/Dhaka'));
 });
 
+test('Learning OS goals count only verified lesson completions', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213210_learning_os_verified_lesson_goals_and_events.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("event_type = 'lesson_completed'"));
+  assert.ok(migration.includes('duration_seconds IS NULL'));
+  assert.ok(migration.includes('lp.completed IS TRUE'));
+  assert.ok(migration.includes("goal_type = 'lesson_completions'"));
+  assert.ok(migration.includes('LEAST(target_value, current_value + 1)'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.increment_lesson_completion_goals()'));
+  const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
+  assert.ok(action.includes("const allowedTypes = ['lesson_completions']"));
+  const dashboard = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
+  assert.ok(dashboard.includes('Lesson completions'));
+  assert.ok(!dashboard.includes('value="study_minutes"'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

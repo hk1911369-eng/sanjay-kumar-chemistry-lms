@@ -13,7 +13,7 @@ export async function createStudyGoal(formData: FormData) {
   const goalType = String(formData.get('goal_type') ?? '');
   const targetValue = Number(formData.get('target_value'));
   const courseId = String(formData.get('course_id') ?? '').trim() || null;
-  const allowedTypes = ['study_minutes','practice_questions','study_sessions','revision_tasks','mastery_score'];
+  const allowedTypes = ['lesson_completions'];
   if (!allowedTypes.includes(goalType) || !Number.isFinite(targetValue) || targetValue <= 0 || targetValue > 100000) {
     redirect('/student?goal_error=invalid#learning-os');
   }

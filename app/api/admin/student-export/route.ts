@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-function csvCell(value: unknown) {
-  const raw = value == null ? '' : String(value);
-  // Prevent spreadsheet formula execution while preserving ordinary values.
-  const safe = /^[=+@\\-\\t\\r]/.test(raw) ? "'" + raw : raw;
-  return '"' + safe.replace(/"/g, '""') + '"';
-}
+import { buildCsv } from '@/lib/csv';
 
 export async function GET() {
   const db = await createClient();
@@ -47,7 +41,7 @@ export async function GET() {
         latest?.amount_bdt,latest?.created_at ? new Date(latest.created_at).toISOString() : ''];
     });
   })];
-  const body = '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\\r\\n');
+  const body = buildCsv(rows);
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

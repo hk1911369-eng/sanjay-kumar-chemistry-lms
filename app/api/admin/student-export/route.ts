@@ -11,7 +11,7 @@ export async function GET() {
   if (actor?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { data: students, error } = await fetchAllPages((from, to) =>
-    db.rpc('get_student_register_export').range(from, to)
+    db.rpc('get_student_register_export').order('full_name').order('student_id').order('course_title').range(from, to)
   );
   if (error || !students) {
     console.error('Student register export failed', { error: error instanceof Error ? error.message : 'query_failed' });

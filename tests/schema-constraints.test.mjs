@@ -116,3 +116,11 @@ test('public course teacher RPC returns names only for published non-archived co
   assert.ok(migration.includes("p.role::text in ('teacher','staff')"));
   assert.ok(migration.includes('revoke all on function public.get_public_course_teachers(uuid) from public'));
 });
+ 
+test('private Storage policies require authentication while course images stay public', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108132143_scope_private_storage_policies_to_authenticated.sql', import.meta.url), 'utf8');
+  assert.equal((migration.match(/ TO authenticated;/g) || []).length, 14);
+  assert.ok(migration.includes('ALTER POLICY "course members read lesson materials"'));
+  assert.ok(migration.includes('ALTER POLICY "students read own payment proofs"'));
+  assert.equal(migration.includes('JMT course images public read'), false);
+});

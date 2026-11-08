@@ -145,7 +145,7 @@ input,select,textarea,button{max-width:100%}
     width:100%;
     max-width:100%;
   }
-  .portal-sidebar{
+  .portal-navigation{
     min-width:0;
     min-height:0;
     overflow-y:auto;

@@ -1,7 +1,6 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { isValidAttendanceDate } from '@/lib/attendance-date';
 import { requireRole } from '@/lib/auth/require-role';
@@ -124,11 +123,7 @@ export async function updateAccountRole(formData: FormData) {
 }
 
 export async function setStudentAccountActive(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (actor?.role !== 'admin') redirect('/portal');
+  const { supabase } = await requireRole(['admin']);
 
   const studentId = String(formData.get('profile_id') ?? '');
   const activeValue = String(formData.get('is_active') ?? '');

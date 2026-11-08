@@ -33,10 +33,12 @@ export async function submitManualPayment(formData: FormData) {
 
   const [courseResult, settingsResult, enrollmentResult] = await Promise.all([
     supabase.from('courses').select('id,monthly_fee_bdt,admission_fee_bdt,is_published,enrollment_open,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('id', courseId).single(),
-    supabase.from('private_payment_settings').select('provider,is_enabled').eq('provider', provider).maybeSingle(),
+    supabase.rpc('get_enabled_payment_instructions'),
     supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
-  const {data:course}=courseResult;const {data:settings}=settingsResult;
+  const {data:course}=courseResult;
+  const {data:instructions}=settingsResult;
+  const settings=(instructions??[]).find((item:any)=>item.provider===provider);
   let existingEnrollment:any=enrollmentResult.data;
   if(enrollmentResult.error){const fallback=await supabase.from('enrollments').select('id,status,admission_fee_paid,paid_through').eq('student_id',user.id).eq('course_id',courseId).maybeSingle();existingEnrollment=fallback.data;}
 

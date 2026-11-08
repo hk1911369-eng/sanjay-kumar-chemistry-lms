@@ -102,8 +102,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
             .eq('student_id',user.id).in('concept_id',prerequisiteIds),
         ])
       : [{ data: [] as any[] }, { data: [] as any[] }];
-    const prerequisiteTitles = new Map((prerequisiteConceptRows ?? []).map((item:any) => [item.id,item.title]));
-    const prerequisiteMastery = new Map((prerequisiteMasteryRows ?? []).map((item:any) => [item.concept_id,item]));
+    const prerequisiteTitles = new Map<string,string>((prerequisiteConceptRows ?? []).map((item:any) => [String(item.id),String(item.title)] as [string,string]));
+    const prerequisiteMastery = new Map<string,any>((prerequisiteMasteryRows ?? []).map((item:any) => [String(item.concept_id),item] as [string,any]));
     const edgesByWeakConcept = new Map<string,string[]>();
     for (const edge of prerequisiteEdges ?? []) {
       const existing = edgesByWeakConcept.get(edge.concept_id) ?? [];

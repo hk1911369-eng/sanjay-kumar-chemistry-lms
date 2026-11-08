@@ -106,7 +106,7 @@ test('Learning knowledge graph rejects cross-subject and circular links at datab
   assert.ok(migration.includes('REVOKE ALL ON FUNCTION public.guard_lesson_concept_subject()'));
 });
 
-test('revision completion is transactional and limited to the student's own active course', async () => {
+test("revision completion is transactional and limited to the student's own active course", async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213452_learning_os_secure_revision_task_completion.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("public.current_role())::text IS DISTINCT FROM 'student'"));
   assert.ok(migration.includes('student_id = auth.uid()'));

@@ -187,3 +187,16 @@ test('follow-up visibility is admin-only on insert as well as update', async () 
   assert.ok(migration.includes("v_role IS DISTINCT FROM 'admin'"));
   assert.ok(migration.includes('BEFORE INSERT OR UPDATE ON public.student_followups'));
 });
+
+ 
+test('authenticated profile updates are limited to approved profile fields', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108184125_restrict_profile_update_columns.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('REVOKE UPDATE ON TABLE public.profiles FROM authenticated'));
+  for (const field of ['id','student_code','admission_date','is_active','created_at']) {
+    assert.ok(migration.includes(field), field);
+  }
+  for (const field of ['role','full_name','phone','avatar_path','guardian_name','guardian_phone','college_name','location','date_of_birth','gender','emergency_contact','blood_group','updated_at']) {
+    assert.ok(migration.includes(field), field);
+  }
+  assert.ok(migration.includes('GRANT UPDATE'));
+});

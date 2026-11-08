@@ -6,7 +6,7 @@ test('Exam War Room targets are private to the student and administrators', asyn
   const migration=await readFile(new URL('../supabase/migrations/20261108220330_learning_os_exam_war_room_targets_and_revision_plans.sql',import.meta.url),'utf8');
   assert.ok(migration.includes('ALTER TABLE public.learner_exam_targets ENABLE ROW LEVEL SECURITY'));
   assert.ok(migration.includes('student_id=(SELECT auth.uid())'));
-  assert.ok(migration.includes("current_role()) IS DISTINCT FROM 'student'::public.app_role"));
+  assert.ok( /current_role\\(\\) IS DISTINCT FROM 'student'::public\\.app_role/.test(migration));
   assert.ok(migration.includes('e.admission_fee_paid IS TRUE'));
   assert.ok(migration.includes('e.paid_through>=v_period_end'));
 });
@@ -29,7 +29,7 @@ test('Exam War Room generates revision tasks from published course concepts and 
   const evidence = await readFile(new URL('../supabase/migrations/20261108220556_learning_os_exam_war_room_task_constraints_and_evidence_thresholds.sql', import.meta.url), 'utf8');
   assert.ok(serialized.includes('FOR UPDATE'));
   assert.ok(serialized.includes('public.profiles'));
-  assert.ok(evidence.includes('evidence_count >= 3'));
+  assert.ok(evidence.includes('COALESCE(m.evidence_count,0)>=3'));
   assert.ok(evidence.includes("'exam_war_room'"));
   assert.ok(evidence.includes('revision_tasks_source_type_check'));
   assert.ok(migration.includes('v_daily_slots'));

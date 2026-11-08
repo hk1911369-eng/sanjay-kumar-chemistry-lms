@@ -1,3 +1,4 @@
+export const metadata = { title: 'Login', robots: { index: false, follow: false } };
 import Link from 'next/link';
 import { signIn } from '@/app/actions/auth';
 export default async function Login({searchParams}:{searchParams:Promise<{error?:string}>}) {

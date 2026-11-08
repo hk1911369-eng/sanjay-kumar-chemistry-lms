@@ -4,7 +4,7 @@ export type PortalIconName =
   | 'home' | 'book-open' | 'book' | 'bell' | 'pencil' | 'calendar'
   | 'users' | 'user' | 'wallet' | 'help' | 'graduation-cap'
   | 'chart' | 'settings' | 'map-pin' | 'megaphone' | 'flask'
-  | 'arrow-left' | 'menu';
+  | 'arrow-left' | 'menu' | 'target';
 
 const paths: Record<PortalIconName, ReactNode> = {
   home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -25,6 +25,7 @@ const paths: Record<PortalIconName, ReactNode> = {
   flask: <><path d="M9 3h6M10 3v7l-6 10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1l-6-10V3"/><path d="M7 16h10"/></>,
   'arrow-left': <><path d="m12 19-7-7 7-7M5 12h14"/></>,
   menu: <><path d="M4 6h16M4 12h16M4 18h16"/></>,
+  target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,
 };
 
 export function PortalIcon({ name, size = 18 }: { name: PortalIconName; size?: number }) {

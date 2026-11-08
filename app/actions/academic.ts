@@ -15,7 +15,9 @@ function parseDhakaDateTime(value:string):string|null {
  if(!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?$/.test(value)) return null;
  const normalized=value.length===16?value+':00':value;
  const parsed=new Date(normalized+'+06:00');
- return Number.isNaN(parsed.getTime())?null:parsed.toISOString();
+ if(Number.isNaN(parsed.getTime())) return null;
+ const roundTrip=new Date(parsed.getTime()+6*60*60*1000).toISOString().slice(0,19);
+ return roundTrip===normalized?parsed.toISOString():null;
 }
 
 async function canTeach(supabase:any,userId:string,role:string,courseId:string) {

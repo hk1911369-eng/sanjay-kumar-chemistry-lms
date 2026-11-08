@@ -35,3 +35,26 @@ export async function saveAcademyCourse(fd:FormData){
  revalidatePath('/admin');revalidatePath('/admin/courses');revalidatePath('/courses');revalidatePath('/');revalidatePath('/courses/'+slug);
  redirect('/admin/courses?saved=1'+(id?'&updated=1':''));
 }
+
+export async function setCourseArchived(formData: FormData) {
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: me } = await db.from('profiles').select('role').eq('id', user.id).single();
+  if (me?.role !== 'admin') redirect('/portal');
+
+  const courseId = String(formData.get('course_id') ?? '');
+  const archivedValue = String(formData.get('archived') ?? '');
+  if (!courseId || !['true','false'].includes(archivedValue)) redirect('/admin/courses?error=archive');
+
+  const { error } = await db.rpc('set_course_archived', {
+    p_course_id: courseId,
+    p_archived: archivedValue === 'true',
+  });
+  if (error) redirect('/admin/courses?error=archive');
+  revalidatePath('/admin');
+  revalidatePath('/admin/courses');
+  revalidatePath('/courses');
+  revalidatePath('/');
+  redirect('/admin/courses?archive_saved=1');
+}

@@ -1,5 +1,6 @@
 import { PortalLayout } from '@/components/portal-layout';
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createStudentFollowup, markStudentAttendance, updateStudentFollowupStatus, updateAccountRole } from '@/app/actions/student-management';
@@ -106,7 +107,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
         const photo=avatarMap.get(student.id);
         return <article className="portal-card" key={student.id} style={{marginTop:20}}>
           <div style={{display:'flex',gap:18,alignItems:'center',flexWrap:'wrap'}}>
-            {photo?<img src={photo} alt="Student profile" style={{width:86,height:86,objectFit:'cover',borderRadius:18,border:'1px solid var(--line)'}}/>:<div style={{width:86,height:86,borderRadius:18,background:'#eaf3ff',display:'grid',placeItems:'center',fontSize:30}}>👤</div>}
+            {photo?<Image src={photo} alt="Student profile" width={86} height={86} unoptimized style={{width:86,height:86,objectFit:'cover',borderRadius:18,border:'1px solid var(--line)'}}/>:<div style={{width:86,height:86,borderRadius:18,background:'#eaf3ff',display:'grid',placeItems:'center',fontSize:30}}>👤</div>}
             <div style={{flex:1,minWidth:220}}>
               <span className="auth-kicker">STUDENT PROFILE</span><h2 style={{margin:'4px 0'}}>{student.full_name}</h2>
               <b>{student.student_code??'ID pending'}</b><p className="muted" style={{margin:'4px 0'}}>Account type: {student.role} · Admitted: {student.admission_date??'Not recorded'} · {student.college_name??'College not added'}</p>

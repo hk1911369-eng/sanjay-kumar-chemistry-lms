@@ -3,6 +3,25 @@ import { createClient } from '@/lib/supabase/server';
 import { buildCsv } from '@/lib/csv';
 import { fetchAllPages } from '@/lib/pagination.js';
 
+type StudentRegisterRow = {
+  student_id: string;
+  student_code: string | null;
+  full_name: string;
+  phone: string | null;
+  guardian_name: string | null;
+  guardian_phone: string | null;
+  college_name: string | null;
+  location: string | null;
+  admission_date: string | null;
+  course_title: string | null;
+  programme_group: string | null;
+  enrollment_status: string | null;
+  admission_fee_paid: boolean | null;
+  paid_through: string | null;
+  latest_approved_payment_bdt: number | null;
+  latest_payment_date: string | null;
+};
+
 export async function GET() {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
@@ -10,7 +29,7 @@ export async function GET() {
   const { data: actor } = await db.from('profiles').select('role').eq('id', user.id).single();
   if (actor?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { data: students, error } = await fetchAllPages((from, to) =>
+  const { data: students, error } = await fetchAllPages<StudentRegisterRow>((from, to) =>
     db.rpc('get_student_register_export').order('full_name').order('student_id').order('course_title').range(from, to)
   );
   if (error || !students) {

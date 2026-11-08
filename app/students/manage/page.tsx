@@ -60,10 +60,14 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   const enrollmentQuery = role === 'admin'
     ? (studentIds.length ? supabase.from('enrollments').select('id,student_id,course_id,status,starts_at,admission_fee_paid,paid_through').in('student_id',studentIds) : Promise.resolve({data:[] as any[]}))
     : supabase.rpc('get_assigned_student_enrollments',{p_student_ids:studentIds});
-  const [{data:enrollments},{data:attendance},{data:followups}] = await Promise.all([
+  const [{data:enrollments},{data:attendance},{data:followups},{data:learningEvents},{data:masteryRows},{data:mistakeRows},{data:revisionRows}] = await Promise.all([
     enrollmentQuery,
     studentIds.length ? supabase.from('student_attendance').select('id,student_id,course_id,attendance_date,status,note').in('student_id',studentIds).order('attendance_date',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
     studentIds.length ? supabase.from('student_followups').select('id,student_id,course_id,category,severity,details,guardian_contacted,guardian_call_outcome,follow_up_status,follow_up_date,created_at,created_by').in('student_id',studentIds).order('created_at',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
+    studentIds.length ? supabase.from('learning_events').select('id,student_id,course_id,event_type,occurred_at,concept_id').in('student_id',studentIds).order('occurred_at',{ascending:false}).limit(1000) : Promise.resolve({data:[] as any[]}),
+    studentIds.length ? supabase.from('learner_concept_mastery').select('student_id,concept_id,mastery_score,confidence,evidence_count,learning_concepts(title,academic_subjects(name))').in('student_id',studentIds).order('mastery_score',{ascending:true}).limit(1000) : Promise.resolve({data:[] as any[]}),
+    studentIds.length ? supabase.from('learner_mistake_memory').select('id,student_id,course_id,concept_id,mistake_type,occurrence_count,last_seen_at').in('student_id',studentIds).order('last_seen_at',{ascending:false}).limit(1000) : Promise.resolve({data:[] as any[]}),
+    studentIds.length ? supabase.from('revision_tasks').select('id,student_id,course_id,title,scheduled_for,status,priority').in('student_id',studentIds).eq('status','pending').order('scheduled_for',{ascending:true}).limit(1000) : Promise.resolve({data:[] as any[]}),
   ]);
   type EnrollmentSummary = { id: string; student_id: string; course_id: string; status: string; starts_at: string | null; admission_fee_paid?: boolean | null; paid_through?: string | null };
   const enrollmentRows = (enrollments ?? []) as EnrollmentSummary[];
@@ -84,6 +88,7 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const currentPeriod=currentBangladeshBillingPeriod();
   const currentEnd=billingMonthEnd(currentPeriod);
+  const activityWindowStart=Date.now()-7*24*60*60*1000;
 
   return <PortalLayout role={role as 'admin' | 'teacher' | 'staff'} active="students" title="Student records" returnTo="/students/manage">
     <section className="portal-content">
@@ -104,6 +109,14 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
         const calendar=paymentMap.get(student.id)??[];
         const studentNotes=(followups??[]).filter(n=>n.student_id===student.id);
         const studentAttendance=(attendance??[]).filter(a=>a.student_id===student.id);
+        const studentEvents=(learningEvents??[]).filter(event=>event.student_id===student.id);
+        const studentMastery=(masteryRows??[]).filter(item=>item.student_id===student.id);
+        const studentMistakes=(mistakeRows??[]).filter(item=>item.student_id===student.id);
+        const studentRevisions=(revisionRows??[]).filter(item=>item.student_id===student.id);
+        const recentLearningEvents=studentEvents.filter(event=>new Date(event.occurred_at).getTime()>=activityWindowStart);
+        const evidenceBasedWeakTopics=studentMastery.filter(item=>Number(item.evidence_count)>=3&&Number(item.mastery_score)<0.55).slice(0,3);
+        const repeatedMistakes=studentMistakes.filter(item=>Number(item.occurrence_count)>=2).slice(0,3);
+        const dueRevisionCount=studentRevisions.filter(item=>new Date(item.scheduled_for).getTime()<=Date.now()).length;
         const photo=avatarMap.get(student.id);
         return <article className="portal-card" key={student.id} style={{marginTop:20}}>
           <div style={{display:'flex',gap:18,alignItems:'center',flexWrap:'wrap'}}>
@@ -144,6 +157,28 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
           {role !== 'admin' && <><h3>Enrolled courses</h3>{studentEnrollments.length===0?<p className="muted">No course enrollment yet.</p>:studentEnrollments.map(enrollment=><p key={enrollment.id}><b>{courseNames.get(enrollment.course_id)??'Course'}</b> · {enrollment.status}</p>)}</>}
           <h3>Attendance (recent)</h3>
           {studentAttendance.length===0?<p className="muted">No attendance records.</p>:<div className="table-scroll"><table><thead><tr><th>Date</th><th>Course</th><th>Status</th><th>Note</th></tr></thead><tbody>{studentAttendance.slice(0,10).map(a=><tr key={a.id}><td>{a.attendance_date}</td><td>{courseNames.get(a.course_id)??'Course'}</td><td>{a.status}</td><td>{a.note??'—'}</td></tr>)}</tbody></table></div>}
+          <h3>Learning intelligence · last 7 days</h3>
+          <div className="portal-grid">
+            <div className="payment-instructions"><b>{recentLearningEvents.length}</b><p>Recorded learning activities</p></div>
+            <div className="payment-instructions"><b>{dueRevisionCount}</b><p>Revision tasks due</p></div>
+            <div className="payment-instructions"><b>{studentMastery.length}</b><p>Concepts with mastery evidence</p></div>
+          </div>
+          <div className="portal-grid">
+            <div className="payment-instructions">
+              <b>Evidence-based weak concepts</b>
+              {evidenceBasedWeakTopics.length===0?<p className="muted">No concept has enough evidence to flag a weakness yet.</p>:
+                <ul>{evidenceBasedWeakTopics.map(item=>{
+                  const concept=Array.isArray(item.learning_concepts)?item.learning_concepts[0]:item.learning_concepts;
+                  return <li key={item.concept_id}>{concept?.title??'Learning concept'} · {Math.round(Number(item.mastery_score)*100)}% mastery · {item.evidence_count} evidence items</li>;
+                })}</ul>}
+            </div>
+            <div className="payment-instructions">
+              <b>Repeated mistake patterns</b>
+              {repeatedMistakes.length===0?<p className="muted">No repeated mistake pattern has been recorded yet.</p>:
+                <ul>{repeatedMistakes.map(item=><li key={item.id}>{item.mistake_type.replace('_',' ')} · {item.occurrence_count} occurrences · {courseNames.get(item.course_id)??'Course'}</li>)}</ul>}
+            </div>
+          </div>
+          <p className="muted small-note">These are learning signals, not exam-result predictions. Staff access is limited by assigned-course and subject permissions.</p>
           <h3>Teacher / staff follow-up history</h3>
           {studentNotes.length===0?<p className="muted">No remarks or follow-ups yet.</p>:studentNotes.slice(0,10).map(note=><div key={note.id} className="payment-instructions"><b>{note.category.toUpperCase()} · {note.severity.toUpperCase()}</b> · {note.follow_up_status}<p>{note.details}</p><p className="muted">Guardian called: {note.guardian_contacted?'Yes':'No'}{note.guardian_call_outcome?' · '+note.guardian_call_outcome:''} · {new Date(note.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>{role==='admin'||note.created_by===user.id?<form action={updateStudentFollowupStatus} className="auth-form payment-form"><input type="hidden" name="followup_id" value={note.id}/><label>Follow-up status<select name="follow_up_status" defaultValue={note.follow_up_status}><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select></label><button className="auth-submit">Update status</button></form>:null}</div>)}
           {role==='admin'&&<form action={setStudentAccountActive} className="auth-form portal-card" style={{marginTop:16}}>

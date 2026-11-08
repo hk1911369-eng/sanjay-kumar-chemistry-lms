@@ -10,7 +10,7 @@ test('courses are created only by admins and are not seeded by new feature migra
     'supabase/migrations/0016_course_applications.sql',
     'supabase/migrations/0021_secure_discussions_and_rate_limits.sql',
   ];
-  assert.match(action, /me\?\.role!=='admin'/);
+  assert.match(action, /requireAdmin/);
   assert.match(action, /HSC 2027/);
   assert.match(action, /HSC 2028/);
   assert.match(action, /Admission Batch/);
@@ -23,8 +23,8 @@ test('courses are created only by admins and are not seeded by new feature migra
 test('payment submission is student-owned and review is admin-only through RPC', async () => {
   const action = await read('app/actions/payments.ts');
   const sql = await read('supabase/migrations/0004_secure_manual_payment_workflow.sql');
-  assert.match(action, /auth\.getUser\(\)/);
-  assert.match(action, /profile\?\.role !== 'admin'/);
+  assert.match(action, /requireRole\(\['student'\]\)/);
+  assert.match(action, /requireRole\(\['admin'\]\)/);
   assert.match(action, /approve_manual_payment_submission/);
   assert.match(action, /reject_manual_payment_submission/);
   assert.match(sql, /for update/i);

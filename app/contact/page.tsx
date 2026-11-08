@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import {createClient} from '@/lib/supabase/server';
+import {createPublicClient} from '@/lib/supabase/public';
+
+export const revalidate = 300;
 
 export default async function Contact(){
- const db=await createClient();const {data:settings}=await db.from('academy_settings').select('academy_name,contact_phone,whatsapp_phone,contact_email,physical_address,google_maps_url,facebook_url,support_hours').eq('id',1).maybeSingle();
+ const db=createPublicClient();const {data:settings}=await db.from('academy_settings').select('academy_name,contact_phone,whatsapp_phone,contact_email,physical_address,google_maps_url,facebook_url,support_hours').eq('id',1).maybeSingle();
  const whatsappDigits=(settings?.whatsapp_phone??'').replace(/\D/g,'').replace(/^0/,'880');
  const hasContact=!!(settings?.contact_phone||settings?.whatsapp_phone||settings?.contact_email||settings?.physical_address||settings?.facebook_url);
  return <main className="portal-shell"><header className="portal-header"><Link className="brand" href="/"><span className="logo">J</span> JMT ACADEMY</Link></header><section className="portal-content"><span className="auth-kicker">JMT ACADEMY · SUPPORT</span><h1>Contact and visit the academy</h1><p className="muted">For course applications, online learning and offline class enquiries, use the official details below.</p>

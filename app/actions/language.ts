@@ -6,7 +6,8 @@ export async function setLanguage(formData: FormData) {
   const value = String(formData.get('locale') ?? 'bn');
   const locale: Locale = value === 'en' ? 'en' : 'bn';
   const store = await cookies();
-  store.set('skc_locale', locale, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 365 });
+  store.set('jmt_locale', locale, { httpOnly: false, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 365 });
+  store.delete('skc_locale');
   const back = String(formData.get('return_to') ?? '/');
   let destination = '/';
   try {

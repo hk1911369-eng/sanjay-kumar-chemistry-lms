@@ -1,46 +1,40 @@
 # JMT Academy
 
-JMT Academy is a mobile-first online and offline learning platform built with Next.js 15, React 19, TypeScript and Supabase.
+JMT Academy is a Bangladesh-focused Chemistry learning platform for HSC 2027, HSC 2028 and university Admission students.
 
-## Programmes
+## Platform
 
-The public catalogue is organised around three programme groups:
+- Next.js 15, React 19 and TypeScript.
+- Supabase Auth, Postgres with row-level security, and private Storage.
+- Student, Teacher, Staff and Admin workspaces.
+- Course applications, learning-format selection, lesson content, quizzes, assignments, written exams, attendance, discussions and notifications.
+- Manual bKash, Nagad and Rocket payment submission with Admin verification.
+- Finance ledger, student register and CSV exports.
+- Bengali and English locale preference.
 
-- HSC 2027
-- HSC 2028
-- Admission Batch
+## Course model
 
-Administrators can create and edit as many courses as needed inside those groups. Courses can offer one or more learning formats:
+Administrators organise courses under three programme groups: HSC 2027, HSC 2028 and Admission Batch. Each course can offer Live + Recorded, Recorded-only and/or Offline learning, with its own published fee settings. Payment verification is manual; the platform does not claim to verify wallet transfers automatically.
 
-- Live + recorded: teacher-led live sessions with access to recordings.
-- Recorded-only: self-paced recorded lessons without live-class access.
-- Offline: in-person academy teaching, with recordings included as make-up support for active offline learners.
+## Local development
 
-Each course can have its own subjects, cover image, schedule, teacher team, monthly format prices, one-time admission fee, seat capacity and enrolment status.
+Requirements: Node.js 22 and npm.
 
-## Main platform areas
+```bash
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run dev
+```
 
-- Public academy website and course catalogue.
-- Student applications and admin admissions review.
-- Student, teacher, staff and administrator workspaces.
-- Lesson chapters, video playback, downloadable class files, PDF previews and discussion threads.
-- Live classes, assignments, quizzes, written exams, results and feedback.
-- Student profiles, guardian contacts, permanent student IDs, attendance and payment history.
-- Manual bKash, Nagad and Rocket payment submission and administrator verification.
-- Finance and accounts reporting, with an append-only cash, bank, expense and refund ledger.
-- In-app notifications for academic and admissions events.
+Create a local `.env.local` using the variable names documented in `DEPLOYMENT.md`. Never commit secrets or paste them into chat.
 
-## Development and deployment
+## Database
 
-- Framework: Next.js 15 / React 19 / TypeScript.
-- Database, authentication and storage: Supabase.
-- Hosting: Render.
-- Main branch: `main`.
-- Build: `npm install --no-audit --no-fund && npm run build`.
-- Start: `npm start`.
+Apply numbered SQL files in `supabase/migrations` in order to a separate test project first. Verify the applied migration history before deploying code that depends on a migration. Production migrations must be reviewed and applied deliberately; do not reset production or delete records to resolve schema drift.
 
-## Database migrations
+## Hosting
 
-Apply the numbered SQL migrations in `supabase/migrations` in order. New JMT Academy migrations are additive and are designed to preserve existing student, enrolment and payment history. Do not deploy a feature that depends on a new migration until that migration has been applied successfully.
-
-The current platform uses manual payment verification; automatic wallet gateway integration is not enabled. Verify each payment in the merchant account before approving it.
+Production runs on Render. The Render Blueprint is described in `render.yaml`; read `DEPLOYMENT.md` before syncing it. The Blueprint declares variable names only and contains no secret values.

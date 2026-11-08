@@ -1,5 +1,5 @@
--- 0040: private, image-only payment proof uploads for manual wallet payments.
--- Existing payment submissions remain unchanged and keep their historical status.
+-- 0040: accept private image-only proof for new manual payment submissions.
+-- Existing payment records remain valid; new submissions must attach a proof owned by the student.
 
 alter table public.manual_payment_submissions
   add column if not exists proof_storage_path text;
@@ -11,8 +11,13 @@ alter table public.manual_payment_submissions
   check (proof_storage_path is null or length(proof_storage_path) between 10 and 240);
 
 insert into storage.buckets(id, name, public, file_size_limit, allowed_mime_types)
-values ('payment-proofs', 'payment-proofs', false, 3145728,
-        array['image/jpeg','image/png','image/webp'])
+values (
+  'payment-proofs',
+  'payment-proofs',
+  false,
+  3145728,
+  array['image/jpeg','image/png','image/webp']
+)
 on conflict (id) do update
 set public = false,
     file_size_limit = 3145728,
@@ -22,15 +27,6 @@ drop policy if exists "students upload own unsubmitted payment proofs" on storag
 create policy "students upload own unsubmitted payment proofs"
 on storage.objects for insert to authenticated
 with check (
-  bucket_id = 'payment-proofs'
-  and (storage.foldername(name))[1] = (select auth.uid())::text
-  and (select public.current_role())::text = 'student'
-);
-
-drop policy if exists "students read own payment proofs" on storage.objects;
-create policy "students read own payment proofs"
-on storage.objects for select to authenticated
-using (
   bucket_id = 'payment-proofs'
   and (storage.foldername(name))[1] = (select auth.uid())::text
   and (select public.current_role())::text = 'student'
@@ -56,3 +52,25 @@ using (
   )
 );
 
+create or replace function public.validate_manual_payment_proof_path()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  if auth.uid() is null
+    or new.proof_storage_path is null
+    or left(new.proof_storage_path, length(auth.uid()::text) + 1) <> auth.uid()::text || '/' then
+    raise exception 'A private payment proof uploaded to your own account is required'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists validate_manual_payment_proof_path on public.manual_payment_submissions;
+create trigger validate_manual_payment_proof_path
+before insert on public.manual_payment_submissions
+for each row execute function public.validate_manual_payment_proof_path();
+
+revoke all on function public.validate_manual_payment_proof_path() from public, anon, authenticated;

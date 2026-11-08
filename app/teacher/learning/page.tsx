@@ -37,7 +37,7 @@ export default async function TeacherLearningInsights() {
       : { data: [] as any[] })
     : (studentIds.length ? await db.rpc('get_assigned_student_enrollments',{p_student_ids:studentIds}) : { data: [] as any[] });
   const activeEnrollments = (enrollmentResult.data ?? []).filter((row: any) => row.status === 'active' && courseIds.includes(row.course_id));
-  const activeStudentIds = [...new Set(activeEnrollments.map((row: any) => row.student_id))];
+  const activeStudentIds: string[] = [...new Set<string>(activeEnrollments.map((row: any) => String(row.student_id)))];
   const [goalResult, masteryResult, revisionResult, mistakeResult] = await Promise.all([
     activeStudentIds.length && courseIds.length
       ? db.from('learner_study_goals').select('id,student_id,course_id,goal_type,target_value,current_value,period_end')
@@ -87,7 +87,7 @@ export default async function TeacherLearningInsights() {
           const studentDue = studentRevisions.filter(task => new Date(task.scheduled_for).getTime() <= now);
           const studentMastery = lowMastery.filter(item => item.student_id === studentId);
           const studentMistakes = mistakes.filter(item => item.student_id === studentId);
-          const courseSet = new Set(activeEnrollments.filter((row: any) => row.student_id === studentId).map((row: any) => row.course_id));
+          const courseSet = new Set<string>(activeEnrollments.filter((row: any) => row.student_id === studentId).map((row: any) => String(row.course_id)));
           const studentCourseNames = [...courseSet].map(id => courseNames.get(id) ?? 'Course').join(', ');
           return <article className="portal-card" key={studentId}>
             <span className="auth-kicker">{student?.student_code ?? 'STUDENT'}</span>

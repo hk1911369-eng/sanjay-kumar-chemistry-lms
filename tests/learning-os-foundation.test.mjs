@@ -140,6 +140,20 @@ test('Learning OS goals count only verified lesson completions', async () => {
   assert.ok(!dashboard.includes('value="study_minutes"'));
 });
 
+test('student dashboard completes revision tasks through the guarded database RPC', async () => {
+  const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
+  assert.ok(action.includes("rpc('complete_revision_task', { p_task_id: taskId })"));
+  assert.ok(action.includes("profile?.role !== 'student'"));
+  const dashboard = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
+  assert.ok(dashboard.includes('completeRevisionTask'));
+  assert.ok(dashboard.includes('Mark revision complete'));
+});
+
+test('redundant lesson completion index is removed while canonical index remains', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213723_learning_os_remove_redundant_lesson_completion_index.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP INDEX IF EXISTS public.learning_events_one_lesson_completion_idx'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

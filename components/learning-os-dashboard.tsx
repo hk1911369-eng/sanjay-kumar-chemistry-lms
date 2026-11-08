@@ -1,4 +1,4 @@
-import { createStudyGoal } from '@/app/actions/learning';
+import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
 
 type Goal = {
   id: string; goal_type: string; target_value: number; current_value: number;
@@ -75,6 +75,10 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
           <ul className="learning-os-list">{revisionTasks.map(task => <li key={task.id}>
             <b>{task.title}</b>
             <small className="learning-os-muted"> {courseNames.get(task.course_id) ?? 'Course'} · {new Date(task.scheduled_for).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' })} · Priority {task.priority}/5</small>
+            <form action={completeRevisionTask}>
+              <input type="hidden" name="task_id" value={task.id}/>
+              <button type="submit">Mark revision complete</button>
+            </form>
           </li>)}</ul>}
       </div>
     </div>

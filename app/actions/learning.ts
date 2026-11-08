@@ -43,6 +43,20 @@ export async function createStudyGoal(formData: FormData) {
   redirect('/student?goal_success=1#learning-os');
 }
 
+export async function completeRevisionTask(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'student') redirect('/portal');
+  const taskId = String(formData.get('task_id') ?? '');
+  if (!taskId) redirect('/student?revision_error=1#learning-os');
+  const { error } = await supabase.rpc('complete_revision_task', { p_task_id: taskId });
+  if (error) redirect('/student?revision_error=1#learning-os');
+  revalidatePath('/student');
+  redirect('/student?revision_success=1#learning-os');
+}
+
 export async function saveLesson(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

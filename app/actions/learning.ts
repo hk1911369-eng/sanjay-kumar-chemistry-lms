@@ -281,7 +281,7 @@ export async function createExamWarRoomTarget(formData: FormData) {
   const targetScore = Number(formData.get('target_score') ?? 80);
   if (!/^[0-9a-f-]{36}$/i.test(courseId)
     || !examTargetTracks.has(targetTrack)
-    || !/^\\d{4}-\\d{2}-\\d{2}$/.test(examDate)
+    || !/^\d{4}-\d{2}-\d{2}$/.test(examDate)
     || !Number.isInteger(dailyMinutes) || dailyMinutes < 15 || dailyMinutes > 600
     || !Number.isFinite(targetScore) || targetScore < 1 || targetScore > 100) {
     redirect('/student?exam_plan_error=invalid#exam-war-room');

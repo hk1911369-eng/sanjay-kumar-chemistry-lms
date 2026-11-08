@@ -99,3 +99,10 @@ test('anonymous notice reads do not evaluate the admin role helper', async () =>
   assert.ok(migration.includes('ON public.notices'));
   assert.ok(migration.includes('TO authenticated'));
 });
+ 
+test('user and staff row policies are restricted to authenticated sessions', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108131000_scope_user_and_staff_policies_to_authenticated.sql', import.meta.url), 'utf8');
+  assert.equal((migration.match(/ TO authenticated;/g) || []).length, 14);
+  assert.ok(migration.includes('ALTER POLICY "students read own lesson progress"'));
+  assert.ok(migration.includes('ALTER POLICY "profiles own admin or assigned staff read"'));
+});

@@ -25,6 +25,12 @@ test('public pages have route-specific canonical URLs and caching', async () => 
   for (const path of ['app/about/page.tsx','app/help/page.tsx','app/privacy/page.tsx','app/terms/page.tsx']) {
     assert.ok((await read(path)).includes('revalidate = 3600'), path);
   }
+  for (const path of ['app/apply/page.tsx','app/login/page.tsx','app/register/page.tsx','app/forgot-password/page.tsx','app/reset-password/page.tsx']) {
+    assert.ok((await read(path)).includes('index: false'), path);
+  }
+  const robots = await read('app/robots.ts');
+  assert.ok(robots.includes("'/apply'"));
+  assert.ok(robots.includes("'/register'"));
   const detail = await read('app/courses/[slug]/page.tsx');
   assert.ok(detail.includes('generateMetadata'));
   assert.ok(detail.includes("'@type':'Course'"));

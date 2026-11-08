@@ -67,6 +67,10 @@ Before any Blueprint sync:
 
 Do not sync the Blueprint while the staging environment variables are blank. Never point staging at production.
 
+## Database migrations
+
+The canonical schema source is `supabase/migrations/*.sql`. Apply migrations in order through the reviewed local/test workflow. `supabase/JMT_ACADEMY_DATABASE_UPDATE.sql` is an archived bundle from an older 0001–0020 sequence; do not run it against production or alongside the current timestamped migrations.
+
 ## Database backup and restore
 
 Use the scripts in `scripts/` only with an explicitly selected non-production/test database unless a production backup has been specifically approved. They require a connection URL supplied through the environment, use restrictive file permissions, and never print credentials.

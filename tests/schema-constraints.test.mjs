@@ -134,3 +134,13 @@ test('attendance visibility and writes are limited to students enrolled in assig
   assert.equal((migration.match(/FROM public\.course_assignments a/g) || []).length, 3);
   assert.ok(migration.includes('marked_by = (SELECT auth.uid())'));
 });
+
+ 
+test('admins can correct attendance while teachers remain scoped to enrolled students', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108134719_allow_admin_attendance_corrections.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('ALTER POLICY "assigned staff mark attendance"'));
+  assert.ok(migration.includes("public.current_role() = 'admin'"));
+  assert.ok(migration.includes('marked_by = (SELECT auth.uid())'));
+  assert.ok(migration.includes('FROM public.enrollments e'));
+  assert.ok(migration.includes('FROM public.course_assignments a'));
+});

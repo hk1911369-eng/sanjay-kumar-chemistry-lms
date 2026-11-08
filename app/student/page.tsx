@@ -79,6 +79,18 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     const course = (courses ?? []).find((item:any) => item.id === enrollment.course_id);
     return [enrollment.course_id, course?.title ?? 'Your course'];
   }));
+  const activeCourseIds = [...new Set((enrollments ?? []).filter((enrollment:any) => enrollment.status === 'active').map((enrollment:any) => enrollment.course_id))];
+  const nowIso = new Date().toISOString();
+  const [upcomingQuizResult, upcomingWrittenResult, upcomingAssignmentResult] = activeCourseIds.length ? await Promise.all([
+    supabase.from('quizzes').select('id,title,course_id,starts_at,ends_at,duration_minutes,total_marks').in('course_id',activeCourseIds).eq('published',true).gte('starts_at',nowIso).order('starts_at',{ascending:true}).limit(8),
+    supabase.from('written_exams').select('id,title,course_id,starts_at,ends_at,total_marks').in('course_id',activeCourseIds).eq('published',true).gte('starts_at',nowIso).order('starts_at',{ascending:true}).limit(8),
+    supabase.from('assignments').select('id,title,course_id,due_at,max_marks').in('course_id',activeCourseIds).eq('published',true).gte('due_at',nowIso).order('due_at',{ascending:true}).limit(8),
+  ]) : [{data:[] as any[]},{data:[] as any[]},{data:[] as any[]}];
+  const upcomingExams = [
+    ...(upcomingQuizResult.data ?? []).map((item:any) => ({...item,kind:'Quiz',duration_minutes:item.duration_minutes})),
+    ...(upcomingWrittenResult.data ?? []).map((item:any) => ({...item,kind:'Written exam',duration_minutes:null})),
+  ].sort((a:any,b:any)=>new Date(a.starts_at).getTime()-new Date(b.starts_at).getTime()).slice(0,8);
+  const upcomingAssignments = upcomingAssignmentResult.data ?? [];
 
   function PaymentForm({ courseId, kind, amount, deliveryMode }: { courseId: string; kind: 'initial' | 'monthly'; amount: number; deliveryMode?: string }) {
     return <form action={submitManualPayment} className="auth-form payment-form">
@@ -104,7 +116,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       {params.learning_error && <p className="form-error">{params.learning_error==='payment_due'?'Your current month tuition must be approved before opening lessons. Offline students receive the recorded library as part of their paid offline course.':'Course access is available only after payment approval.'}</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
       <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>{applications?.length ?? 0}</b><span>Course applications</span></article></div>
-      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} courseNames={courseNames} />
+      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} courseNames={courseNames} upcomingExams={upcomingExams} upcomingAssignments={upcomingAssignments} />
       <h2 id="profile">Student profile</h2>
       {avatarUrl&&<p><Image src={avatarUrl} alt="Your profile" width={100} height={100} unoptimized style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
       <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">

@@ -11,13 +11,21 @@ type Mastery = {
   concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
   learning_concepts?: { title?: string; academic_subjects?: { name?: string }[] | null }[] | null;
 };
+type UpcomingExam = {
+  id:string; title:string; course_id:string; starts_at:string; ends_at:string|null;
+  total_marks:number; kind:string; duration_minutes:number|null;
+};
+type UpcomingAssignment = {
+  id:string; title:string; course_id:string; due_at:string; max_marks:number;
+};
 
 const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames }: {
+export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames, upcomingExams, upcomingAssignments }: {
   goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; courseNames: Map<string, string>;
+  upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
   const averageMastery = mastery.length
@@ -79,6 +87,27 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
               <input type="hidden" name="task_id" value={task.id}/>
               <button type="submit">Mark revision complete</button>
             </form>
+          </li>)}</ul>}
+      </div>
+    </div>
+
+    <div className="learning-os-columns">
+      <div>
+        <h3>Upcoming exams</h3>
+        {upcomingExams.length === 0 ? <p className="learning-os-muted">No scheduled quizzes or written exams in your active courses.</p> :
+          <ul className="learning-os-list">{upcomingExams.map(exam => <li key={exam.kind + exam.id}>
+            <b>{exam.title}</b> <span className="learning-os-muted">· {exam.kind}</span>
+            <small className="learning-os-muted">{courseNames.get(exam.course_id) ?? 'Course'} · {new Date(exam.starts_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} Bangladesh time · {exam.total_marks} marks{exam.duration_minutes ? ' · '+exam.duration_minutes+' min' : ''}</small>
+            <p><a href="/academic">Open academic centre</a></p>
+          </li>)}</ul>}
+      </div>
+      <div>
+        <h3>Upcoming assignments</h3>
+        {upcomingAssignments.length === 0 ? <p className="learning-os-muted">No upcoming assignment deadlines in your active courses.</p> :
+          <ul className="learning-os-list">{upcomingAssignments.map(assignment => <li key={assignment.id}>
+            <b>{assignment.title}</b>
+            <small className="learning-os-muted">{courseNames.get(assignment.course_id) ?? 'Course'} · Due {new Date(assignment.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} Bangladesh time · {assignment.max_marks} marks</small>
+            <p><a href="/academic#assignments">Open assignment</a></p>
           </li>)}</ul>}
       </div>
     </div>

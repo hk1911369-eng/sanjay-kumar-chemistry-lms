@@ -193,6 +193,19 @@ test('stale permissive learning-event policy is removed', async () => {
   assert.ok(migration.includes('DROP POLICY IF EXISTS "students record own learning events" ON public.learning_events'));
 });
 
+test('student Learning OS dashboard surfaces upcoming exams and assignment deadlines from active courses', async () => {
+  const page = await readFile(new URL('../app/student/page.tsx', import.meta.url), 'utf8');
+  const component = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
+  assert.ok(page.includes("from('quizzes')"));
+  assert.ok(page.includes("from('written_exams')"));
+  assert.ok(page.includes("from('assignments')"));
+  assert.ok(page.includes(".eq('published',true).gte('starts_at',nowIso)"));
+  assert.ok(page.includes(".eq('published',true).gte('due_at',nowIso)"));
+  assert.ok(page.includes('activeCourseIds'));
+  assert.ok(component.includes('Upcoming exams'));
+  assert.ok(component.includes('Upcoming assignments'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

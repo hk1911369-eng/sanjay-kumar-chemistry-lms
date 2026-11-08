@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { randomUUID } from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { currentBangladeshBillingPeriod } from '@/lib/pricing';
@@ -97,9 +98,12 @@ export async function submitManualPayment(formData: FormData) {
   if (!Number.isSafeInteger(amount) || amount <= 0) redirect('/student?payment_error=unavailable');
 
   const extension = proof.type === 'image/jpeg' ? 'jpg' : proof.type === 'image/png' ? 'png' : 'webp';
-  const proofPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+  const proofPath = `${user.id}/${randomUUID()}.${extension}`;
   const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(proofPath, proofBytes, { contentType: proof.type, upsert: false });
-  if (uploadError) redirect('/student?payment_error=submit_failed');
+  if (uploadError) {
+    console.error('Payment proof upload failed', { code: uploadError.name ?? 'unknown' });
+    redirect('/student?payment_error=proof_upload_failed');
+  }
 
   const submission: Record<string, unknown> = {
     proof_storage_path: proofPath,

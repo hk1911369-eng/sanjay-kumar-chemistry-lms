@@ -8,5 +8,14 @@ export async function setLanguage(formData: FormData) {
   const store = await cookies();
   store.set('skc_locale', locale, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 365 });
   const back = String(formData.get('return_to') ?? '/');
-  redirect(back.startsWith('/') && !back.startsWith('//') ? back : '/');
+  let destination = '/';
+  try {
+    const target = new URL(back, 'https://jmt-academy.invalid');
+    if (target.origin === 'https://jmt-academy.invalid' && back.startsWith('/')) {
+      destination = target.pathname + target.search + target.hash;
+    }
+  } catch {
+    // Keep the safe home destination for malformed return paths.
+  }
+  redirect(destination);
 }

@@ -240,7 +240,7 @@ test('verified lesson completion uses one non-bypassable event insert policy', a
 
 test('quiz question concepts feed trusted mastery and mistake memory evidence', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108214832_learning_os_quiz_concept_evidence_and_mistake_memory.sql', import.meta.url), 'utf8');
-  const patch = await readFile(new URL('../supabase/migrations/20261108215000_learning_os_quiz_evidence_conflict_aliases.sql', import.meta.url), 'utf8');
+  const patch = await readFile(new URL('../supabase/migrations/20261108214922_learning_os_quiz_evidence_conflict_aliases.sql', import.meta.url), 'utf8');
   const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
   const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
   assert.ok(migration.includes('ADD COLUMN IF NOT EXISTS concept_id'));

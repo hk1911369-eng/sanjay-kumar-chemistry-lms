@@ -158,6 +158,12 @@ test('student dashboard completes revision tasks through the guarded database RP
   assert.ok(dashboard.includes('Mark revision complete'));
 });
 
+test('applied lesson completion deduplication migration is recorded in source control', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108213614_learning_os_dedupe_lesson_completion_events.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('CREATE UNIQUE INDEX IF NOT EXISTS learning_events_one_lesson_completion_idx'));
+  assert.ok(migration.includes("event_type = 'lesson_completed'"));
+});
+
 test('redundant lesson completion index is removed while canonical index remains', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261108213723_learning_os_remove_redundant_lesson_completion_index.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('DROP INDEX IF EXISTS public.learning_events_one_lesson_completion_idx'));

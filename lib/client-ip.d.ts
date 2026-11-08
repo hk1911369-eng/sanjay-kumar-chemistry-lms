@@ -1,1 +1,1 @@
-export function getClientIp(requestHeaders: { get(name: string): string | null }): string;\n
+export function getClientIp(requestHeaders: { get(name: string): string | null }): string;

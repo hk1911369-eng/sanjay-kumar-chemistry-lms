@@ -35,3 +35,19 @@ test('teacher question bank UI and quiz builder preserve concept tags into asses
   assert.ok(page.includes('name="concept_id"'));
   assert.ok(page.includes('questionConcepts.map'));
 });
+
+test('reusable quiz questions aggregate recurring errors and resolve after a correct answer', async () => {
+  const identity = await readFile(new URL('../supabase/migrations/20261108215214_learning_os_reusable_question_identity_and_mistake_resolution.sql', import.meta.url), 'utf8');
+  const aggregate = await readFile(new URL('../supabase/migrations/20261108215223_learning_os_aggregate_repeated_bank_question_mistakes.sql', import.meta.url), 'utf8');
+  const finalise = await readFile(new URL('../supabase/migrations/20261108215412_learning_os_finalize_question_bank_mistake_memory.sql', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
+  assert.ok(identity.includes('source_bank_question_id'));
+  assert.ok(identity.includes('resolved_at = NEW.submitted_at'));
+  assert.ok(aggregate.includes('question_bank_id'));
+  assert.ok(aggregate.includes('occurrence_count = existing.occurrence_count + 1'));
+  assert.ok(finalise.includes('DROP COLUMN IF EXISTS source_bank_question_id'));
+  assert.ok(finalise.includes('COALESCE(x.question_bank_id,x.id)'));
+  assert.ok(finalise.includes('SET resolved_at=NEW.submitted_at'));
+  assert.ok(action.includes('question_bank_id:q.id'));
+  assert.equal(action.includes('source_bank_question_id:q.id'), false);
+});

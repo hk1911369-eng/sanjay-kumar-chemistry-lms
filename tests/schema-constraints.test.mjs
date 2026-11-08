@@ -58,3 +58,10 @@ test('admin RPC role checks fail closed for a missing active profile', async () 
   }
   assert.ok(migration.includes('IS DISTINCT FROM'));
 });
+
+test('application rate limits require an active account profile', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108123730_require_active_profile_for_app_rate_limits.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('consume_app_rate_limit'));
+  assert.ok(migration.includes('public.current_role() is null'));
+  assert.ok(migration.includes('Active account required'));
+});

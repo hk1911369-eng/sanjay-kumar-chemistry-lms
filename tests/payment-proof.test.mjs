@@ -12,6 +12,8 @@ test('payment proof image signatures are checked, not just file extensions', () 
   assert.equal(isAllowedImageSignature('image/png', Uint8Array.from([0xff,0xd8,0xff])), false);
   assert.equal(isAllowedImageSignature('image/svg+xml', Uint8Array.from([0x3c,0x73,0x76,0x67])), false);
   assert.equal(isAllowedImageSignature('image/jpeg', new Uint8Array()), false);
+  assert.equal(isAllowedImageSignature('application/octet-stream', Uint8Array.from([0xff,0xd8,0xff])), false);
+  assert.equal(isAllowedImageSignature('image/jpeg', 'not bytes'), false);
 });
 
 test('payment proof storage is private, bounded and role-scoped', async () => {

@@ -21,7 +21,7 @@ export async function saveAcademyCourse(fd:FormData){
  const {data:existingCourse}=id?await db.from('courses').select('id,slug').eq('id',id).maybeSingle():{data:null};
  if(id&&!existingCourse)redirect('/admin/courses?error=not_found');
  const slug=existingCourse?.slug??(title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,65)+'-'+crypto.randomUUID().slice(0,8));
- const payload={title,slug,level:/^ssc\\b/i.test(group)?'SSC':/^hsc\\b/i.test(group)?'HSC':/admission|medical|engineering/i.test(group)?'ADMISSION':'OTHER',description:String(fd.get('description')??'').trim(),programme_group:group,subjects,
+ const payload={title,slug,level:/^ssc\b/i.test(group)?'SSC':/^hsc\b/i.test(group)?'HSC':/admission|medical|engineering/i.test(group)?'ADMISSION':'OTHER',description:String(fd.get('description')??'').trim(),programme_group:group,subjects,
  teaching_method:String(fd.get('teaching_method')??'').trim(),schedule_text:String(fd.get('schedule_text')??'').trim(),delivery_modes:selected,
  live_price_bdt:live,recorded_price_bdt:recorded,offline_price_bdt:offline,monthly_fee_bdt:live??recorded??offline??0,admission_fee_bdt:admission??0,price_bdt:live??recorded??offline??0,
  capacity,enrollment_open:fd.get('enrollment_open')==='on',is_published:fd.get('is_published')==='on',...(imagePath?{cover_image_path:imagePath}:{})};
@@ -30,7 +30,7 @@ export async function saveAcademyCourse(fd:FormData){
  const courseId=saved.data.id;
  const subjectRowsBySlug=new Map<string,{name:string;slug:string;description:string}>();
  for(const name of subjects){
-  const base=name.normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const base=name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const slug=base||'subject-'+Array.from(name).map(char=>char.codePointAt(0)?.toString(16)??'0').join('-');
   if(!subjectRowsBySlug.has(slug))subjectRowsBySlug.set(slug,{name,slug,description:''});
  }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {createPublicClient} from '@/lib/supabase/public';
 
 export const revalidate = 300;
+export const metadata = { title: 'Contact', alternates: { canonical: '/contact' }, openGraph: { url: '/contact' } };
 
 export default async function Contact(){
  const db=createPublicClient();const {data:settings}=await db.from('academy_settings').select('academy_name,contact_phone,whatsapp_phone,contact_email,physical_address,google_maps_url,facebook_url,support_hours').eq('id',1).maybeSingle();

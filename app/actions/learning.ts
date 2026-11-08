@@ -48,11 +48,7 @@ export async function assignTeacher(formData: FormData) {
 }
 
 export async function publishAnnouncement(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { supabase, user } = await requireAdmin();
   const title = String(formData.get('title') ?? '').trim();
   const body = String(formData.get('body') ?? '').trim();
   const publish = formData.get('published') === 'on';
@@ -62,11 +58,7 @@ export async function publishAnnouncement(formData: FormData) {
 }
 
 export async function setCoursePublication(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { supabase, user } = await requireAdmin();
   const courseId = String(formData.get('course_id') ?? '');
   const publish = formData.get('published') === 'on';
   const { data: course } = await supabase.from('courses').select('id').eq('id', courseId).maybeSingle();

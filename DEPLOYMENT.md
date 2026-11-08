@@ -28,6 +28,9 @@ Required:
 Optional server-side rate limiting:
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+Optional trusted proxy configuration:
+- `TRUST_CLOUDFLARE_IP_HEADER` (default unset/false). Keep unset on direct Render ingress. Set to `true` only when Cloudflare is the enforced edge, direct-origin bypass is blocked, and Cloudflare overwrites `CF-Connecting-IP`.
+
 Use the production Supabase project for the production service. A separate staging service must use the test Supabase project and its own environment variables; never point staging at production.
 
 ## CI and deployment

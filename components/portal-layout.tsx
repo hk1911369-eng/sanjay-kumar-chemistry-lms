@@ -35,6 +35,7 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'library', label: 'Lesson library', href: '/teacher#lesson-library', icon: 'chart' },
       { key: 'academic', label: 'Classes & exams', href: '/academic', icon: 'calendar' },
       { key: 'notifications', label: 'Notifications inbox', href: '/academic#notifications', icon: 'users' },
+      { key: 'learning-insights', label: 'Learning insights', href: '/teacher/learning', icon: 'chart' },
       { key: 'students', label: 'Students & attendance', href: '/students/manage', icon: 'graduation-cap' },
     ]},
   ],

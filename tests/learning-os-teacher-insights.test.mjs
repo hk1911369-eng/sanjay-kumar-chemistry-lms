@@ -21,6 +21,9 @@ test('teacher analytics is role-gated and reads only assigned course/student sig
   assert.ok(!page.includes(".limit(250)"));
   assert.ok(page.includes(".in('course_id',courseIds)"));
   assert.ok(page.includes(".gte('occurrence_count',2)"));
+  assert.ok(page.includes('Class topic heatmap'));
+  assert.ok(page.includes('Number(item.evidence_count) < 2'));
+  assert.ok(page.includes('averageMastery'));
   assert.ok(page.includes('Learner-wide preferences and global goals are not shown'));
   const navigation = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
   assert.equal((navigation.match(/key: 'learning-insights'/g) ?? []).length, 3);

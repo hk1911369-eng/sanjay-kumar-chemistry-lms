@@ -131,3 +131,21 @@ export async function updateAccountRole(formData: FormData) {
   const { error } = await supabase.from('profiles').update({ role: nextRole }).eq('id', studentId);
   redirect(error ? '/students/manage?error=role' : '/students/manage?saved=role');
 }
+
+export async function setStudentAccountActive(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (actor?.role !== 'admin') redirect('/portal');
+
+  const studentId = String(formData.get('profile_id') ?? '');
+  const activeValue = String(formData.get('is_active') ?? '');
+  if (!studentId || !['true','false'].includes(activeValue)) redirect('/students/manage?error=account');
+
+  const { error } = await supabase.rpc('set_student_account_active', {
+    p_student_id: studentId,
+    p_is_active: activeValue === 'true',
+  });
+  redirect(error ? '/students/manage?error=account' : '/students/manage?saved=account');
+}

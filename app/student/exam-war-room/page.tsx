@@ -29,7 +29,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
   const targetIds=(targets??[]).map(target=>target.id);
   const {data:tasks}=targetIds.length
     ? await db.from('revision_tasks').select('id,source_id,title,scheduled_for,priority,status')
-      .eq('student_id',user.id).eq('source_type','exam_war_room').in('source_id',targetIds).order('scheduled_for')
+      .eq('student_id',user.id).eq('source_type','exam_plan').in('source_id',targetIds).order('scheduled_for')
     : {data:[] as Task[]};
   const courseNames=new Map((courses??[]).map(course=>[course.id,course.title]));
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -73,6 +73,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
           const targetTasks=(tasks??[]).filter(task=>task.source_id===target.id);
           const pending=targetTasks.filter(task=>task.status==='pending');
           const completed=targetTasks.filter(task=>task.status==='completed');
+          const skipped=targetTasks.filter(task=>task.status==='skipped');
           return <article className="portal-card" key={target.id}>
             <div className="studio-heading"><div><span className="auth-kicker">{trackLabels[target.target_track]??target.target_track}</span>
               <h2>{courseNames.get(target.course_id)??'Course'} · {target.exam_date}</h2>
@@ -83,6 +84,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
               <div className="learning-os-stat"><strong>{targetTasks.length}</strong><span>Planned tasks</span></div>
               <div className="learning-os-stat"><strong>{pending.length}</strong><span>Pending</span></div>
               <div className="learning-os-stat"><strong>{completed.length}</strong><span>Completed</span></div>
+              <div className="learning-os-stat"><strong>{skipped.length}</strong><span>Skipped</span></div>
             </div>
             {targetTasks.length===0?<p className="muted">No concepts are mapped to this exam track yet. Your teacher can tag published concepts in the knowledge graph.</p>:
               <ul className="learning-os-list">{targetTasks.slice(0,30).map(task=><li key={task.id}><b>{task.title}</b><small className="muted"> · {new Date(task.scheduled_for).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})} · Priority {task.priority}/5 · {task.status}</small></li>)}</ul>}

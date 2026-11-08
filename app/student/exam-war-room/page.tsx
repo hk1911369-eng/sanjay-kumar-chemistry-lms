@@ -75,7 +75,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
           const targetTasks=(tasks??[]).filter(task=>task.source_id===target.id);
           const pending=targetTasks.filter(task=>task.status==='pending');
           const completed=targetTasks.filter(task=>task.status==='completed');
-          const skipped=targetTasks.filter(task=>task.status==='skipped');
+          const cancelled=targetTasks.filter(task=>task.status==='cancelled');
           const cancelled=targetTasks.filter(task=>task.status==='cancelled');
           return <article className="portal-card" key={target.id}>
             <div className="studio-heading"><div><span className="auth-kicker">{trackLabels[target.target_track]??target.target_track}</span>
@@ -87,7 +87,7 @@ export default async function ExamWarRoomPage({searchParams}:{searchParams:Promi
               <div className="learning-os-stat"><strong>{targetTasks.length}</strong><span>Planned tasks</span></div>
               <div className="learning-os-stat"><strong>{pending.length}</strong><span>Pending</span></div>
               <div className="learning-os-stat"><strong>{completed.length}</strong><span>Completed</span></div>
-              <div className="learning-os-stat"><strong>{skipped.length}</strong><span>Skipped</span></div>
+              <div className="learning-os-stat"><strong>{cancelled.length}</strong><span>Cancelled</span></div>
               <div className="learning-os-stat"><strong>{cancelled.length}</strong><span>Cancelled</span></div>
             </div>
             {targetTasks.length===0?<p className="muted">No concepts are mapped to this exam track yet. Your teacher can tag published concepts in the knowledge graph.</p>:

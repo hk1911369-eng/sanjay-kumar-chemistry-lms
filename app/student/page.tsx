@@ -47,7 +47,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   }
   let payments: any[] | null = paymentResult.data;
   if(paymentResult.error){
-    const fallback=await supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,admin_note').eq('student_id',user.id).order('created_at',{ascending:false}).limit(30);
+    const fallback=await supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,admin_note,proof_storage_path').eq('student_id',user.id).order('created_at',{ascending:false}).limit(30);
     payments=fallback.data;
   }
   const {data:settings}=settingsResult;

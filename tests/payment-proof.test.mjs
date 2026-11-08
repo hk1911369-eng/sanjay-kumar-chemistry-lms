@@ -28,6 +28,12 @@ test('payment proof bucket is private with student-owned and admin-only access',
   assert.ok(enforcement.includes("owner_id = auth.uid()::text"));
   assert.ok(enforcement.includes("metadata->>'mimetype'"));
   assert.ok(enforcement.includes("validate_manual_payment_proof_path"));
+  const finalEnforcement = await read('supabase/migrations/0044_complete_payment_proof_ownership.sql');
+  assert.ok(finalEnforcement.includes("set search_path = ''"));
+  assert.ok(finalEnforcement.includes("owner_id = auth.uid()::text"));
+  assert.ok(finalEnforcement.includes("metadata->>'mimetype'"));
+  assert.ok(finalEnforcement.includes("v_size::bigint > 3145728"));
+  assert.ok(finalEnforcement.includes("revoke all on function public.validate_manual_payment_proof_path"));
 });
 
 test('student payment form requires proof and server validates then uploads before insert', async () => {

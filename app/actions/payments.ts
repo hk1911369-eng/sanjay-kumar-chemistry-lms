@@ -31,7 +31,7 @@ export async function submitManualPayment(formData: FormData) {
 
   if (!courseId || !providers.includes(provider) || !['initial', 'monthly'].includes(paymentKind)
       || transactionId.length < 5 || transactionId.length > 100 || !senderPhone
-      || !(proof instanceof File) || proof.size < 1 || proof.size > 3 * 1024 * 1024
+      || !(proof instanceof File) || proof.size < 12 || proof.size > 3 * 1024 * 1024
       || !['image/jpeg','image/png','image/webp'].includes(proof.type)
       || (deliveryMode && !['live_recorded','recorded_only','offline'].includes(deliveryMode))) {
     redirect('/student?payment_error=invalid');

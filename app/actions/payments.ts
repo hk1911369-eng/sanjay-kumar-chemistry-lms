@@ -159,11 +159,7 @@ export async function reviewManualPayment(formData: FormData) {
 }
 
 export async function updatePaymentSettings(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { supabase } = await requireRole(['admin']);
 
   const provider = String(formData.get('provider') ?? '').trim() as Provider;
   const receivingNumber = normalizeBangladeshMobile(String(formData.get('receiving_number') ?? '').trim());

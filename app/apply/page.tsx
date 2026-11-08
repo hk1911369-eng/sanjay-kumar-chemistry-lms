@@ -1,8 +1,8 @@
-export const metadata = { title: 'Apply', robots: { index: false, follow: false } };
 import Link from 'next/link';
 import {redirect} from 'next/navigation';
 import {createClient} from '@/lib/supabase/server';
 import {submitCourseApplication} from '@/app/actions/course-application';
+export const metadata = { title: 'Apply', robots: { index: false, follow: false } };
 const labels:Record<string,string>={live_recorded:'Live classes + recordings',recorded_only:'Recorded-only access',offline:'Offline academy classes'};
 export default async function ApplyPage({searchParams}:{searchParams:Promise<{course?:string;mode?:string;error?:string}>}){
  const p=await searchParams;const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login?next=/courses');

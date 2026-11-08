@@ -56,11 +56,11 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   }
 
   const studentIds = profiles.map(p=>p.id);
-  const enrollmentFields = role === 'admin'
-    ? 'id,student_id,course_id,status,starts_at,admission_fee_paid,paid_through'
-    : 'id,student_id,course_id,status,starts_at';
+  const enrollmentQuery = role === 'admin'
+    ? (studentIds.length ? supabase.from('enrollments').select('id,student_id,course_id,status,starts_at,admission_fee_paid,paid_through').in('student_id',studentIds) : Promise.resolve({data:[] as any[]}))
+    : supabase.rpc('get_assigned_student_enrollments',{p_student_ids:studentIds});
   const [{data:enrollments},{data:attendance},{data:followups}] = await Promise.all([
-    studentIds.length ? supabase.from('enrollments').select(enrollmentFields).in('student_id',studentIds) : Promise.resolve({data:[] as any[]}),
+    enrollmentQuery,
     studentIds.length ? supabase.from('student_attendance').select('id,student_id,course_id,attendance_date,status,note').in('student_id',studentIds).order('attendance_date',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
     studentIds.length ? supabase.from('student_followups').select('id,student_id,course_id,category,severity,details,guardian_contacted,guardian_call_outcome,follow_up_status,follow_up_date,created_at,created_by').in('student_id',studentIds).order('created_at',{ascending:false}).limit(100) : Promise.resolve({data:[] as any[]}),
   ]);

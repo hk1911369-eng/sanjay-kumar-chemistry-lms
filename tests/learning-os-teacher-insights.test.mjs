@@ -22,8 +22,9 @@ test('teacher analytics is role-gated and reads only assigned course/student sig
   assert.ok(page.includes('.range(from, to)'));
   assert.ok(!page.includes('.limit(250)'));
   assert.ok(!page.includes('.limit(1000)'));
-  assert.ok(page.includes(".in('course_id',courseIds)"));
-  assert.ok(page.includes(".gte('occurrence_count',2)"));
+  const compactPage = page.replace(/\\s+/g, '');
+  assert.ok(compactPage.includes(".in('course_id',courseIds)"));
+  assert.ok(compactPage.includes(".gte('occurrence_count',2)"));
   assert.ok(page.includes('Class topic heatmap'));
   assert.ok(page.includes('Number(item.evidence_count) < 2'));
   assert.ok(page.includes('averageMastery'));

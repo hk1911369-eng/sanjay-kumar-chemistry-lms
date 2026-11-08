@@ -35,6 +35,7 @@ test('student payment form requires proof and server validates then uploads befo
   assert.match(student, /name="payment_proof"/);
   assert.match(student, /type="file"/);
   assert.match(student, /required/);
+  assert.match(action, /proof\.size < 12/);
   assert.match(action, /isAllowedImageSignature/);
   assert.match(action, /payment-proofs/);
   assert.match(action, /proof_storage_path/);

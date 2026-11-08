@@ -135,3 +135,63 @@ input,select,textarea,button{max-width:100%}
  .student-bottom-nav a.is-active{background:#eaf3ff;color:var(--blue)}
  .student-bottom-nav svg{flex:0 0 auto}
 }
+
+
+/* Desktop workspace safeguards: keep the sidebar usable and prevent dashboard grids
+   from squeezing cards or pushing the page wider than the viewport. */
+@media(min-width:761px){
+  .portal-layout{
+    grid-template-columns:minmax(220px,258px) minmax(0,1fr);
+    width:100%;
+    max-width:100%;
+  }
+  .portal-sidebar{
+    min-width:0;
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+  }
+  .portal-navigation{
+    min-width:0;
+    align-content:start;
+  }
+  .portal-workspace{
+    min-width:0;
+    max-width:100%;
+    overflow-x:clip;
+  }
+  .portal-topbar{
+    min-width:0;
+    flex-wrap:wrap;
+  }
+  .portal-topbar-title{
+    min-width:0;
+    flex:1 1 220px;
+  }
+  .portal-topbar-actions{
+    min-width:0;
+    flex:0 1 auto;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .portal-content{
+    width:100%;
+    min-width:0;
+    max-width:1380px;
+    margin-inline:auto;
+  }
+  .portal-content>*{
+    min-width:0;
+    max-width:100%;
+  }
+  .portal-grid{
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));
+    min-width:0;
+  }
+  .table-scroll{
+    width:100%;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+  }
+}

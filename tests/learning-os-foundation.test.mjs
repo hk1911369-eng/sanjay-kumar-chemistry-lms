@@ -253,6 +253,11 @@ test('quiz question concepts feed trusted mastery and mistake memory evidence', 
   assert.ok(migration.includes('source_question_id'));
   assert.ok(patch.includes('existing.mastery_score'));
   assert.ok(patch.includes('existing.occurrence_count'));
+  const identity = await readFile(new URL('../supabase/migrations/20261108215214_learning_os_reusable_question_identity_and_mistake_resolution.sql', import.meta.url), 'utf8');
+  assert.ok(identity.includes('source_bank_question_id'));
+  assert.ok(identity.includes('COALESCE(v_question.source_bank_question_id, v_question.id)'));
+  assert.ok(identity.includes('resolved_at = NEW.submitted_at'));
+  assert.ok(action.includes('source_bank_question_id:q.id'));
   assert.ok(action.includes("concept_id:conceptId"));
   assert.ok(action.includes("concept_id:q.concept_id"));
   assert.ok(page.includes('Knowledge graph concept (optional)'));

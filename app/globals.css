@@ -235,3 +235,5 @@ button:disabled{cursor:not-allowed}
 button,.btn,.auth-submit,.portal-nav-link{touch-action:manipulation}
 .auth-submit,.btn,.quiet-button{min-height:44px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.archive-course-form{margin-top:12px;display:flex;justify-content:flex-end}

@@ -44,7 +44,7 @@ test('reusable quiz questions aggregate recurring errors and resolve after a cor
   assert.ok(identity.includes('source_bank_question_id'));
   assert.ok(identity.includes('resolved_at = NEW.submitted_at'));
   assert.ok(aggregate.includes('question_bank_id'));
-  assert.ok(aggregate.includes('occurrence_count = existing.occurrence_count + 1'));
+  assert.ok(aggregate.includes('occurrence_count=existing.occurrence_count+1'));
   assert.ok(finalise.includes('DROP COLUMN IF EXISTS source_bank_question_id'));
   assert.ok(finalise.includes('COALESCE(x.question_bank_id,x.id)'));
   assert.ok(finalise.includes('SET resolved_at=NEW.submitted_at'));

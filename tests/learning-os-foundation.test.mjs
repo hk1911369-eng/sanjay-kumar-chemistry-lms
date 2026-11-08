@@ -273,6 +273,7 @@ test('quiz windows are available to teachers and start actions enforce the confi
   const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
   const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
   assert.ok(action.includes('parseDhakaDateTime'));
+  assert.ok(action.includes('roundTrip===normalized?parsed.toISOString():null'));
   assert.ok(action.includes("select('id,starts_at,ends_at')"));
   assert.ok(action.includes('quiz.starts_at'));
   assert.ok(action.includes('quiz.ends_at'));

@@ -220,7 +220,7 @@ test('quiz answer key access uses one staff-only policy', async () => {
 
 
 test('written exam grading enforces database score limits and rejects missing roles', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108190000_bound_written_exam_scores_and_fail_closed_grader_role.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108201953_bound_written_exam_scores_and_fail_closed_grader_role.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes("v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff')"));
   assert.ok(migration.includes('SELECT total_marks INTO v_max_marks'));
   assert.ok(migration.includes('NEW.score > v_max_marks'));

@@ -269,6 +269,17 @@ test('quiz question concepts feed trusted mastery and mistake memory evidence', 
   assert.ok(page.includes('questionConcepts'));
 });
 
+test('quiz windows are available to teachers and start actions enforce the configured window', async () => {
+  const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/academic/page.tsx', import.meta.url), 'utf8');
+  assert.ok(action.includes('parseDhakaDateTime'));
+  assert.ok(action.includes("select('id,starts_at,ends_at')"));
+  assert.ok(action.includes('quiz.starts_at'));
+  assert.ok(action.includes('quiz.ends_at'));
+  assert.ok(page.includes('Starts at (Bangladesh time, optional)'));
+  assert.ok(page.includes('Ends at (Bangladesh time, optional)'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

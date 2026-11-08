@@ -152,7 +152,7 @@ export async function createQuizFromBank(formData:FormData) {
  const total=ordered.reduce((sum,q)=>sum+Number(q.marks),0);
  const {data:quiz,error}=await supabase.from('quizzes').insert({course_id:courseId,title,duration_minutes:duration,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!quiz) redirect('/academic?error=bank_quiz');
- const inserted=await supabase.from('quiz_questions').insert(ordered.map((q:any,i:number)=>({quiz_id:quiz.id,source_bank_question_id:q.id,concept_id:q.concept_id,question_text:q.question_text,options:q.options,marks:q.marks,position:i+1}))).select('id');
+ const inserted=await supabase.from('quiz_questions').insert(ordered.map((q:any,i:number)=>({quiz_id:quiz.id,question_bank_id:q.id,concept_id:q.concept_id,question_text:q.question_text,options:q.options,marks:q.marks,position:i+1}))).select('id');
  if(inserted.error||!inserted.data||inserted.data.length!==ordered.length){await supabase.from('quizzes').delete().eq('id',quiz.id);redirect('/academic?error=bank_quiz');}
  const keys=inserted.data.map((row:any,i:number)=>({question_id:row.id,correct_option:ordered[i].correct_option}));
  const saved=await supabase.from('quiz_answer_keys').insert(keys);

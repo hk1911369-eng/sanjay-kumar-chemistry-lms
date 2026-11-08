@@ -236,3 +236,11 @@ test('student identity field guard rejects missing roles and uses a trusted sear
   assert.ok(migration.includes('NEW.admission_date IS DISTINCT FROM OLD.admission_date'));
   assert.ok(migration.includes('SET search_path = pg_catalog, public, pg_temp'));
 });
+
+
+test('manual payment validation runs once before insert', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108204938_remove_duplicate_manual_payment_validation_trigger.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP TRIGGER IF EXISTS validate_manual_payment_submission'));
+  assert.ok(migration.includes('ON public.manual_payment_submissions'));
+  assert.ok(migration.includes('validate_manual_payment_before_insert'));
+});

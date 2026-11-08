@@ -25,3 +25,14 @@ test('quiz submission rechecks student role and current paid enrollment inside t
   assert.match(migration, /quiz_answer_keys/);
   assert.match(migration, /set answers = p_answers,[\s\S]*score = v_score/);
 });
+
+test('teachers cannot read enrollment billing rows directly', async () => {
+  const migration = await read('supabase/migrations/0034_teacher_safe_enrollment_overview.sql');
+  const page = await read('app/students/manage/page.tsx');
+  assert.match(migration, /drop policy if exists "assigned staff read enrolled students"/);
+  assert.match(migration, /drop policy if exists "student own enrollments"/);
+  assert.match(migration, /using \(student_id = \(select auth\.uid\(\)\)\)/);
+  assert.match(migration, /get_assigned_student_enrollments/);
+  assert.doesNotMatch(migration, /admission_fee_paid|paid_through|monthly_fee_bdt/);
+  assert.match(page, /supabase\.rpc\('get_assigned_student_enrollments'/);
+});

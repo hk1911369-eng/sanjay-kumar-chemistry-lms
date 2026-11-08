@@ -42,3 +42,13 @@ test('Exam War Room UI calls protected create and cancel actions', async () => {
   assert.ok(actions.includes("rpc('cancel_exam_war_room_target'"));
   assert.ok(nav.includes("key: 'exam-war-room'"));
 });
+
+
+test('Exam War Room creates tasks under the source key read by its student dashboard', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108220718_learning_os_align_exam_war_room_task_source_with_ui.sql', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/student/exam-war-room/page.tsx', import.meta.url), 'utf8');
+  assert.ok(migration.includes("e.id,'exam_plan',v_target_id"));
+  assert.ok(page.includes(".in('source_type',['exam_plan','exam_war_room'])"));
+  assert.ok(page.includes("task.status==='cancelled'"));
+  assert.ok(page.includes('<span>Cancelled</span>'));
+});

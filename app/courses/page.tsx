@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import {createPublicClient} from '@/lib/supabase/public';
+import {CourseCatalogue} from '@/components/course-catalogue';
 
 export const revalidate = 300;
-import {CourseCatalogue} from '@/components/course-catalogue';
 
 export default async function Courses(){
  const db=createPublicClient();

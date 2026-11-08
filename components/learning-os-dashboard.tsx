@@ -8,7 +8,7 @@ type Goal = {
 type RevisionTask = {
   id: string; title: string; scheduled_for: string; priority: number; course_id: string;
 };
-type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number };
+type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null };
 type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };
 type Mastery = {
   concept_id: string; mastery_score: number; confidence: number; evidence_count: number;

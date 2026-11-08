@@ -133,13 +133,12 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
             rootCauseFor:cause,
           });
         }
-      } else {
-        recommendationTargets.set(weak.concept_id,{
-          conceptTitle:weakTitle,
-          masteryScore:Number(weak.mastery_score),
-          rootCauseFor:null,
-        });
       }
+      recommendationTargets.set(weak.concept_id,{
+        conceptTitle:weakTitle,
+        masteryScore:Number(weak.mastery_score),
+        rootCauseFor:null,
+      });
     }
     const recommendationConceptIds = [...recommendationTargets.keys()];
     if (recommendationConceptIds.length) {

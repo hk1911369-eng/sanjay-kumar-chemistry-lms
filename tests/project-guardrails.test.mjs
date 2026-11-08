@@ -116,7 +116,7 @@ test('lesson file signed URLs are created only after an explicit resource reques
 
 test('authentication throttling uses the visitor IP rather than a proxy IP', async () => {
   const limiter = await read('lib/auth-rate-limit.ts');
-  assert.match(limiter, /get\('cf-connecting-ip'\)/);
+  assert.match(await read('lib/client-ip.js'), /cf-connecting-ip/);
   assert.match(limiter, /getClientIp/);
   assert.match(await read('lib/client-ip.js'), /chain\.length - 1/);
   assert.doesNotMatch(limiter, /filter\(Boolean\)\[0\]/);

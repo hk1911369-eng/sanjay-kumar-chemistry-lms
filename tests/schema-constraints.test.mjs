@@ -106,3 +106,13 @@ test('user and staff row policies are restricted to authenticated sessions', asy
   assert.ok(migration.includes('ALTER POLICY "students read own lesson progress"'));
   assert.ok(migration.includes('ALTER POLICY "profiles own admin or assigned staff read"'));
 });
+ 
+test('public course teacher RPC returns names only for published non-archived courses', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/0033_public_published_course_access.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('grant select on public.courses to anon'));
+  assert.ok(migration.includes('for select'));
+  assert.ok(migration.includes('to anon'));
+  assert.ok(migration.includes('is_published is true and archived_at is null'));
+  assert.ok(migration.includes("p.role::text in ('teacher','staff')"));
+  assert.ok(migration.includes('revoke all on function public.get_public_course_teachers(uuid) from public'));
+});

@@ -221,6 +221,14 @@ test('programme groups are universal and no longer restricted to chemistry-era c
   assert.equal(catalogue.includes("const groups=['HSC 2027','HSC 2028','Admission Batch']"), false);
 });
 
+test('public platform metadata presents JMT Academy as multi-subject, not Chemistry-only', async () => {
+  const layout = await readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8');
+  assert.ok(layout.includes('multi-subject learning platform'));
+  assert.ok(layout.includes("'Physics','Chemistry','Biology','Mathematics'"));
+  assert.ok(layout.includes("'Vocational education'"));
+  assert.equal(layout.includes('HSC 2027, HSC 2028 and Admission Batch students'), false);
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

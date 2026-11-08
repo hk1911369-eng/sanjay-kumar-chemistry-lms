@@ -28,7 +28,10 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Run guardrail tests
         run: npm test
@@ -42,3 +45,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-not-a-real-key
           APP_URL: https://example.invalid
+
+      - name: Production dependency audit
+        run: npm audit --omit=dev

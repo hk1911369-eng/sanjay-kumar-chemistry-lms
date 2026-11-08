@@ -8,10 +8,6 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const requiresSession = protectedPrefixes.some(prefix => pathname === prefix || pathname.startsWith(prefix + '/'));
   const response = requiresSession ? await updateSession(request) : NextResponse.next({ request });
-
-  // One-time migration from the legacy cookie; new preference is non-HttpOnly
-  // so a tiny client island can set the document language without making all
-  // public routes dynamic.
   const legacyLocale = request.cookies.get('skc_locale')?.value;
   if (!request.cookies.get('jmt_locale') && (legacyLocale === 'bn' || legacyLocale === 'en')) {
     response.cookies.set('jmt_locale', legacyLocale, {

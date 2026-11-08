@@ -62,10 +62,11 @@ export async function signOut() {
 export async function requestPasswordReset(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (!email) redirect('/forgot-password?error=invalid');
+  if (!await enforceAuthRateLimit('password_reset', email)) redirect('/forgot-password?sent=1');
   const supabase = await createClient();
   const redirectTo = getAppUrl() + '/auth/confirm?next=/reset-password';
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-  if (error) redirect('/forgot-password?error=failed');
+  // Keep the response identical whether the account exists or the provider rejects the request.
+  await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   redirect('/forgot-password?sent=1');
 }
 

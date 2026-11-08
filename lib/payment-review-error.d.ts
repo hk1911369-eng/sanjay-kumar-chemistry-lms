@@ -1,0 +1,1 @@
+export function paymentReviewErrorCode(error: { code?: string } | null | undefined): 'forbidden' | 'not_found' | 'duplicate' | 'failed';

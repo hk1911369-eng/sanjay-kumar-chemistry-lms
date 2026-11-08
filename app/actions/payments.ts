@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { currentBangladeshBillingPeriod } from '@/lib/pricing';
+import { paymentReviewErrorCode } from '@/lib/payment-review-error.js';
 
 const providers = ['bkash', 'nagad', 'rocket'] as const;
 type Provider = (typeof providers)[number];
@@ -134,7 +135,10 @@ export async function reviewManualPayment(formData: FormData) {
     ? await supabase.rpc('approve_manual_payment_submission', { p_submission_id: id, p_admin_note: note || null })
     : await supabase.rpc('reject_manual_payment_submission', { p_submission_id: id, p_admin_note: note });
 
-  if (error) redirect(`/admin?review_error=${encodeURIComponent(error.message.slice(0, 120))}`);
+  if (error) {
+    console.error('Payment review failed', { code: error.code ?? 'unknown' });
+    redirect('/admin?review_error=' + paymentReviewErrorCode(error));
+  }
   redirect('/admin?review_success=1');
 }
 

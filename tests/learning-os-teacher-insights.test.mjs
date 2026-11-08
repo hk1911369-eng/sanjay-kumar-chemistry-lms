@@ -32,3 +32,19 @@ test('teacher analytics is role-gated and reads only assigned course/student sig
   const navigation = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
   assert.equal((navigation.match(/key: 'learning-insights'/g) ?? []).length, 3);
 });
+
+test('teacher revision assignments are scoped to paid learners and mapped concepts', async () => {
+  const page = await readFile(new URL('../app/teacher/learning/page.tsx', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/teacher-learning.ts', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108221622_add_secure_teacher_revision_assignment.sql', import.meta.url), 'utf8');
+  assert.ok(page.includes('assignTeacherRevisionTask'));
+  assert.ok(page.includes('courseSubjectKeys'));
+  assert.ok(page.includes('name="student_id"'));
+  assert.ok(action.includes("rpc('assign_teacher_revision_task'"));
+  assert.ok(migration.includes("v_role NOT IN ('admin', 'teacher', 'staff')"));
+  assert.ok(migration.includes('a.teacher_id = auth.uid()'));
+  assert.ok(migration.includes('e.admission_fee_paid IS TRUE'));
+  assert.ok(migration.includes('e.paid_through >= v_period_end'));
+  assert.ok(migration.includes('lc.is_published IS TRUE'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION'));
+});

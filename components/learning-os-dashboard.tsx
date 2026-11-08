@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
 
 type Goal = {
@@ -7,6 +8,7 @@ type Goal = {
 type RevisionTask = {
   id: string; title: string; scheduled_for: string; priority: number; course_id: string;
 };
+type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number };
 type Mastery = {
   concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
   learning_concepts?: { title?: string; academic_subjects?: { name?: string }[] | null }[] | null;
@@ -111,6 +113,15 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, courseNames
           </li>)}</ul>}
       </div>
     </div>
+
+    <h3>Recommended next steps</h3>
+    {recommendations.length === 0
+      ? <p className="learning-os-muted">Personal lesson recommendations will appear when a topic has at least three verified learning signals and a published lesson is available in a currently paid course. Recommendations are based on evidence, not guesses.</p>
+      : <ul className="learning-os-list">{recommendations.map(item => <li key={item.lessonId}>
+          <b>{item.lessonTitle}</b>
+          <small className="learning-os-muted"> Revisit {item.conceptTitle} · {Math.round(item.masteryScore * 100)}% current mastery · {courseNames.get(item.courseId) ?? 'Your course'}</small>
+          <p><Link href={`/learn/${item.courseId}#lesson-${item.lessonId}`}>Study this lesson →</Link></p>
+        </li>)}</ul>}
 
     <h3>Topic mastery map</h3>
     {mastery.length === 0 ? <p className="learning-os-muted">Topic-level mastery will appear after concepts are mapped to lessons and enough practice evidence is collected. Your scores are not guessed.</p> :

@@ -79,6 +79,43 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     const course = (courses ?? []).find((item:any) => item.id === enrollment.course_id);
     return [enrollment.course_id, course?.title ?? 'Your course'];
   }));
+  // Recommend only published lessons the student can currently access, tied to concepts
+  // with enough real evidence to justify a weakness signal.
+  const weakConceptIds = conceptMastery
+    .filter((item:any) => Number(item.evidence_count) >= 3 && Number(item.mastery_score) <= 0.65)
+    .map((item:any) => item.concept_id);
+  const eligibleCourseIds = [...new Set((enrollments ?? [])
+    .filter((item:any) => item.status === 'active' && item.admission_fee_paid
+      && item.paid_through && item.paid_through >= periodEnd)
+    .map((item:any) => item.course_id))];
+  let learningRecommendations: { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number }[] = [];
+  if (weakConceptIds.length && eligibleCourseIds.length) {
+    const { data: candidateLessons } = await supabase.from('lessons')
+      .select('id,title,course_id').in('course_id',eligibleCourseIds).eq('is_published',true).limit(300);
+    const lessonRows = candidateLessons ?? [];
+    if (lessonRows.length) {
+      const { data: mappings } = await supabase.from('lesson_concepts')
+        .select('lesson_id,concept_id').in('lesson_id',lessonRows.map((lesson:any)=>lesson.id))
+        .in('concept_id',weakConceptIds);
+      const masteryByConcept = new Map(conceptMastery.map((item:any)=>[item.concept_id,item]));
+      const lessonById = new Map(lessonRows.map((lesson:any)=>[lesson.id,lesson]));
+      const seen = new Set<string>();
+      for (const mapping of mappings ?? []) {
+        const lesson:any = lessonById.get(mapping.lesson_id);
+        const mastery:any = masteryByConcept.get(mapping.concept_id);
+        if (!lesson || !mastery || seen.has(lesson.id)) continue;
+        const concept = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : null;
+        seen.add(lesson.id);
+        learningRecommendations.push({
+          lessonId:lesson.id, lessonTitle:lesson.title, courseId:lesson.course_id,
+          conceptTitle:concept?.title ?? 'Learning topic',
+          masteryScore:Number(mastery.mastery_score),
+        });
+      }
+      learningRecommendations.sort((a,b)=>a.masteryScore-b.masteryScore);
+      learningRecommendations=learningRecommendations.slice(0,6);
+    }
+  }
   const activeCourseIds = [...new Set((enrollments ?? []).filter((enrollment:any) => enrollment.status === 'active').map((enrollment:any) => enrollment.course_id))];
   const nowIso = new Date().toISOString();
   const [upcomingQuizResult, upcomingWrittenResult, upcomingAssignmentResult] = activeCourseIds.length ? await Promise.all([

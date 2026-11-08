@@ -226,3 +226,13 @@ test('written exam grading enforces database score limits and rejects missing ro
   assert.ok(migration.includes('NEW.score > v_max_marks'));
   assert.ok(migration.includes('NEW.answers IS DISTINCT FROM OLD.answers'));
 });
+
+
+test('student identity field guard rejects missing roles and uses a trusted search path', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108202657_fail_closed_student_identity_field_guard.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("public.current_role() IS DISTINCT FROM 'admin'::public.app_role"));
+  assert.ok(migration.includes('auth.uid() IS NOT NULL'));
+  assert.ok(migration.includes('NEW.student_code IS DISTINCT FROM OLD.student_code'));
+  assert.ok(migration.includes('NEW.admission_date IS DISTINCT FROM OLD.admission_date'));
+  assert.ok(migration.includes('SET search_path = pg_catalog, public, pg_temp'));
+});

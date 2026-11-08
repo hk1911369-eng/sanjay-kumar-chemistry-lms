@@ -45,3 +45,16 @@ test('SECURITY DEFINER functions use an explicit trusted search path', async () 
   assert.ok(migration.includes('search_path TO pg_catalog, public, pg_temp'));
   assert.ok(migration.includes("p.proname <> 'rls_auto_enable'"));
 });
+
+test('admin RPC role checks fail closed for a missing active profile', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108123210_fail_closed_admin_rpc_role_guards.sql', import.meta.url), 'utf8');
+  for (const fn of [
+    'approve_manual_payment_submission',
+    'reject_manual_payment_submission',
+    'set_course_archived',
+    'set_student_account_active',
+  ]) {
+    assert.ok(migration.includes(fn), fn);
+  }
+  assert.ok(migration.includes('IS DISTINCT FROM'));
+});

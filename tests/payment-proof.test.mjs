@@ -44,7 +44,7 @@ test('student payment form requires proof and server validates then uploads befo
 
 test('admin creates short-lived signed URLs rather than public proof URLs', async () => {
   const admin = await read('app/admin/page.tsx');
-  assert.match(admin, /createSignedUrl/);
+  assert.match(admin, /createSignedUrls/);
   assert.match(admin, /proof_storage_path/);
   assert.doesNotMatch(admin, /getPublicUrl\(.*proof/i);
 });

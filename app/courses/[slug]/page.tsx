@@ -3,6 +3,8 @@ import Image from 'next/image';
 import {createPublicClient} from '@/lib/supabase/public';
 
 export const revalidate = 300;
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
  const { slug } = await params;
  const canonical = '/courses/' + encodeURIComponent(slug);

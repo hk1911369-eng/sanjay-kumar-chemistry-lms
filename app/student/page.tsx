@@ -32,7 +32,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     supabase.from('courses').select('id,title,slug,description,monthly_fee_bdt,admission_fee_bdt,delivery_modes,live_price_bdt,recorded_price_bdt,offline_price_bdt').eq('is_published', true).is('archived_at',null).order('title'),
     supabase.from('enrollments').select('id,status,course_id,admission_fee_paid,paid_through,delivery_mode,monthly_fee_bdt').eq('student_id', user.id),
     supabase.from('manual_payment_submissions').select('id,status,amount_bdt,payment_kind,billing_period,provider,transaction_id,created_at,course_id,delivery_mode,admin_note').eq('student_id', user.id).order('created_at', { ascending: false }).limit(30),
-    supabase.from('private_payment_settings').select('provider,receiving_number,is_enabled'),
+    supabase.rpc('get_enabled_payment_instructions'),
     supabase.from('notices').select('id,title,body,published_at').not('published_at','is',null).order('published_at',{ascending:false}).limit(10),
     supabase.from('student_followups').select('id,category,severity,details,follow_up_status,created_at').eq('student_id',user.id).eq('visible_to_student',true).order('created_at',{ascending:false}).limit(10),
     supabase.from('course_applications').select('id,course_id,delivery_mode,status,admin_note,created_at').eq('student_id',user.id).order('created_at',{ascending:false}).limit(50),

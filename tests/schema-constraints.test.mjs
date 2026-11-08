@@ -10,3 +10,23 @@ test('database URL and sender phone constraints are represented in migrations', 
   assert.match(migration, /sender_phone is null or sender_phone ~ '\^01\[3-9\]\[0-9\]\{8\}\$'/);
   assert.match(migration, /if not exists/);
 });
+
+test('student submission policies require an active student role', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/0049_student_submission_role_guards.sql', import.meta.url), 'utf8');
+  for (const policy of [
+    'students submit own assignments',
+    'students update own ungraded submissions',
+    'students submit own course applications',
+    'students manage own lesson bookmarks',
+    'students manage own enrolled lesson progress',
+    'students update own enrolled lesson progress',
+    'student submits own manual payment',
+    'students create own quiz attempts',
+    'students submit written exams',
+  ]) {
+    assert.ok(migration.includes(policy), policy);
+  }
+  assert.equal((migration.match(/public\.current_role\(\)\) = 'student'/g) ?? []).length, 9);
+  assert.ok(migration.includes('to authenticated'));
+  assert.equal(migration.includes('to public'), false);
+});

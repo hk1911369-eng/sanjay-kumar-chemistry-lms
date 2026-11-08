@@ -30,8 +30,12 @@ test('virtual lab completion is recorded through a paid-enrollment-checked datab
   assert.ok(migration.includes('e.paid_through>=v_period_end'));
   const subjectGuard = await readFile(new URL('../supabase/migrations/20261108215837_learning_os_validate_virtual_lab_course_subject.sql', import.meta.url), 'utf8');
   assert.ok(subjectGuard.includes('course_subjects cs'));
-  assert.ok(subjectGuard.includes('academic_subjects subject'));
-  assert.ok(subjectGuard.includes('Active paid course access for this subject is required'));
+  assert.ok(subjectGuard.includes('academic_subjects s'));
+  assert.ok(subjectGuard.includes('Simulation subject is not part of this course'));
+  const secureSimulation = await readFile(new URL('../supabase/migrations/20261108215857_learning_os_secure_simulation_completion_rpc.sql', import.meta.url), 'utf8');
+  assert.ok(secureSimulation.includes('academic_subjects subject'));
+  assert.ok(secureSimulation.includes('Active paid course access for this subject is required'));
+  assert.ok(secureSimulation.includes('unnest(COALESCE(c.subjects, ARRAY[]::text[]))'));
   assert.ok(action.includes("rpc('record_simulation_completion'"));
   assert.ok(component.includes('recordSimulationCompletion'));
   assert.ok(component.includes('hasInteracted'));

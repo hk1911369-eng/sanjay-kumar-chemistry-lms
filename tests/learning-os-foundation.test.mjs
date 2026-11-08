@@ -206,6 +206,15 @@ test('student Learning OS dashboard surfaces upcoming exams and assignment deadl
   assert.ok(component.includes('Upcoming assignments'));
 });
 
+test('lesson completion events require the matching completed progress record', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108214400_learning_os_require_verified_lesson_completion_event.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("event_type <> 'lesson_completed'"));
+  assert.ok(migration.includes('FROM public.lesson_progress lp'));
+  assert.ok(migration.includes('lp.student_id = (SELECT auth.uid())'));
+  assert.ok(migration.includes('lp.completed IS TRUE'));
+  assert.ok(migration.includes('l.is_published IS TRUE'));
+});
+
 test('Learning OS roadmap covers the full subject-agnostic product vision', async () => {
   const roadmap = await readFile(new URL('../docs/LEARNING_OPERATING_SYSTEM_ROADMAP.md', import.meta.url), 'utf8');
   for (const feature of [

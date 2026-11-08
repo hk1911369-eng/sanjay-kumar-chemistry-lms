@@ -2,12 +2,11 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { requireRole, requireAdmin, requireUser, requireCourseStaff } from '@/lib/auth/require-role';
 
 export async function saveLesson(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
   const courseId = String(formData.get('course_id') ?? '');
+  const { supabase, user } = await requireCourseStaff(courseId);
   const lessonId = String(formData.get('lesson_id') ?? '');
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
@@ -16,10 +15,6 @@ export async function saveLesson(formData: FormData) {
   const published = formData.get('published') === 'on';
   const chapterId = String(formData.get('chapter_id') ?? '').trim() || null;
   if (!courseId || title.length < 2 || title.length > 180 || content.length > 100000 || (videoUrl && !/^https:\/\//i.test(videoUrl))) redirect('/teacher?lesson_error=invalid');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
-  const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
-  if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
   const payload = { course_id: courseId, chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() };
   const result = lessonId
     ? await supabase.from('lessons').update({ chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() }).eq('id', lessonId).eq('course_id', courseId)
@@ -29,9 +24,7 @@ export async function saveLesson(formData: FormData) {
 }
 
 export async function markLessonComplete(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireRole(['student']);
   const lessonId = String(formData.get('lesson_id') ?? '');
   const courseId = String(formData.get('course_id') ?? '');
   if (!lessonId || !courseId) redirect('/student');
@@ -42,11 +35,7 @@ export async function markLessonComplete(formData: FormData) {
 }
 
 export async function assignTeacher(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { supabase, user } = await requireAdmin();
   const courseId = String(formData.get('course_id') ?? '');
   const teacherId = String(formData.get('teacher_id') ?? '');
   const [{ data: course }, { data: teacher }] = await Promise.all([
@@ -87,17 +76,11 @@ export async function setCoursePublication(formData: FormData) {
 }
 
 export async function saveChapter(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
   const courseId = String(formData.get('course_id') ?? '');
+  const { supabase, user } = await requireCourseStaff(courseId);
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
   if (!courseId || title.length < 1 || title.length > 180) redirect('/teacher?chapter_error=invalid');
-  const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
-  if (profile.role !== 'admin' && !assignment) redirect('/teacher?chapter_error=forbidden');
   const { error } = await supabase.from('chapters').insert({ course_id: courseId, title, description, published: formData.get('published') === 'on' });
   redirect(error ? '/teacher?chapter_error=save' : '/teacher?chapter_success=1');
 }
@@ -121,9 +104,7 @@ export async function getLessonResourceUrl(resourceId: string, mode: 'preview' |
 }
 
 export async function postLessonDiscussion(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireUser();
   const lessonId = String(formData.get('lesson_id') ?? '');
   const courseId = String(formData.get('course_id') ?? '');
   const parentId = String(formData.get('parent_id') ?? '').trim() || null;
@@ -144,20 +125,11 @@ export async function postLessonDiscussion(formData: FormData) {
 
 
 export async function pinLessonDiscussion(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
   const discussionId = String(formData.get('discussion_id') ?? '').trim();
+  const { supabase, user } = await requireCourseStaff(String(formData.get('course_id') ?? '').trim());
   const courseId = String(formData.get('course_id') ?? '').trim();
   const pinned = String(formData.get('pinned') ?? '') === 'true';
   if (!discussionId || !courseId) redirect('/student');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') {
-    if (!['teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
-    const { data: assignment } = await supabase.from('course_assignments').select('id')
-      .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
-    if (!assignment) redirect('/portal');
-  }
   const { error } = await supabase.from('lesson_discussions').update({ is_pinned: pinned })
     .eq('id', discussionId).eq('course_id', courseId);
   if (error) redirect('/learn/' + courseId + '?discussion_error=1');
@@ -166,9 +138,7 @@ export async function pinLessonDiscussion(formData: FormData) {
 }
 
 export async function toggleLessonReaction(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireUser();
   const discussionId = String(formData.get('discussion_id') ?? '');
   const reaction = String(formData.get('reaction') ?? '');
   if (!discussionId || !['like','love','helpful'].includes(reaction)) redirect('/student');
@@ -186,9 +156,7 @@ export async function toggleLessonReaction(formData: FormData) {
 }
 
 export async function toggleLessonBookmark(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase, user } = await requireRole(['student']);
   const lessonId = String(formData.get('lesson_id') ?? '');
   const courseId = String(formData.get('course_id') ?? '');
   if (!lessonId || !courseId) redirect('/student');

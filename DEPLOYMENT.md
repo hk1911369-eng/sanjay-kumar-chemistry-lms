@@ -54,4 +54,18 @@ Never run `supabase db reset` against production. Never apply a demo purge as a 
 
 ## Staging
 
-The separate Supabase test project is available for database and integration validation. A Render staging web service is not yet provisioned because it requires its own test-project environment values. Do not create it pointed at production.
+A separate Render staging service definition is prepared in `render.yaml`, but the service has **not** been provisioned. It uses the audit/staging branch and requires its own environment values.
+
+Before any Blueprint sync:
+1. Obtain the test Supabase project's URL, anon key and (if needed) service-role key.
+2. Enter them directly in Render's secure environment-variable interface; never commit them.
+3. Confirm the staging service uses only the test Supabase project.
+4. Obtain explicit approval before syncing the Blueprint or creating the Render service.
+
+Do not sync the Blueprint while the staging environment variables are blank. Never point staging at production.
+
+## Database backup and restore
+
+Use the scripts in `scripts/` only with an explicitly selected non-production/test database unless a production backup has been specifically approved. They require a connection URL supplied through the environment, use restrictive file permissions, and never print credentials.
+
+A restore must require an explicit confirmation string and must refuse a production target. Do not use `supabase db reset` or any seed/purge script against production.

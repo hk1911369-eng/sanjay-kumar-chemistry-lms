@@ -1,6 +1,6 @@
-export const metadata = { title: 'Login', robots: { index: false, follow: false } };
 import Link from 'next/link';
 import { signIn } from '@/app/actions/auth';
+export const metadata = { title: 'Login', robots: { index: false, follow: false } };
 export default async function Login({searchParams}:{searchParams:Promise<{error?:string}>}) {
  const {error}=await searchParams;
  return <main className="auth-shell"><section className="auth-card"><Link href="/" className="back-link">← JMT Academy home</Link><div className="auth-brand-mark" aria-label="JMT Academy"><span>J</span><b>JMT ACADEMY</b><small>ONLINE & OFFLINE LEARNING</small></div><span className="auth-kicker">STUDENT & STAFF PORTAL</span><h1>Welcome back</h1><p className="muted">Sign in to continue learning with JMT Academy.</p>{error&&<p className="form-error">{error}</p>}<form action={signIn} className="auth-form"><label>Email address<input name="email" type="email" autoComplete="email" required placeholder="you@example.com" /></label><label>Password<input name="password" type="password" autoComplete="current-password" minLength={8} required placeholder="At least 8 characters" /></label><button className="auth-submit">Sign in</button></form><p className="auth-foot"><Link href="/forgot-password">Forgot password?</Link></p><p className="auth-foot">New to JMT Academy? <Link href="/register">Create an account</Link></p><small className="muted">Account access is role-controlled. Students cannot assign themselves staff or admin privileges.</small></section></main>

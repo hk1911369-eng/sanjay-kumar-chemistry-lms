@@ -243,8 +243,9 @@ test('manual payment validation runs once before insert', async () => {
   const original = await readFile(new URL('../supabase/migrations/0004_secure_manual_payment_workflow.sql', import.meta.url), 'utf8');
   assert.ok(migration.includes('DROP TRIGGER IF EXISTS validate_manual_payment_submission'));
   assert.ok(migration.includes('ON public.manual_payment_submissions'));
-  assert.ok(original.includes('CREATE TRIGGER validate_manual_payment_before_insert'));
-  assert.ok(original.includes('EXECUTE FUNCTION public.validate_manual_payment_submission()'));
+  const originalSql = original.toLowerCase();
+  assert.ok(originalSql.includes('create trigger validate_manual_payment_before_insert'));
+  assert.ok(originalSql.includes('execute function public.validate_manual_payment_submission()'));
 });
 
 

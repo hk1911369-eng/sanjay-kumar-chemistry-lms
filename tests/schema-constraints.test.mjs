@@ -210,3 +210,10 @@ test('student course applications cannot supply internal admin review notes', as
   assert.ok(migration.includes('reviewed_at IS NULL'));
   assert.ok(migration.includes("status = 'submitted'"));
 });
+
+
+test('quiz answer key access uses one staff-only policy', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108185000_remove_redundant_quiz_answer_key_read_policy.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "teachers read quiz answer keys"'));
+  assert.ok(migration.includes('ON public.quiz_answer_keys'));
+});

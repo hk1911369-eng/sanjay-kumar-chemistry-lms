@@ -42,10 +42,10 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
     const normalized = q.replace(/[^0-9]/g,'');
     const lookups = await Promise.all([
       supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role,is_active').eq('role','student').ilike('student_code',q).limit(30),
-      supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').ilike('full_name','%'+q.replace(/[%_,()]/g,' ')+'%').limit(30),
+      supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role,is_active').eq('role','student').ilike('full_name','%'+q.replace(/[%_,()]/g,' ')+'%').limit(30),
       ...(normalized.length >= 8 ? [
-        supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').eq('phone',normalized.slice(-11)).limit(30),
-        supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role').eq('guardian_phone',normalized.slice(-11)).limit(30),
+        supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role,is_active').eq('role','student').eq('phone',normalized.slice(-11)).limit(30),
+        supabase.from('profiles').select('id,student_code,full_name,phone,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact,created_at,role,is_active').eq('role','student').eq('guardian_phone',normalized.slice(-11)).limit(30),
       ] : []),
     ]);
     const map = new Map<string,StudentProfile>();

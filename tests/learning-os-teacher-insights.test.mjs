@@ -48,3 +48,11 @@ test('teacher revision assignments are scoped to paid learners and mapped concep
   assert.ok(migration.includes('lc.is_published IS TRUE'));
   assert.ok(migration.includes('REVOKE ALL ON FUNCTION'));
 });
+
+test('teacher revision RPC fails closed for missing roles and inactive students', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108221803_secure_teacher_revision_assignment_fail_closed_role_guard.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes('v_role IS NULL'));
+  assert.ok(migration.includes("v_role IS DISTINCT FROM 'admin'"));
+  assert.ok(migration.includes('p.is_active IS TRUE'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION'));
+});

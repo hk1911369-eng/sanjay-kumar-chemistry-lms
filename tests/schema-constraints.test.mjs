@@ -154,5 +154,5 @@ test('submission updates preserve student work and ownership while allowing boun
   assert.ok(migration.includes('NEW.answers IS DISTINCT FROM OLD.answers'));
   assert.ok(migration.includes('NEW.student_id IS DISTINCT FROM OLD.student_id'));
   assert.ok(migration.includes('NEW.marks > v_max_marks'));
-  assert.ok(migration.includes("v_role NOT IN ('admin', 'teacher', 'staff')"));
+  assert.ok(migration.includes("v_role IS NULL OR v_role NOT IN ('admin', 'teacher', 'staff')"));
 });

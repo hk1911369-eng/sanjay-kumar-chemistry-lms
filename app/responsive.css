@@ -258,3 +258,10 @@ input,select,textarea,button{max-width:100%}
 .virtual-lab-principle{padding:1rem;border-left:3px solid var(--accent,#2563eb);background:var(--surface-soft,#f8fafc);border-radius:8px}
 .virtual-lab-principle p{margin-bottom:0}
 @media(max-width:760px){.virtual-lab-studio{grid-template-columns:1fr}.virtual-lab-catalogue{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.virtual-lab-selects{grid-template-columns:1fr}}
+
+
+/* Exam War Room layout */
+.exam-war-room { display: grid; gap: 1.25rem; }
+.exam-war-room-form { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); align-items: end; gap: .85rem; }
+.exam-war-room-plans { display: grid; gap: 1rem; }
+@media (max-width: 760px) { .exam-war-room-form { grid-template-columns: 1fr; } }

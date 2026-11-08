@@ -47,6 +47,10 @@ test('teacher revision assignments are scoped to paid learners and mapped concep
   assert.ok(migration.includes('e.paid_through >= v_period_end'));
   assert.ok(migration.includes('lc.is_published IS TRUE'));
   assert.ok(migration.includes('REVOKE ALL ON FUNCTION'));
+  const audited = await readFile(new URL('../supabase/migrations/20261108221907_audit_and_scope_teacher_revision_assignments.sql', import.meta.url), 'utf8');
+  assert.ok(audited.includes('c.is_published IS TRUE'));
+  assert.ok(audited.includes("'teacher_revision_assigned'"));
+  assert.ok(audited.includes('public.audit_logs'));
 });
 
 test('teacher revision RPC fails closed for missing roles and inactive students', async () => {

@@ -207,7 +207,7 @@ test('student Learning OS dashboard surfaces upcoming exams and assignment deadl
 });
 
 test('programme groups are universal and no longer restricted to chemistry-era cohorts', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261108214330_learning_os_generalize_programme_groups.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261108214411_learning_os_generalize_programme_groups.sql', import.meta.url), 'utf8');
   const action = await readFile(new URL('../app/actions/course-studio.ts', import.meta.url), 'utf8');
   const adminPage = await readFile(new URL('../app/admin/courses/page.tsx', import.meta.url), 'utf8');
   const catalogue = await readFile(new URL('../components/course-catalogue.tsx', import.meta.url), 'utf8');

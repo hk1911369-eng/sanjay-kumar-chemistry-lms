@@ -178,3 +178,12 @@ test('health endpoint verifies Supabase connectivity and returns an uncached fai
   assert.ok(route.includes("Cache-Control': 'no-store'"));
   assert.ok(route.includes("dynamic = 'force-dynamic'"));
 });
+
+ 
+test('follow-up visibility is admin-only on insert as well as update', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261108183651_restrict_followup_student_visibility_on_insert.sql', import.meta.url), 'utf8');
+  assert.ok(migration.includes("IF TG_OP = 'INSERT' THEN"));
+  assert.ok(migration.includes('NEW.visible_to_student IS TRUE'));
+  assert.ok(migration.includes("v_role IS DISTINCT FROM 'admin'"));
+  assert.ok(migration.includes('BEFORE INSERT OR UPDATE ON public.student_followups'));
+});

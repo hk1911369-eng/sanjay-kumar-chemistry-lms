@@ -256,8 +256,13 @@ test('quiz question concepts feed trusted mastery and mistake memory evidence', 
   const identity = await readFile(new URL('../supabase/migrations/20261108215214_learning_os_reusable_question_identity_and_mistake_resolution.sql', import.meta.url), 'utf8');
   assert.ok(identity.includes('source_bank_question_id'));
   assert.ok(identity.includes('COALESCE(v_question.source_bank_question_id, v_question.id)'));
-  assert.ok(identity.includes('resolved_at = NEW.submitted_at'));
-  assert.ok(action.includes('source_bank_question_id:q.id'));
+  const bankIdentity = await readFile(new URL('../supabase/migrations/20261108215223_learning_os_aggregate_repeated_bank_question_mistakes.sql', import.meta.url), 'utf8');
+  const cleanup = await readFile(new URL('../supabase/migrations/20261108215412_learning_os_finalize_question_bank_mistake_memory.sql', import.meta.url), 'utf8');
+  assert.ok(bankIdentity.includes('question_bank_id'));
+  assert.ok(bankIdentity.includes('COALESCE(x.question_bank_id, x.id)'));
+  assert.ok(cleanup.includes('DROP COLUMN IF EXISTS source_bank_question_id'));
+  assert.ok(cleanup.includes('resolved_at = NEW.submitted_at'));
+  assert.ok(action.includes('question_bank_id:q.id'));
   assert.ok(action.includes("concept_id:conceptId"));
   assert.ok(action.includes("concept_id:q.concept_id"));
   assert.ok(page.includes('Knowledge graph concept (optional)'));

@@ -11,7 +11,7 @@ type RevisionTask = {
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number };
 type Mastery = {
   concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
-  learning_concepts?: { title?: string; academic_subjects?: { name?: string }[] | null }[] | null;
+  learning_concepts?: { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
 };
 type UpcomingExam = {
   id:string; title:string; course_id:string; starts_at:string; ends_at:string|null;
@@ -126,8 +126,8 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, recommendat
     <h3>Topic mastery map</h3>
     {mastery.length === 0 ? <p className="learning-os-muted">Topic-level mastery will appear after concepts are mapped to lessons and enough practice evidence is collected. Your scores are not guessed.</p> :
       <div className="learning-os-columns">{mastery.map(item => {
-        const concept = Array.isArray(item.learning_concepts) ? item.learning_concepts[0] : null;
-        const subject = Array.isArray(concept?.academic_subjects) ? concept.academic_subjects[0] : null;
+        const concept = Array.isArray(item.learning_concepts) ? item.learning_concepts[0] : item.learning_concepts;
+        const subject = Array.isArray(concept?.academic_subjects) ? concept.academic_subjects[0] : concept?.academic_subjects;
         const score = Math.round(Number(item.mastery_score) * 100);
         return <div className="learning-os-stat" key={item.concept_id}>
           <b>{concept?.title ?? 'Learning topic'}</b>

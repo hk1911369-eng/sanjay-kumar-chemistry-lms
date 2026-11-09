@@ -82,7 +82,7 @@ export default async function PracticeAnalyticsPage() {
     };
   });
   const activeQuestions = questionsWithStats.filter(question => question.attempts > 0);
-  const weakQuestions = activeQuestions.filter(question => question.attempts >= 3 && (question.accuracy ?? 100) < 60)
+  const weakQuestions = activeQuestions.filter(question => question.attempts >= 5 && (question.accuracy ?? 100) < 60)
     .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100)).slice(0, 8);
   const subjectStats = [...new Set(activeQuestions.map(question => question.subject))]
     .map(subject => {
@@ -120,7 +120,7 @@ export default async function PracticeAnalyticsPage() {
       </section>
 
       <section className="portal-card practice-analytics-section">
-        <div className="practice-analytics-section-heading"><div><span className="auth-kicker">INTERVENTION CANDIDATES</span><h2>Questions learners find difficult</h2><p className="muted">At least three attempts and below 60% accuracy in the last 90 days.</p></div></div>
+        <div className="practice-analytics-section-heading"><div><span className="auth-kicker">INTERVENTION CANDIDATES</span><h2>Questions learners find difficult</h2><p className="muted">At least five responses and below 60% accuracy in the last 90 days. Smaller cohorts are suppressed for privacy.</p></div></div>
         {!weakQuestions.length ? <p className="muted">No clear difficulty pattern yet. More responses are needed before highlighting an intervention.</p> : <div className="practice-weak-question-list">
           {weakQuestions.map(question => <article key={question.id} className="practice-weak-question">
             <div className="practice-weak-question-meta"><span>{question.subject}{question.chapter_label ? ' · ' + question.chapter_label : ''}</span><b>{Math.round(question.accuracy ?? 0)}% accuracy</b></div>

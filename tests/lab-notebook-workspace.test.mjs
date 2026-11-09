@@ -21,6 +21,7 @@ test('student and teacher practical workspaces are connected to the portals', as
 test('notebook server actions validate payloads and defer authorisation to RLS', async () => {
   const actions = await readFile(new URL('../app/actions/lab-notebooks.ts', import.meta.url), 'utf8');
   assert.match(actions, /parseMeasurements/);
+  assert.match(actions, /raw.length > 30000/);
   assert.match(actions, /value\.length > 100/);
   assert.match(actions, /feedback\.length > 4000/);
   assert.match(actions, /score\s*>\s*100/);

@@ -82,5 +82,6 @@ test('higher mathematics has an interactive quadratic simulation template', asyn
   assert.match(component, /vertexX/);
   assert.match(admin, /value="quadratic"/);
   assert.match(migration, /higher-maths-quadratic/);
-  assert.match(migration, /Higher Mathematics/);
+  assert.match(migration, /higher-maths-quadratic/);
+  assert.match(migration, /10000000-0000-4000-8000-000000000008/);
 });

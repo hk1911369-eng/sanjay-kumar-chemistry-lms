@@ -18,6 +18,10 @@ export async function createLabPracticalAssignment(formData: FormData) {
   const parts = choice.split(':');
   const courseId = parts.length === 2 ? parts[0] : '';
   const labId = parts.length === 2 ? parts[1] : '';
+  const conceptChoice = String(formData.get('concept_choice') ?? '').trim();
+  const conceptParts = conceptChoice ? conceptChoice.split(':') : [];
+  const conceptId = conceptParts.length === 3 && conceptParts[0] === courseId && conceptParts[1] === labId && uuid.test(conceptParts[2]) ? conceptParts[2] : '';
+  if (conceptChoice && !conceptId) redirect('/teacher/lab-notebooks?error=assignment');
   const title = String(formData.get('title') ?? '').trim();
   const instructions = String(formData.get('instructions') ?? '').trim();
   const dueInput = String(formData.get('due_at') ?? '').trim();
@@ -41,6 +45,7 @@ export async function createLabPracticalAssignment(formData: FormData) {
   const { data, error } = await db.from('lab_practical_assignments').insert({
     course_id: courseId,
     lab_id: labId,
+    concept_id: conceptId || null,
     teacher_id: user.id,
     title,
     instructions,

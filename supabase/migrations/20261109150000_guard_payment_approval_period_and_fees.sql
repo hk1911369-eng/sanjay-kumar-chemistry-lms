@@ -53,6 +53,20 @@ begin
     else null
   end;
 
+  if new.payment_kind = 'monthly' then
+    select coalesce(e.monthly_fee_bdt, expected_monthly)
+      into expected_monthly
+    from public.enrollments e
+    where e.student_id = new.student_id
+      and e.course_id = new.course_id
+      and e.status = 'active'
+      and e.delivery_mode = new.delivery_mode;
+    if not found then
+      raise exception 'An active enrollment with the same learning format is required'
+        using errcode = '42501';
+    end if;
+  end if;
+
   if expected_monthly is null
      or new.fee_monthly_bdt is distinct from expected_monthly then
     raise exception 'Payment monthly fee does not match the course delivery-mode price'

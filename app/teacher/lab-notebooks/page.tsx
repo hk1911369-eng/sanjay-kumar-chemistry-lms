@@ -21,7 +21,7 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
   courseIds.length?db.from('lab_notebook_entries').select('id,course_id,student_id,title,updated_at').in('course_id',courseIds).order('updated_at',{ascending:false}).limit(200):Promise.resolve({data:[] as any[]})
  ]);
  const historyNotebookIds=(historyNotebooks??[]).map(n=>n.id);
- const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
+ const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,rubric_scores,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
  const historyNotebookById=new Map((historyNotebooks??[]).map(n=>[n.id,n]));
  const historyByNotebook=new Map<string,any[]>();
  for(const item of reviewHistory??[]){const list=historyByNotebook.get(item.notebook_id)??[];list.push(item);historyByNotebook.set(item.notebook_id,list);}
@@ -37,7 +37,7 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const studentName=new Map((students??[]).map(s=>[s.id,s.full_name+(s.student_code?' · '+s.student_code:'')])), labName=new Map((labs??[]).map(l=>[l.id,l.title])), courseName=new Map(courses.map((c:any)=>[c.id,c.title]));
  return <PortalLayout role={profile!.role as 'admin'|'teacher'|'staff'} active="overview" title="Practical assessment" returnTo="/teacher"><section className="portal-content">
   <span className="auth-kicker">TEACHER REVIEW WORKSPACE</span><h1>Submitted lab notebooks</h1><p className="muted">Review scientific reasoning, method quality, observations and conclusions. Only assigned courses are included.</p>
-  {params.reviewed&&<p className="form-success">Review saved.</p>}{params.assignment_created&&<p className="form-success">Practical assignment published for enrolled students.</p>}{params.error==='assignment'&&<p className="form-error">Assignment could not be published. Check the course, experiment, title, instructions and due date.</p>}{params.error&&params.error!=='assignment'&&<p className="form-error">Review could not be saved. Check feedback, score and assignment access.</p>}
+  {params.reviewed&&<p className="form-success">Review saved.</p>}{params.assignment_created&&<p className="form-success">Practical assignment published for enrolled students.</p>}{params.error==='assignment'&&<p className="form-error">Assignment could not be published. Check the course, experiment, title, instructions and due date.</p>}{params.error==='rubric'&&<p className="form-error">For a graded review, enter all six rubric scores within their weighted maximums. The database calculates the total out of 100.</p>}{params.error&&params.error!=='assignment'&&params.error!=='rubric'&&<p className="form-error">Review could not be saved. Check feedback and assignment access.</p>}
   <h2>Create a practical assignment</h2>
   {!labOptions.length?<p className="muted">No published experiments are mapped to your assigned courses yet.</p>:<form action={createLabPracticalAssignment} className="auth-form portal-card">
    <label>Course and experiment<select name="lab_choice" required defaultValue=""><option value="" disabled>Select a course experiment</option>{labOptions.map((o:any)=><option key={o.courseId+o.labId} value={o.courseId+':'+o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
@@ -60,7 +60,7 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
     <h3>{notebook?.title??'Practical notebook'}</h3>
     <p className="muted">{studentName.get(review.student_id)??'Enrolled student'} · {courseName.get(notebook?.course_id)??'Assigned course'} · {review.reviewer_display_name} · {new Date(review.reviewed_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
     <p>{review.feedback}</p>
-    {review.score!==null&&<p><b>Score:</b> {review.score}/100</p>}
+    {review.score!==null&&<><p><b>Total:</b> {review.score}/100</p><ul>{Object.entries(review.rubric_scores??{}).map(([key,value])=><li key={key}>{({hypothesis:'Hypothesis',method:'Method',observations_measurements:'Observations and measurements',analysis_interpretation:'Analysis and interpretation',conclusion_reflection:'Conclusion and reflection',safety_integrity:'Lab safety and integrity'} as Record<string,string>)[key]??key}: {String(value)}</li>)}</ul></>}
    </article>;
   })}</div>}
   {!entries?.length?<article className="portal-card"><p className="muted">No practical notebooks are waiting for review.</p></article>:<div className="portal-grid">{entries.map(entry=><article className="portal-card" key={entry.id}>
@@ -72,7 +72,15 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
    <form action={reviewLabNotebook} className="auth-form"><input type="hidden" name="entry_id" value={entry.id}/>
     <label>Feedback for student<textarea name="teacher_feedback" required maxLength={4000} rows={4}/></label>
     <label>Decision<select name="decision" defaultValue="reviewed"><option value="reviewed">Reviewed and graded</option><option value="returned">Return for correction</option></select></label>
-    <label>Score out of 100 (required when graded)<input name="score" type="number" min="0" max="100" step="0.5"/></label><button className="auth-submit">Save review</button>
+    <h3>Weighted practical rubric</h3>
+    <p className="muted">For a graded review, enter each criterion. The database validates the ranges and calculates the total out of 100. Leave the rubric blank when returning work for correction.</p>
+    <label>Hypothesis and scientific question · /15<input name="rubric_hypothesis" type="number" min="0" max="15" step="0.5"/></label>
+    <label>Method and control of variables · /20<input name="rubric_method" type="number" min="0" max="20" step="0.5"/></label>
+    <label>Observations and measurements · /25<input name="rubric_observations_measurements" type="number" min="0" max="25" step="0.5"/></label>
+    <label>Analysis and interpretation · /20<input name="rubric_analysis_interpretation" type="number" min="0" max="20" step="0.5"/></label>
+    <label>Conclusion and reflection · /15<input name="rubric_conclusion_reflection" type="number" min="0" max="15" step="0.5"/></label>
+    <label>Lab safety and integrity · /5<input name="rubric_safety_integrity" type="number" min="0" max="5" step="0.5"/></label>
+    <button className="auth-submit">Save review</button>
    </form>
   </article>)}</div>}
  </section></PortalLayout>;

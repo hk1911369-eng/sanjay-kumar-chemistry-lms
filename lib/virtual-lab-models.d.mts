@@ -24,3 +24,43 @@ export type ShortCircuitTeachingResult = {
   severity: 'high' | 'moderate' | 'lower'; assumptions: string;
 };
 export function calculateIllustrativeShortCircuit(input: ShortCircuitTeachingInput): ShortCircuitTeachingResult;
+
+export type ChemicalKineticsInput = {
+  initialConcentrationMolar: number;
+  reactionOrder: 0 | 1 | 2;
+  referenceRateConstant: number;
+  activationEnergyKJMol: number;
+  temperatureKelvin: number;
+  catalystActivationEnergyReductionKJMol?: number;
+  sampleCount?: number;
+};
+export type ChemicalKineticsPoint = {
+  timeMinutes: number;
+  uncatalysedConcentrationMolar: number;
+  catalysedConcentrationMolar: number;
+  uncatalysedRate: number;
+  catalysedRate: number;
+};
+export type ChemicalKineticsResult = {
+  initialConcentrationMolar: number;
+  reactionOrder: 0 | 1 | 2;
+  referenceRateConstant: number;
+  rateConstant: number;
+  uncatalysedRateConstant: number;
+  catalysedRateConstant: number;
+  effectiveActivationEnergyKJMol: number;
+  activationEnergyKJMol: number;
+  temperatureKelvin: number;
+  arrheniusMultiplier: number;
+  catalystRateFactor: number;
+  initialRate: number;
+  rateUnits: string;
+  halfLifeMinutes: number;
+  uncatalysedHalfLifeMinutes: number;
+  catalysedHalfLifeMinutes: number;
+  concentrationDoublingFactor: number;
+  timeWindowMinutes: number;
+  curve: ChemicalKineticsPoint[];
+  model: string;
+};
+export function calculateChemicalKinetics(input: ChemicalKineticsInput): ChemicalKineticsResult;

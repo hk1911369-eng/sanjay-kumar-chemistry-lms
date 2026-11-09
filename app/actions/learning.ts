@@ -88,35 +88,16 @@ export async function markLessonComplete(formData: FormData) {
   const lessonId = String(formData.get('lesson_id') ?? '');
   const courseId = String(formData.get('course_id') ?? '');
   if (!lessonId || !courseId) redirect('/student');
-  const { data: lesson } = await supabase.from('lessons').select('id').eq('id', lessonId).eq('course_id', courseId).eq('is_published', true).maybeSingle();
-  if (!lesson) redirect('/student?learning_error=unavailable');
-  const { data: existingProgress, error: progressReadError } = await supabase.from('lesson_progress')
-    .select('id,completed').eq('student_id', user.id).eq('lesson_id', lessonId).maybeSingle();
-  if (progressReadError) redirect(`/learn/${courseId}?progress_error=1`);
 
-  const completedAt = new Date().toISOString();
-  const progressResult = existingProgress
-    ? existingProgress.completed
-      ? { error: null }
-      : await supabase.from('lesson_progress').update({
-          completed: true, completed_at: completedAt, updated_at: completedAt,
-        }).eq('id', existingProgress.id)
-    : await supabase.from('lesson_progress').insert({
-        student_id: user.id, lesson_id: lessonId, completed: true,
-        completed_at: completedAt, updated_at: completedAt,
-      });
-
-  if (progressResult.error) redirect(`/learn/${courseId}?progress_error=1`);
-
-  // A unique database index makes this event idempotent: repeat clicks cannot
-  // inflate lesson-completion goals or schedule duplicate revision tasks.
-  const { error: eventError } = await supabase.from('learning_events').insert({
-    student_id: user.id, course_id: courseId, lesson_id: lessonId,
-    event_type: 'lesson_completed', occurred_at: completedAt,
+  // The database RPC validates ownership, publication and paid access, then
+  // commits progress + the learning event in one transaction.
+  const { data: saved, error } = await supabase.rpc('record_lesson_completion', {
+    p_course_id: courseId,
+    p_lesson_id: lessonId,
   });
-  if (eventError && eventError.code !== '23505') {
-    redirect(`/learn/${courseId}?progress_error=1`);
-  }
+  if (error || saved !== true) redirect(`/learn/${courseId}?progress_error=1`);
+  revalidatePath('/student');
+  revalidatePath(`/learn/${courseId}`);
   redirect(`/learn/${courseId}?progress_saved=1`);
 }
 

@@ -54,7 +54,8 @@ export type ChemicalKineticsResult = {
   arrheniusMultiplier: number;
   catalystRateFactor: number;
   initialRate: number;
-  rateUnits: string;
+  rateConstantUnits: string;
+  initialRateUnits: string;
   halfLifeMinutes: number;
   uncatalysedHalfLifeMinutes: number;
   catalysedHalfLifeMinutes: number;

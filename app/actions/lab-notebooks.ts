@@ -53,9 +53,27 @@ export async function reviewLabNotebook(formData: FormData) {
   const {data:profile}=await db.from('profiles').select('role').eq('id',user.id).single();
   if(!['admin','teacher','staff'].includes(profile?.role??'')) redirect('/portal');
   const id=String(formData.get('entry_id')??''), decision=String(formData.get('decision')??''), feedback=String(formData.get('teacher_feedback')??'').trim();
-  const scoreText=String(formData.get('score')??'').trim(), score=scoreText===''?null:Number(scoreText);
-  if(!uuid.test(id)||!['returned','reviewed'].includes(decision)||!feedback||feedback.length>4000||(decision==='reviewed'&&(score===null||!Number.isFinite(score)||score<0||score>100))||(decision==='returned'&&score!==null)) redirect('/teacher/lab-notebooks?error=invalid');
-  const {data,error}=await db.from('lab_notebook_entries').update({status:decision,teacher_feedback:feedback,score,reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',id).eq('status','submitted').select('id').maybeSingle();
+  const criteria=[
+    {key:'hypothesis',field:'rubric_hypothesis',max:15},
+    {key:'method',field:'rubric_method',max:20},
+    {key:'observations_measurements',field:'rubric_observations_measurements',max:25},
+    {key:'analysis_interpretation',field:'rubric_analysis_interpretation',max:20},
+    {key:'conclusion_reflection',field:'rubric_conclusion_reflection',max:15},
+    {key:'safety_integrity',field:'rubric_safety_integrity',max:5},
+  ];
+  const rubricScores:Record<string,number>={};
+  let score:number|null=null;
+  if(decision==='reviewed'){
+    for(const criterion of criteria){
+      const raw=String(formData.get(criterion.field)??'').trim();
+      const value=raw===''?Number.NaN:Number(raw);
+      if(!Number.isFinite(value)||value<0||value>criterion.max||Math.round(value*100)!==value*100) redirect('/teacher/lab-notebooks?error=rubric');
+      rubricScores[criterion.key]=value;
+    }
+    score=Math.round(Object.values(rubricScores).reduce((sum,value)=>sum+value,0)*100)/100;
+  }
+  if(!uuid.test(id)||!['returned','reviewed'].includes(decision)||!feedback||feedback.length>4000) redirect('/teacher/lab-notebooks?error=invalid');
+  const {data,error}=await db.from('lab_notebook_entries').update({status:decision,teacher_feedback:feedback,score,rubric_scores:rubricScores,reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',id).eq('status','submitted').select('id').maybeSingle();
   if(error||!data) redirect('/teacher/lab-notebooks?error=review');
   revalidatePath('/teacher/lab-notebooks'); revalidatePath('/student/lab-notebook'); revalidatePath('/student');
   redirect('/teacher/lab-notebooks?reviewed=1');

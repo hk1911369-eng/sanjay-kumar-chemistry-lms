@@ -34,7 +34,7 @@ test('admin and server catalogue configuration both recognise the kinetics templ
     readFile(new URL('../supabase/migrations/20261110253900_allow_chemical_kinetics_template.sql', import.meta.url), 'utf8'),
     readFile(new URL('../supabase/migrations/20261110254000_add_chemistry_reaction_kinetics_lab.sql', import.meta.url), 'utf8'),
   ]);
-  assert.match(admin, /value="kinetics">Chemistry · Reaction kinetics/);
+  assert.equal((admin.match(/value="kinetics">Chemistry · Reaction kinetics/g) ?? []).length, 2);
   assert.match(action, /'chemistry','kinetics','biology'/);
   assert.match(typeMigration, /'kinetics'/);
   assert.match(catalogueMigration, /chemistry-reaction-kinetics/);

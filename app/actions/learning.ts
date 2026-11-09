@@ -91,14 +91,34 @@ export async function markLessonComplete(formData: FormData) {
   if (!lessonId || !courseId) redirect('/student');
   const { data: lesson } = await supabase.from('lessons').select('id').eq('id', lessonId).eq('course_id', courseId).eq('is_published', true).maybeSingle();
   if (!lesson) redirect('/student?learning_error=unavailable');
-  const { error } = await supabase.from('lesson_progress').upsert({ student_id: user.id, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'student_id,lesson_id' });
-  if (!error) {
-    await supabase.from('learning_events').insert({
-      student_id: user.id, course_id: courseId, lesson_id: lessonId,
-      event_type: 'lesson_completed', occurred_at: new Date().toISOString(),
-    });
+  const { data: existingProgress, error: progressReadError } = await supabase.from('lesson_progress')
+    .select('id,completed').eq('student_id', user.id).eq('lesson_id', lessonId).maybeSingle();
+  if (progressReadError) redirect(`/learn/${courseId}?progress_error=1`);
+
+  const completedAt = new Date().toISOString();
+  const progressResult = existingProgress
+    ? existingProgress.completed
+      ? { error: null }
+      : await supabase.from('lesson_progress').update({
+          completed: true, completed_at: completedAt, updated_at: completedAt,
+        }).eq('id', existingProgress.id)
+    : await supabase.from('lesson_progress').insert({
+        student_id: user.id, lesson_id: lessonId, completed: true,
+        completed_at: completedAt, updated_at: completedAt,
+      });
+
+  if (progressResult.error) redirect(`/learn/${courseId}?progress_error=1`);
+
+  // A unique database index makes this event idempotent: repeat clicks cannot
+  // inflate lesson-completion goals or schedule duplicate revision tasks.
+  const { error: eventError } = await supabase.from('learning_events').insert({
+    student_id: user.id, course_id: courseId, lesson_id: lessonId,
+    event_type: 'lesson_completed', occurred_at: completedAt,
+  });
+  if (eventError && eventError.code !== '23505') {
+    redirect(`/learn/${courseId}?progress_error=1`);
   }
-  redirect(error ? `/learn/${courseId}?progress_error=1` : `/learn/${courseId}?progress_saved=1`);
+  redirect(`/learn/${courseId}?progress_saved=1`);
 }
 
 export async function assignTeacher(formData: FormData) {

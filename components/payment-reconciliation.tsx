@@ -46,7 +46,7 @@ export function PaymentReconciliation() {
     setPreview(null);
     startTransition(() => {
       void previewPaymentStatement(formData).then(result => {
-        if (!('rows' in result)) {
+        if (!Array.isArray(result.rows) || !Array.isArray(result.matches) || !Array.isArray(result.flagged)) {
           setMessage(result.error === 'invalid_file'
             ? 'Choose a CSV file under 1 MB and select a wallet provider.'
             : (result.error ?? 'Unable to process the statement.'));

@@ -20,11 +20,14 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
   db.from('lab_notebook_entries').select('id,course_id,lab_id,assignment_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,status,teacher_feedback,score,updated_at').eq('student_id',user.id).order('updated_at',{ascending:false}).limit(30)
  ]);
  const subjectIds=[...new Set((courseSubjects??[]).map(x=>x.subject_id))];
- const {data:labs}=subjectIds.length?await db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):{data:[] as any[]};
- const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,title,instructions,due_at,points').in('course_id',courseIds).eq('status','published').order('due_at',{ascending:true,nullsFirst:false}).limit(100):{data:[] as any[]};
+ const [{data:labs},{data:availableConcepts}]=await Promise.all([
+  subjectIds.length?db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):Promise.resolve({data:[] as any[]}),
+  subjectIds.length?db.from('learning_concepts').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):Promise.resolve({data:[] as any[]})
+ ]);
+ const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,concept_id,title,instructions,due_at,points').in('course_id',courseIds).eq('status','published').order('due_at',{ascending:true,nullsFirst:false}).limit(100):{data:[] as any[]};
  const assignmentEntry=new Map((notebooks??[]).filter(n=>n.assignment_id).map(n=>[n.assignment_id,n]));
  const labOptions=(courses??[]).flatMap(course=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(labs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title}))));
- const courseName=new Map((courses??[]).map(c=>[c.id,c.title])), labName=new Map((labs??[]).map(l=>[l.id,l.title]));
+ const courseName=new Map((courses??[]).map(c=>[c.id,c.title])), labName=new Map((labs??[]).map(l=>[l.id,l.title])), conceptName=new Map((availableConcepts??[]).map((concept:any)=>[concept.id,concept.title]));
  const notebookIds=(notebooks??[]).map(n=>n.id);
  const {data:evidenceRows}=notebookIds.length?await db.from('lab_notebook_evidence').select('id,notebook_id,original_filename,content_type,size_bytes,created_at').in('notebook_id',notebookIds).order('created_at',{ascending:true}):{data:[] as any[]};
  const evidenceByNotebook=new Map<string,any[]>();
@@ -54,7 +57,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
    return <article className="portal-card" key={task.id}>
     <span className="auth-kicker">ASSIGNED PRACTICAL</span><h3>{task.title}</h3>
     <p>{task.instructions}</p>
-    <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
+    <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'} · {task.points} marks{task.concept_id?' · Concept: '+(conceptName.get(task.concept_id)??'Linked learning concept'):''}{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
     {existing?<p className="form-success">Notebook already started — current status: {existing.status}. Find it in Previous practical records below.</p>:<form action={saveLabNotebook} className="auth-form">
      <input type="hidden" name="assignment_id" value={task.id}/><input type="hidden" name="course_id" value={task.course_id}/><input type="hidden" name="lab_id" value={task.lab_id}/>
      <label>Notebook title<input name="title" required minLength={2} maxLength={180} defaultValue={task.title}/></label>

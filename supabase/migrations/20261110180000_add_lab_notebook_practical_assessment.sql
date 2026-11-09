@@ -219,6 +219,8 @@ begin
        or new.status not in ('returned','reviewed')
        or new.reviewed_by is distinct from auth.uid()
        or new.reviewed_at is null
+       or new.reviewed_at < now() - interval '30 seconds'
+       or new.reviewed_at > now() + interval '30 seconds'
        or new.teacher_feedback is null
        or length(new.teacher_feedback) > 4000
        or (new.status = 'returned' and new.score is not null)

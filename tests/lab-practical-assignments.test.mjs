@@ -22,3 +22,12 @@ test('practical notebook assignment links cannot be moved or mismatched', async 
   assert.match(migration, /a\.status = 'published'/i);
   assert.match(migration, /set search_path = pg_catalog, public, pg_temp/i);
 });
+
+test('student practical delivery requires a currently published experiment and one notebook per assignment', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110230000_tighten_practical_assignment_delivery.sql', import.meta.url), 'utf8');
+  assert.match(migration, /vl\.is_published is true/i);
+  assert.match(migration, /e\.admission_fee_paid is true/i);
+  assert.match(migration, /e\.paid_through >=/i);
+  assert.match(migration, /create unique index if not exists lab_notebook_one_per_student_assignment_idx/i);
+  assert.match(migration, /on public\.lab_notebook_entries\(student_id, assignment_id\)/i);
+});

@@ -22,7 +22,7 @@ export async function saveLabNotebook(formData: FormData) {
   if (!user) redirect('/login');
   const {data:profile} = await db.from('profiles').select('role').eq('id',user.id).single();
   if (profile?.role !== 'student') redirect('/portal');
-  const entryId=String(formData.get('entry_id')??''), courseId=String(formData.get('course_id')??''), labId=String(formData.get('lab_id')??'');
+  const entryId=String(formData.get('entry_id')??''), choice=String(formData.get('lab_choice')??''), parts=choice?choice.split(':'):[], courseId=parts.length===2?parts[0]:String(formData.get('course_id')??''), labId=parts.length===2?parts[1]:String(formData.get('lab_id')??'');
   const title=String(formData.get('title')??'').trim(), hypothesis=String(formData.get('hypothesis')??'').trim();
   const procedureNotes=String(formData.get('procedure_notes')??'').trim(), observations=String(formData.get('observations')??'').trim();
   const conclusion=String(formData.get('conclusion')??'').trim(), intent=String(formData.get('intent')??'draft');

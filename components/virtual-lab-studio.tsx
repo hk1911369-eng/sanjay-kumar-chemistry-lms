@@ -109,7 +109,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
 
       {selected.simulation_type === 'pendulum' && <DoublePendulumLab compact/>}
       {selected.simulation_type === 'projectile' && <ProjectileMotionLab/>}
-      {selected.simulation_type === 'microscope' && <VirtualMicroscopeLab onInteraction={() => setHasInteracted(true)}/ >}
+      {selected.simulation_type === 'microscope' && <VirtualMicroscopeLab onInteraction={() => setHasInteracted(true)}/>}
 
       {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>

@@ -16,8 +16,16 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const {data:availableLabs}=subjectIds.length?await db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):{data:[] as any[]};
  const labOptions=courses.flatMap((course:any)=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(availableLabs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title}))));
  const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,title,instructions,due_at,points,status,created_at').in('course_id',courseIds).order('created_at',{ascending:false}).limit(50):{data:[] as any[]};
- const {data:entries}=courseIds.length?await db.from('lab_notebook_entries').select('id,course_id,lab_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):{data:[] as any[]};
- const studentIds=[...new Set((entries??[]).map(e=>e.student_id))], labIds=[...new Set((entries??[]).map(e=>e.lab_id))];
+ const [{data:entries},{data:historyNotebooks}]=await Promise.all([
+  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,lab_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):Promise.resolve({data:[] as any[]}),
+  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,student_id,title,updated_at').in('course_id',courseIds).order('updated_at',{ascending:false}).limit(200):Promise.resolve({data:[] as any[]})
+ ]);
+ const historyNotebookIds=(historyNotebooks??[]).map(n=>n.id);
+ const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
+ const historyNotebookById=new Map((historyNotebooks??[]).map(n=>[n.id,n]));
+ const historyByNotebook=new Map<string,any[]>();
+ for(const item of reviewHistory??[]){const list=historyByNotebook.get(item.notebook_id)??[];list.push(item);historyByNotebook.set(item.notebook_id,list);}
+ const studentIds=[...new Set([...(entries??[]).map(e=>e.student_id),...(historyNotebooks??[]).map(n=>n.student_id)])], labIds=[...new Set((entries??[]).map(e=>e.lab_id))];
  const entryIds=(entries??[]).map(e=>e.id);
  const [{data:students},{data:labs},{data:evidenceRows}]=await Promise.all([
   studentIds.length?db.from('profiles').select('id,full_name,student_code').in('id',studentIds):Promise.resolve({data:[] as any[]}),
@@ -44,6 +52,17 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
    <span className="auth-kicker">{String(task.status).toUpperCase()}</span><h3>{task.title}</h3><p>{task.instructions}</p>
    <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
   </article>)}</div>}
+  <h2>Recent review history</h2>
+  {!reviewHistory?.length?<p className="muted">Completed practical reviews will appear here.</p>:<div className="portal-grid">{reviewHistory.map((review:any)=>{
+   const notebook=historyNotebookById.get(review.notebook_id);
+   return <article className="portal-card" key={review.id}>
+    <span className="auth-kicker">REVIEW ROUND {review.review_round} · {review.decision==='reviewed'?'GRADED':'RETURNED'}</span>
+    <h3>{notebook?.title??'Practical notebook'}</h3>
+    <p className="muted">{studentName.get(review.student_id)??'Enrolled student'} · {courseName.get(notebook?.course_id)??'Assigned course'} · {review.reviewer_display_name} · {new Date(review.reviewed_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
+    <p>{review.feedback}</p>
+    {review.score!==null&&<p><b>Score:</b> {review.score}/100</p>}
+   </article>;
+  })}</div>}
   {!entries?.length?<article className="portal-card"><p className="muted">No practical notebooks are waiting for review.</p></article>:<div className="portal-grid">{entries.map(entry=><article className="portal-card" key={entry.id}>
    <span className="auth-kicker">AWAITING REVIEW</span><h2>{entry.title}</h2><p className="muted">{studentName.get(entry.student_id)??'Enrolled student'} · {courseName.get(entry.course_id)??'Assigned course'} · {labName.get(entry.lab_id)??'Practical'}</p>
    <h3>Hypothesis</h3><p>{entry.hypothesis||'Not provided'}</p><h3>Method</h3><p>{entry.procedure_notes||'Not provided'}</p><h3>Observations</h3><p>{entry.observations}</p>

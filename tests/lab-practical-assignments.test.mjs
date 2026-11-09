@@ -31,3 +31,21 @@ test('student practical delivery requires a currently published experiment and o
   assert.match(migration, /create unique index if not exists lab_notebook_one_per_student_assignment_idx/i);
   assert.match(migration, /on public\.lab_notebook_entries\(student_id, assignment_id\)/i);
 });
+
+
+test('archiving an assignment blocks new notebook links but preserves existing notebook edits and submissions', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110249000_preserve_existing_practical_work_after_archival.sql', import.meta.url), 'utf8');
+  assert.match(migration, /if tg_op = 'UPDATE' then[\s\S]*new\.assignment_id is distinct from old\.assignment_id[\s\S]*return new/i);
+  assert.match(migration, /if new\.assignment_id is not null and not exists/i);
+  assert.match(migration, /a\.status = 'published'/i);
+  assert.match(migration, /revoke all on function public\.guard_lab_notebook_assignment_link\(\) from public, anon, authenticated/i);
+});
+
+test('teacher review queue identifies late work from server-stored due and submission timestamps without auto-deducting marks', async () => {
+  const page = await readFile(new URL('../app/teacher/lab-notebooks/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /assignment_dueRows|assignmentDueRows/);
+  assert.match(page, /new Date\(entry\.submitted_at\)\.getTime\(\)>new Date\(due\)\.getTime\(\)/);
+  assert.match(page, /Late submission/);
+  assert.match(page, /No automatic mark deduction is applied/);
+  assert.match(page, /review\.submitted_at/);
+});

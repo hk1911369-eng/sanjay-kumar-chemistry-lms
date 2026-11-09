@@ -106,6 +106,8 @@ begin
 end;
 $function$;
 
+revoke all on function public.guard_manual_payment_approval() from public, anon, authenticated;
+
 drop trigger if exists guard_manual_payment_approval on public.manual_payment_submissions;
 create trigger guard_manual_payment_approval
 before update of status on public.manual_payment_submissions

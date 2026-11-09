@@ -624,3 +624,31 @@ input,select,textarea,button{max-width:100%}
 .practice-publish-toggle b{color:var(--text);font-size:12px}
 .practice-publish-toggle small{font-size:11px;font-weight:500;line-height:1.5}
 @media(max-width:620px){.practice-authoring-grid{grid-template-columns:1fr}}
+
+
+.practice-analytics-page{display:grid;gap:18px}
+.practice-analytics-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.practice-analytics-kpis article{display:grid;gap:6px;padding:18px}
+.practice-analytics-kpis article>span{font-size:11px;color:var(--muted);font-weight:750}
+.practice-analytics-kpis article>strong{font-size:30px;letter-spacing:-1px}
+.practice-analytics-kpis article>small{font-size:11px;color:var(--muted)}
+.practice-analytics-section{padding:clamp(17px,3vw,25px)}
+.practice-analytics-section-heading{display:flex;justify-content:space-between;gap:15px;margin-bottom:16px}
+.practice-analytics-section-heading h2{margin:5px 0;font-size:20px}
+.practice-analytics-section-heading p{margin:4px 0;font-size:12px}
+.practice-subject-table{display:grid;gap:14px}
+.practice-subject-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(80px,1.5fr) 48px;gap:14px;align-items:center}
+.practice-subject-row>div:first-child{display:grid;gap:3px}
+.practice-subject-row strong{font-size:13px}
+.practice-subject-row small{font-size:10px;color:var(--muted)}
+.practice-subject-row>b{text-align:right;font-size:12px}
+.practice-accuracy-track{height:8px;border-radius:99px;background:var(--surface-alt,#edf1f6);overflow:hidden}
+.practice-accuracy-track span{display:block;height:100%;border-radius:inherit;background:var(--accent,#2563eb)}
+.practice-weak-question-list{display:grid;gap:12px}
+.practice-weak-question{padding:14px;border:1px solid var(--line);border-radius:12px}
+.practice-weak-question-meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px}
+.practice-weak-question-meta b{color:#b45309}
+.practice-weak-question h3{margin:10px 0 7px;font-size:14px;line-height:1.55}
+.practice-weak-question p,.practice-weak-question small{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.practice-weak-question small{display:block;margin-top:4px}
+@media(max-width:650px){.practice-analytics-kpis{grid-template-columns:1fr}.practice-subject-row{grid-template-columns:minmax(100px,1fr) 1fr 42px;gap:8px}.practice-subject-row small{font-size:9px}}

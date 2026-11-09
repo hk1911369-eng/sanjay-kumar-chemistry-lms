@@ -39,9 +39,10 @@ export default async function VirtualLabsPage({ searchParams }: { searchParams: 
     title: course.title,
     subjectIds: (mappings ?? []).filter(mapping => mapping.course_id === course.id).map(mapping => mapping.subject_id),
   }));
+  const enrolledSubjectIds = new Set((mappings ?? []).map(mapping => mapping.subject_id));
   const labCatalogue = (catalogue ?? []).flatMap(lab => {
     const subject = lab.academic_subjects as unknown as { name: string } | null;
-    return subject ? [{ ...lab, lab_key: lab.lab_key, subject_name: subject.name }] : [];
+    return subject && enrolledSubjectIds.has(lab.subject_id) ? [{ ...lab, lab_key: lab.lab_key, subject_name: subject.name }] : [];
   });
 
   return <PortalLayout role="student" active="labs" title="Virtual labs" returnTo="/student">

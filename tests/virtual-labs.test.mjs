@@ -71,3 +71,15 @@ test('published simulations are visible only to paid students enrolled in the ma
   assert.match(migration, /e\.paid_through >=/);
   assert.match(migration, /c\.archived_at IS NULL/);
 });
+
+test('higher mathematics has an interactive quadratic simulation template', async () => {
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261110120000_add_quadratic_virtual_lab_template.sql', import.meta.url), 'utf8');
+  assert.match(component, /simulation_type === 'quadratic'/);
+  assert.match(component, /discriminant/);
+  assert.match(component, /vertexX/);
+  assert.match(admin, /value="quadratic"/);
+  assert.match(migration, /higher-maths-quadratic/);
+  assert.match(migration, /Higher Mathematics/);
+});

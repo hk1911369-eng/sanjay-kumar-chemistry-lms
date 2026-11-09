@@ -683,3 +683,8 @@ input,select,textarea,button{max-width:100%}
 .virtual-lab-safety-feedback.is-success{background:#f1faf3;border-color:#b8dec1;color:#185b30}
 @media(max-width:560px){.virtual-lab-safety-heading{display:grid}.virtual-lab-safety-actions{grid-template-columns:1fr}.virtual-lab-safety-actions button{width:100%;min-height:52px}}
 @media(prefers-reduced-motion:reduce){.virtual-lab-safety *{scroll-behavior:auto;transition:none!important}}
+
+.virtual-lab-consequence-chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;list-style:none;padding:0;margin:.9rem 0 1.1rem;counter-reset:none}
+.virtual-lab-consequence-chain li{display:flex;align-items:flex-start;gap:.55rem;min-width:0;padding:.7rem;border:1px solid #e7b6b0;border-radius:9px;background:rgba(255,255,255,.72);font-size:.88rem;line-height:1.45;overflow-wrap:anywhere}
+.virtual-lab-consequence-chain li span{display:grid;place-items:center;flex:0 0 1.45rem;height:1.45rem;border-radius:50%;background:#8f2119;color:#fff;font-size:.75rem;font-weight:800}
+@media(max-width:650px){.virtual-lab-consequence-chain{grid-template-columns:1fr}.virtual-lab-consequence-chain li{min-height:44px}}

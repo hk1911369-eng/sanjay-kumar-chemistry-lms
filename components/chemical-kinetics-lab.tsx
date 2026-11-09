@@ -24,7 +24,7 @@ export function ChemicalKineticsLab({ onInteraction }: Props) {
   const [reactionOrder, setReactionOrder] = useState<ReactionOrder>(1);
   const [referenceRateConstant, setReferenceRateConstant] = useState(0.08);
   const [activationEnergy, setActivationEnergy] = useState(55);
-  const [temperature, setTemperature] = useState(298);
+  const [temperature, setTemperature] = useState(298.15);
   const [catalystReduction, setCatalystReduction] = useState(6);
 
   const effectiveCatalystReduction = Math.min(catalystReduction, activationEnergy, 20);
@@ -120,8 +120,8 @@ export function ChemicalKineticsLab({ onInteraction }: Props) {
       </label>
       <label>
         Temperature
-        <b>{temperature} K · {(temperature - 273.15).toFixed(1)} °C</b>
-        <input type="range" min="273.15" max="373.15" step="1" value={temperature}
+        <b>{temperature.toFixed(1)} K · {(temperature - 273.15).toFixed(1)} °C</b>
+        <input type="range" min="273.15" max="373.15" step="0.5" value={temperature}
           onChange={event => changed(() => setTemperature(Number(event.target.value)))}/>
       </label>
       <label>

@@ -12,6 +12,7 @@ type SafetyScenario = {
   riskLevel: 'High' | 'Moderate';
   unsafeChoice: string;
   consequence: string;
+  consequenceSteps: string[];
   safeChoice: string;
   safeFeedback: string;
 };
@@ -22,6 +23,7 @@ const SAFETY_SCENARIOS: Partial<Record<SimulationType, SafetyScenario>> = {
     riskLevel: 'High',
     unsafeChoice: 'Pour water into concentrated acid.',
     consequence: 'The rapid release of heat can make the mixture boil or splash corrosive liquid. In a real laboratory this can cause serious eye and skin injuries.',
+    consequenceSteps: ['Rapid heat release', 'Boiling or sudden splashing', 'Possible corrosive eye or skin injury'],
     safeChoice: 'Follow the institution’s approved acid-dilution procedure, use suitable PPE and supervision, and add acid to water—not water to acid.',
     safeFeedback: 'Correct safety principle. Follow your laboratory’s written procedure and teacher supervision; this simulation is not a substitute for practical training.',
   },
@@ -30,6 +32,7 @@ const SAFETY_SCENARIOS: Partial<Record<SimulationType, SafetyScenario>> = {
     riskLevel: 'High',
     unsafeChoice: 'Connect the supply terminals directly with a wire.',
     consequence: 'A short circuit can cause a very large current, rapid heating, damaged components, burns or fire. The result depends on the source and its protection.',
+    consequenceSteps: ['Current rises sharply', 'Conductors or components heat up', 'Equipment damage, burns or fire may result'],
     safeChoice: 'Switch off before changing connections, use a circuit designed for the experiment, and follow the teacher’s current-limit and equipment instructions.',
     safeFeedback: 'Correct. De-energise before rewiring and use only the approved circuit and protective equipment.',
   },
@@ -38,6 +41,7 @@ const SAFETY_SCENARIOS: Partial<Record<SimulationType, SafetyScenario>> = {
     riskLevel: 'Moderate',
     unsafeChoice: 'Reuse an unclean dropper or slide between specimens.',
     consequence: 'Material can transfer between samples, contaminating observations and potentially exposing people to biological material. Results may become unreliable.',
+    consequenceSteps: ['Material transfers between samples', 'The next specimen becomes contaminated', 'Observations may be unreliable; exposure risk may increase'],
     safeChoice: 'Use clean or single-use tools as directed, label specimens, wash hands, and dispose of materials using the laboratory’s approved process.',
     safeFeedback: 'Correct. Clean technique, labelling, hand hygiene and approved disposal protect both the sample and the people handling it.',
   },
@@ -158,6 +162,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         {safetyResult === 'unsafe' && <div className="virtual-lab-safety-feedback is-warning" role="status" aria-live="polite">
           <b>Simulated mistake: {SAFETY_SCENARIOS[selected.simulation_type]!.unsafeChoice}</b>
           <p>{SAFETY_SCENARIOS[selected.simulation_type]!.consequence}</p>
+          <ol className="virtual-lab-consequence-chain">{SAFETY_SCENARIOS[selected.simulation_type]!.consequenceSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol>
           <b>Safer approach</b><p>{SAFETY_SCENARIOS[selected.simulation_type]!.safeChoice}</p>
         </div>}
         {safetyResult === 'safe' && <div className="virtual-lab-safety-feedback is-success" role="status" aria-live="polite">

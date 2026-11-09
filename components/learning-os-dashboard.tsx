@@ -12,7 +12,7 @@ type RevisionTask = {
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null };
 type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };
 type Mastery = {
-  concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
+  concept_id: string; mastery_score: number; confidence: number; evidence_count: number; next_review_at?: string | null;
   learning_concepts?: { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
 };
 type UpcomingExam = {
@@ -58,8 +58,8 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
           {action.kind === 'revision' ? <form action={completeRevisionTask}>
             <input type="hidden" name="task_id" value={action.sourceId}/>
             <button type="submit">Complete this revision</button>
-          </form> : action.kind === 'lesson' && action.courseId
-            ? <p><Link href={`/learn/${action.courseId}#lesson-${action.sourceId}`}>Open recommended lesson →</Link></p>
+          </form> : (action.kind === 'lesson' || action.kind === 'review') && action.courseId
+            ? <p><Link href={`/learn/${action.courseId}#lesson-${action.sourceId}`}>{action.kind === 'review' ? 'Open spaced review →' : 'Open recommended lesson →'}</Link></p>
             : action.kind === 'mistake'
               ? <p><Link href={`#mistake-${action.sourceId}`}>Review saved mistake →</Link></p>
               : action.kind === 'assignment'

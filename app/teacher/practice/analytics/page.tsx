@@ -73,6 +73,7 @@ export default async function PracticeAnalyticsPage() {
       ...question,
       subject: subjectNames.get(question.subject_id) ?? 'Subject',
       attempts: stats.total,
+      correctCount: stats.correct,
       accuracy: stats.total ? stats.correct / stats.total * 100 : null,
       options: Array.isArray(question.options) ? question.options.filter((option): option is string => typeof option === 'string') : [],
       mostSelectedWrongOption: [...stats.options.entries()]
@@ -90,7 +91,7 @@ export default async function PracticeAnalyticsPage() {
     .map(subject => {
       const rows = activeQuestions.filter(question => question.subject === subject);
       const attemptsCount = rows.reduce((sum, question) => sum + question.attempts, 0);
-      const correctCount = rows.reduce((sum, question) => sum + Math.round((question.accuracy ?? 0) * question.attempts / 100), 0);
+      const correctCount = rows.reduce((sum, question) => sum + question.correctCount, 0);
       return { subject, questions: rows.length, attempts: attemptsCount, accuracy: attemptsCount ? Math.round(correctCount / attemptsCount * 100) : 0 };
     }).sort((a, b) => a.accuracy - b.accuracy);
 

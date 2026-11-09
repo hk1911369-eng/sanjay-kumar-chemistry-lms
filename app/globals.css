@@ -693,3 +693,10 @@ input,select,textarea,button{max-width:100%}
 .virtual-lab-experiment .muted{line-height:1.55}
 .virtual-lab-results strong{font-variant-numeric:tabular-nums}
 .virtual-lab-model-note{padding:.75rem;border:1px dashed var(--line);border-radius:9px;font-size:.82rem;line-height:1.55}
+
+.virtual-lab-safety-meter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:.9rem 0;padding:.9rem;border:1px solid #efc1bb;border-radius:10px;background:rgba(255,255,255,.75);color:#70251f}
+.virtual-lab-safety-meter>b,.virtual-lab-safety-meter>small{grid-column:1/-1}
+.virtual-lab-safety-meter>div{display:grid;gap:.2rem;min-width:0}
+.virtual-lab-safety-meter strong{font-size:clamp(1rem,3vw,1.35rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.virtual-lab-safety-meter span,.virtual-lab-safety-meter small{font-size:.78rem;line-height:1.5}
+@media(max-width:560px){.virtual-lab-safety-meter{grid-template-columns:1fr}}

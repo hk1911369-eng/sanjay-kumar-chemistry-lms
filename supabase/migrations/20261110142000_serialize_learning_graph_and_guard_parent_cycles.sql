@@ -71,6 +71,11 @@ DECLARE
   v_parent_subject uuid;
   v_cycle boolean;
 BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.subject_id IS DISTINCT FROM OLD.subject_id THEN
+    RAISE EXCEPTION 'A concept subject is immutable; create a new concept to move subjects'
+      USING ERRCODE = '23514';
+  END IF;
+
   IF NEW.parent_id IS NULL THEN
     RETURN NEW;
   END IF;

@@ -9,6 +9,8 @@ test('payment approval cannot grant future billing periods or accept forged deli
   assert.match(migration, /set search_path = pg_catalog, public, pg_temp/i);
   assert.match(migration, /new\.billing_period > current_period/i);
   assert.match(migration, /new\.delivery_mode = any\(course_row\.delivery_modes\)/i);
+  assert.match(migration, /new\.payment_kind = 'monthly'/i);
+  assert.match(migration, /coalesce\(e\.monthly_fee_bdt, expected_monthly\)/i);
   assert.match(migration, /new\.fee_monthly_bdt is distinct from expected_monthly/i);
   assert.match(migration, /new\.fee_admission_bdt is distinct from expected_admission/i);
   assert.match(migration, /new\.amount_bdt <> expected_monthly \+ expected_admission/i);

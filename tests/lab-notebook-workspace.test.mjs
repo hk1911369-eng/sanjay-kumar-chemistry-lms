@@ -24,7 +24,9 @@ test('notebook server actions validate payloads and defer authorisation to RLS',
   assert.match(actions, /raw.length > 30000/);
   assert.match(actions, /value\.length > 100/);
   assert.match(actions, /feedback\.length\s*>\s*4000/);
-  assert.match(actions, /rubric_hypothesis/);\n  assert.match(actions, /rubric_safety_integrity/);\n  assert.match(actions, /score=Math\.round\(Object\.values\(rubricScores\)/);
+  assert.match(actions, /rubric_hypothesis/);
+  assert.match(actions, /rubric_safety_integrity/);
+  assert.match(actions, /score=Math\.round\(Object\.values\(rubricScores\)/);
   assert.match(actions, /\.eq\('student_id',user\.id\)/);
   assert.match(actions, /\.eq\('status','submitted'\)/);
 });

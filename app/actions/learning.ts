@@ -237,9 +237,12 @@ export async function pinLessonDiscussion(formData: FormData) {
       .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
     if (!assignment) redirect('/portal');
   }
-  const { error } = await supabase.from('lesson_discussions').update({ is_pinned: pinned })
-    .eq('id', discussionId).eq('course_id', courseId);
-  if (error) redirect('/learn/' + courseId + '?discussion_error=1');
+  const { data: updated, error } = await supabase.rpc('set_lesson_discussion_pin', {
+    p_discussion_id: discussionId,
+    p_course_id: courseId,
+    p_is_pinned: pinned,
+  });
+  if (error || !updated) redirect('/learn/' + courseId + '?discussion_error=1');
   revalidatePath('/learn/' + courseId);
   redirect('/learn/' + courseId);
 }

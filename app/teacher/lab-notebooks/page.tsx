@@ -23,8 +23,6 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const historyNotebookIds=(historyNotebooks??[]).map(n=>n.id);
  const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,rubric_scores,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
  const historyNotebookById=new Map((historyNotebooks??[]).map(n=>[n.id,n]));
- const historyByNotebook=new Map<string,any[]>();
- for(const item of reviewHistory??[]){const list=historyByNotebook.get(item.notebook_id)??[];list.push(item);historyByNotebook.set(item.notebook_id,list);}
  const studentIds=[...new Set([...(entries??[]).map(e=>e.student_id),...(historyNotebooks??[]).map(n=>n.student_id)])], labIds=[...new Set((entries??[]).map(e=>e.lab_id))];
  const entryIds=(entries??[]).map(e=>e.id);
  const [{data:students},{data:labs},{data:evidenceRows}]=await Promise.all([

@@ -5,17 +5,21 @@ umask 077
 : "${JMT_BACKUP_DATABASE_URL:?Set JMT_BACKUP_DATABASE_URL in your shell or secret manager}"
 : "${JMT_BACKUP_TARGET:?Set JMT_BACKUP_TARGET to test or production}"
 
+database_url_host() {
+  node -e 'const u = new URL(process.argv[1]); if (!["postgres:", "postgresql:"].includes(u.protocol)) process.exit(2); process.stdout.write(u.hostname.toLowerCase())' "$1"
+}
+
 case "$JMT_BACKUP_TARGET" in
   test)
     : "${JMT_TEST_DB_HOST:?Set the expected test database host}"
-    if [[ "$JMT_BACKUP_DATABASE_URL" != *"$JMT_TEST_DB_HOST"* ]]; then
+    if [[ "$(database_url_host "$JMT_BACKUP_DATABASE_URL")" != "${JMT_TEST_DB_HOST,,}" ]]; then
       echo "Refusing: backup URL does not match JMT_TEST_DB_HOST." >&2
       exit 2
     fi
     ;;
   production)
     : "${JMT_PRODUCTION_DB_HOST:?Set the expected production database host}"
-    if [[ "$JMT_BACKUP_DATABASE_URL" != *"$JMT_PRODUCTION_DB_HOST"* ]]; then
+    if [[ "$(database_url_host "$JMT_BACKUP_DATABASE_URL")" != "${JMT_PRODUCTION_DB_HOST,,}" ]]; then
       echo "Refusing: backup URL does not match JMT_PRODUCTION_DB_HOST." >&2
       exit 2
     fi

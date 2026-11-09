@@ -15,3 +15,12 @@ export type PunnettOutcome = { genotype: string; count: number; probability: num
 export function calculatePunnettSquare(parentA: string, parentB: string): {
   gametesA: string[]; gametesB: string[]; cells: string[]; outcomes: PunnettOutcome[];
 };
+
+export type ShortCircuitTeachingInput = {
+  sourceVoltage: number; sourceInternalResistance: number; pathResistance: number; durationSeconds: number;
+};
+export type ShortCircuitTeachingResult = {
+  currentAmps: number; pathPowerWatts: number; energyJoules: number;
+  severity: 'high' | 'moderate' | 'lower'; assumptions: string;
+};
+export function calculateIllustrativeShortCircuit(input: ShortCircuitTeachingInput): ShortCircuitTeachingResult;

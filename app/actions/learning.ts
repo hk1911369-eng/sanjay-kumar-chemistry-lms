@@ -34,7 +34,6 @@ export async function createStudyGoal(formData: FormData) {
     course_id: courseId,
     goal_type: goalType,
     target_value: targetValue,
-    current_value: 0,
     period_start: periodStart,
     period_end: periodEnd,
   });

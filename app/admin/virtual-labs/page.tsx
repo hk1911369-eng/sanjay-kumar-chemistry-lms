@@ -33,7 +33,7 @@ export default async function VirtualLabCatalogueAdmin({ searchParams }: { searc
           <label>Simulation title<input name="title" minLength={2} maxLength={160} required/></label>
           <label>Short description<input name="summary" maxLength={500}/></label>
           <label>Learning principle<textarea name="principle" maxLength={2000} rows={3}/></label>
-          <label>Interactive template<select name="simulation_type" required defaultValue="physics"><option value="physics">Physics · Circuit / Ohm&apos;s law</option><option value="chemistry">Chemistry · Acid–base titration</option><option value="biology">Biology · Inheritance</option><option value="maths">Mathematics · Linear functions</option><option value="ict">ICT · Binary converter</option></select></label>
+          <label>Interactive template<select name="simulation_type" required defaultValue="physics"><option value="physics">Physics · Circuit / Ohm&apos;s law</option><option value="chemistry">Chemistry · Acid–base titration</option><option value="biology">Biology · Inheritance</option><option value="maths">Mathematics · Linear functions</option><option value="ict">ICT · Binary converter</option><option value="quadratic">Higher Mathematics · Quadratic explorer</option></select></label>
           <label>Display order<input name="sort_order" type="number" min="0" max="10000" defaultValue="100"/></label>
           <label className="toggle-label"><input type="checkbox" name="is_published"/> Publish for enrolled students</label>
           <button className="auth-submit" type="submit">Save simulation mapping</button>

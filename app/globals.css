@@ -663,3 +663,23 @@ input,select,textarea,button{max-width:100%}
 .learning-graph-readiness-subjects { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:.6rem; }
 .learning-graph-readiness-subjects>div { display:grid; gap:.2rem; padding:.7rem .8rem; background:var(--surface-muted,transparent); border:1px solid var(--line); border-radius:9px; }
 .learning-graph-readiness-subjects span { color:var(--muted); font-size:.84rem; }
+
+/* Virtual-lab safety challenge: clear, touch-friendly choices on phones and desktops. */
+.virtual-lab-safety{display:grid;gap:.85rem;margin:1.25rem 0;padding:clamp(1rem,2.5vw,1.35rem);border:1px solid var(--line,#dbe3ed);border-radius:14px;background:var(--surface-soft,#f8fafc);min-width:0}
+.virtual-lab-safety-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.virtual-lab-safety-heading h3{margin:.35rem 0 0;font-size:clamp(1.05rem,2vw,1.25rem);line-height:1.35}
+.virtual-lab-risk{flex:0 0 auto;padding:.35rem .65rem;border-radius:999px;font-size:.75rem;font-weight:800;background:#fff1f0;color:#9f241b}
+.virtual-lab-risk.is-moderate{background:#fff7e6;color:#875500}
+.virtual-lab-safety-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
+.virtual-lab-safety-actions button{min-height:48px;padding:.75rem 1rem;border:1px solid var(--line,#dbe3ed);border-radius:10px;font:inherit;font-weight:750;cursor:pointer;touch-action:manipulation}
+.virtual-lab-unsafe-choice{background:#fff1f0;color:#8f2119;border-color:#efb7b2!important}
+.virtual-lab-safe-choice{background:#edf8f0;color:#176b36;border-color:#a8d8b6!important}
+.virtual-lab-safety-actions button:focus-visible{outline:3px solid var(--accent,#2563eb);outline-offset:3px}
+.virtual-lab-safety-actions button[aria-pressed=true]{box-shadow:0 0 0 2px currentColor}
+.virtual-lab-safety-feedback{padding:1rem;border-radius:10px;border:1px solid var(--line,#dbe3ed);overflow-wrap:anywhere}
+.virtual-lab-safety-feedback p{margin:.4rem 0 .8rem;line-height:1.6}
+.virtual-lab-safety-feedback p:last-child{margin-bottom:0}
+.virtual-lab-safety-feedback.is-warning{background:#fff7f5;border-color:#efc1bb;color:#70251f}
+.virtual-lab-safety-feedback.is-success{background:#f1faf3;border-color:#b8dec1;color:#185b30}
+@media(max-width:560px){.virtual-lab-safety-heading{display:grid}.virtual-lab-safety-actions{grid-template-columns:1fr}.virtual-lab-safety-actions button{width:100%;min-height:52px}}
+@media(prefers-reduced-motion:reduce){.virtual-lab-safety *{scroll-behavior:auto;transition:none!important}}

@@ -9,7 +9,7 @@ test('assigned teachers can read only published experiments mapped to their assi
   assert.match(migration, /is_published is true/i);
   assert.match(migration, /cs\.subject_id = virtual_lab_catalog\.subject_id/i);
   assert.match(migration, /ca\.teacher_id = \(select auth\.uid\(\)\)/i);
-  assert.match(migration, /cs\.course_id = ca\.course_id/i);
+  assert.match(migration, /ca\.course_id = cs\.course_id/i);
 });
 
 test('admin catalogue writes remain explicitly role-restricted without overlapping SELECT policies', async () => {

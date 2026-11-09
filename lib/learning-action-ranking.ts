@@ -110,7 +110,7 @@ export function rankLearningActions(input: {
       detail: 'Due in ' + Math.max(0, Math.ceil(days)) + ' day(s)',
       courseId: assignment.course_id,
       sourceId: assignment.id,
-      score: 72 + clamp(10 - days, 0, 10),
+      score: 86 + clamp(10 - days, 0, 10),
       dueAt: assignment.due_at,
     });
   }

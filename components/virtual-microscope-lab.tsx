@@ -62,7 +62,7 @@ export function VirtualMicroscopeLab({ onInteraction }: { onInteraction: () => v
               {specimen!=='leaf' && <ellipse cx={cell.w/2} cy={cell.h/2} rx="12" ry="15" fill={specimen==='cheek'?'#76509a':'#b17b57'} fillOpacity=".85"/>}
             </g>)}
           </g>
-          {labels && <g fill="#263238" fontSize="12" fontWeight="600"><path d="M280 190 L390 105" stroke="#263238"/><text x="394" y="101">{specimen==='leaf'?'Cell wall':'Cell boundary'}</text><path d="M300 205 L390 260" stroke="#263238"/><text x="394" y="265">{specimen==='leaf'?'Chloroplast':'Nucleus'}</text></g>}
+          {labels && <g fill="#263238" fontSize="12" fontWeight="600"><path d="M280 190 L390 105" stroke="#263238"/><text x="394" y="101">{specimen==='cheek'?'Cell membrane':'Cell wall'}</text><path d="M300 205 L390 260" stroke="#263238"/><text x="394" y="265">{specimen==='leaf'?'Chloroplast':'Nucleus'}</text></g>}
         </g>
         <circle cx="280" cy="190" r="174" fill="none" stroke="#d9e1e5" strokeWidth="2"/>
         <path d="M280 12 V28 M280 352 V368 M102 190 H118 M442 190 H458" stroke="#9caeb8" strokeWidth="2"/>

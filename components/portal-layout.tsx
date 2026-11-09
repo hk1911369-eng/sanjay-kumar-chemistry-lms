@@ -37,7 +37,6 @@ const navigation: Record<PortalRole, NavGroup[]> = {
       { key: 'lessons', label: 'Lesson studio', href: '/teacher#lesson-creator', icon: 'pencil' },
       { key: 'library', label: 'Lesson library', href: '/teacher#lesson-library', icon: 'chart' },
       { key: 'practice-library', label: 'Practice questions', href: '/teacher/practice', icon: 'book-open' },
-      { key: 'practice-library', label: 'Practice questions', href: '/teacher/practice', icon: 'book-open' },
       { key: 'academic', label: 'Classes & exams', href: '/academic', icon: 'calendar' },
       { key: 'notifications', label: 'Notifications inbox', href: '/academic#notifications', icon: 'users' },
       { key: 'learning-insights', label: 'Learning insights', href: '/teacher/learning', icon: 'chart' },

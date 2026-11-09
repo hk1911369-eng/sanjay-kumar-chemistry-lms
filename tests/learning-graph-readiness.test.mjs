@@ -19,7 +19,7 @@ test('curriculum readiness blocks adaptation claims when lesson or concept found
   const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
   assert.match(page, /lessons\.length === 0/);
   assert.match(page, /publishedConceptCount === 0/);
-  assert.match(page, /lesson\\(s\\) still need concept mapping/);
+  assert.ok(page.includes('lesson(s) still need concept mapping'));
   assert.match(page, /published concept\(s\) are not connected to any lesson/);
   assert.match(page, /Continue reviewing prerequisite quality before enabling predictive features/);
 });

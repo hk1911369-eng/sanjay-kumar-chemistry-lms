@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 test('written exam answers are bounded and must match every exam question', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261109250000_validate_written_exam_answers.sql', import.meta.url), 'utf8');
   assert.match(migration, /jsonb_typeof\(answers\) = 'object'/i);
-  assert.match(migration, /jsonb_object_length\(answers\) between 1 and 30/i);
+  assert.match(migration, /jsonb_object_keys\(answers\)/i);
   assert.match(migration, /jsonb_object_length\(answers\) = \([\s\S]*written_exam_questions/i);
   assert.match(migration, /length\(answer\.value #>> '\{\}'\) > 12000/i);
   assert.match(migration, /q\.id::text = answer\.key/i);

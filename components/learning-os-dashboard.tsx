@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
-import type { LearningAction } from '@/lib/learning-action-ranking';
+import type { LearningAction } from '@/lib/learning-action-ranking.mjs';
 
 type Goal = {
   id: string; goal_type: string; target_value: number; current_value: number;

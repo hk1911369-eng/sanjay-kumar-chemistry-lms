@@ -754,3 +754,25 @@ input,select,textarea,button{max-width:100%}
 .projectile-motion-lab .virtual-lab-secondary-action{min-height:46px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
 .projectile-motion-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(max-width:560px){.projectile-controls{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-results{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-secondary-action{width:100%;min-height:50px}}
+
+/* Virtual microscope: specimen viewer, accessible controls and compact mobile layout. */
+.virtual-microscope{display:grid;gap:1rem}
+.microscope-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
+.microscope-controls label{display:grid;gap:.4rem;min-width:0;font-size:.9rem}
+.microscope-controls input[type=range],.microscope-controls select{width:100%;min-height:40px}
+.microscope-controls input[type=range]{accent-color:var(--accent);touch-action:pan-y}
+.microscope-viewer{padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-soft);min-width:0}
+.microscope-viewer-heading,.microscope-viewer-footer{display:flex;justify-content:space-between;gap:.8rem;align-items:center;flex-wrap:wrap}
+.microscope-viewer-heading span,.microscope-viewer-footer{font-size:.82rem;color:var(--muted)}
+.microscope-viewer svg{display:block;width:min(100%,560px);height:auto;margin:.5rem auto}
+.microscope-viewer-footer label{display:flex;align-items:center;gap:.4rem}
+.microscope-readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+.microscope-readouts>div{display:grid;gap:.2rem;padding:.8rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.microscope-readouts strong{font-size:1.1rem;font-variant-numeric:tabular-nums}
+.microscope-readouts span{font-size:.78rem;color:var(--muted)}
+.microscope-learning-note{padding:.9rem 1rem;border:1px solid var(--line);border-radius:10px;line-height:1.6}
+.microscope-learning-note p{margin:.35rem 0}
+.microscope-learning-note small{display:block;color:var(--muted)}
+.virtual-microscope .virtual-lab-secondary-action{min-height:48px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
+.virtual-microscope button:focus-visible,.virtual-microscope input:focus-visible,.virtual-microscope select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:560px){.microscope-controls{grid-template-columns:1fr}.microscope-readouts{grid-template-columns:1fr}.microscope-viewer{padding:.6rem}}

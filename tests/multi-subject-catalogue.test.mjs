@@ -15,6 +15,7 @@ test('synthetic catalogue covers all three target cohorts and core subjects', as
   ]) assert.ok(seed.includes(`'${subject}'`), subject);
   assert.ok(seed.includes("'bangla'"), 'Bangla concept coverage');
   assert.ok(seed.includes("'higher-mathematics'"), 'Higher Mathematics concept coverage');
+  assert.ok(seed.includes("'bangla','bangla-reading-comprehension','bangla-language-grammar'"), 'Bangla prerequisite graph stays within Bangla');
   assert.ok(seed.includes('false, false'), 'synthetic courses remain unpublished and closed');
 });
 

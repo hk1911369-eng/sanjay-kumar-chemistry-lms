@@ -2,9 +2,9 @@ import { redirect } from 'next/navigation';
 import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import { reviewLabNotebook } from '@/app/actions/lab-notebooks';
-import { createLabPracticalAssignment } from '@/app/actions/lab-practical-assignments';
+import { archiveLabPracticalAssignment, createLabPracticalAssignment } from '@/app/actions/lab-practical-assignments';
 
-export default async function TeacherLabNotebooksPage({searchParams}:{searchParams:Promise<{error?:string;reviewed?:string;assignment_created?:string}>}) {
+export default async function TeacherLabNotebooksPage({searchParams}:{searchParams:Promise<{error?:string;reviewed?:string;assignment_created?:string;assignment_archived?:string}>}) {
  const params=await searchParams, db=await createClient(), {data:{user}}=await db.auth.getUser();
  if(!user) redirect('/login');
  const {data:profile}=await db.from('profiles').select('role,full_name').eq('id',user.id).single();
@@ -47,7 +47,7 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const studentName=new Map((students??[]).map(s=>[s.id,s.full_name+(s.student_code?' · '+s.student_code:'')])), labName=new Map((labs??[]).map(l=>[l.id,l.title])), courseName=new Map(courses.map((c:any)=>[c.id,c.title]));
  return <PortalLayout role={profile!.role as 'admin'|'teacher'|'staff'} active="overview" title="Practical assessment" returnTo="/teacher"><section className="portal-content">
   <span className="auth-kicker">TEACHER REVIEW WORKSPACE</span><h1>Submitted lab notebooks</h1><p className="muted">Review scientific reasoning, method quality, observations and conclusions. Only assigned courses are included.</p>
-  {params.reviewed&&<p className="form-success">Review saved.</p>}{params.assignment_created&&<p className="form-success">Practical assignment published for enrolled students.</p>}{params.error==='assignment'&&<p className="form-error">Assignment could not be published. Check the course, experiment, title, instructions and due date.</p>}{params.error==='rubric'&&<p className="form-error">For a graded review, enter all six rubric scores within their weighted maximums. The database calculates the total out of 100.</p>}{params.error&&params.error!=='assignment'&&params.error!=='rubric'&&<p className="form-error">Review could not be saved. Check feedback and assignment access.</p>}
+  {params.reviewed&&<p className="form-success">Review saved.</p>}{params.assignment_created&&<p className="form-success">Practical assignment published for enrolled students.</p>}{params.assignment_archived&&<p className="form-success">Assignment archived. Students who already started a notebook can still finish and submit it.</p>}{params.error==='assignment'&&<p className="form-error">Assignment could not be published. Check the course, experiment, title, instructions and due date.</p>}{params.error==='rubric'&&<p className="form-error">For a graded review, enter all six rubric scores within their weighted maximums. The database calculates the total out of 100.</p>}{params.error==='archive'&&<p className="form-error">Assignment could not be archived. It may already be archived or you may not have permission.</p>}{params.error&&params.error!=='assignment'&&params.error!=='rubric'&&params.error!=='archive'&&<p className="form-error">Review could not be saved. Check feedback and assignment access.</p>}
   <h2>Create a practical assignment</h2>
   {!labOptions.length?<p className="muted">No published experiments are mapped to your assigned courses yet.</p>:<form action={createLabPracticalAssignment} className="auth-form portal-card">
    <label>Course and experiment<select name="lab_choice" required defaultValue=""><option value="" disabled>Select a course experiment</option>{labOptions.map((o:any)=><option key={o.courseId+o.labId} value={o.courseId+':'+o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
@@ -61,13 +61,18 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
    <label>Assignment title<input name="title" required minLength={3} maxLength={180} placeholder="e.g. Measure and compare projectile range"/></label>
    <label>Instructions<textarea name="instructions" required minLength={1} maxLength={8000} rows={4} placeholder="Describe the scientific task, expected observations and submission requirements."/></label>
    <label>Due date and time (Bangladesh time)<input name="due_at" type="datetime-local"/></label>
-   <label>Maximum marks<input name="points" type="number" min="0.01" max="1000" step="0.5" defaultValue="100" required/></label>
+   <p className="muted">Assessment total: 100 marks. The six weighted rubric criteria add up to 100.</p>
    <button className="auth-submit">Publish practical assignment</button>
   </form>}
   <h2>Published and past assignments</h2>
   {!practicalAssignments?.length?<p className="muted">No practical assignments have been created for these courses.</p>:<div className="portal-grid">{practicalAssignments.map((task:any)=><article className="portal-card" key={task.id}>
    <span className="auth-kicker">{String(task.status).toUpperCase()}</span><h3>{task.title}</h3><p>{task.instructions}</p>
-   <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'}{task.concept_id?' · Concept: '+(conceptName.get(task.concept_id)??'Linked concept'):''} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
+   <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'}{task.concept_id?' · Concept: '+(conceptName.get(task.concept_id)??'Linked concept'):''} · 100 marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
+   {task.status==='published'&&<form action={archiveLabPracticalAssignment} className="auth-form">
+    <input type="hidden" name="assignment_id" value={task.id}/>
+    <p className="muted">Archiving stops new notebooks. Existing student notebooks remain editable and reviewable.</p>
+    <button className="auth-submit" type="submit">Archive assignment</button>
+   </form>}
   </article>)}</div>}
   <h2>Recent review history</h2>
   {!reviewHistory?.length?<p className="muted">Completed practical reviews will appear here.</p>:<div className="portal-grid">{reviewHistory.map((review:any)=>{

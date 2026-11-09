@@ -27,7 +27,7 @@ declare
 begin
   if p_scores is null
      or pg_catalog.jsonb_typeof(p_scores) <> 'object'
-     or pg_catalog.jsonb_object_length(p_scores) <> 6 then
+     or (select count(*) from pg_catalog.jsonb_object_keys(p_scores)) <> 6 then
     return null;
   end if;
 
@@ -48,7 +48,7 @@ exception
 end;
 $function$;
 
-revoke all on function private.lab_notebook_rubric_total(jsonb) from public, anon, authenticated;
+revoke all on function private.lab_notebook_rubric_total(jsonb) from public, anon;\ngrant execute on function private.lab_notebook_rubric_total(jsonb) to authenticated, service_role;
 
 alter table public.lab_notebook_entries
   add column if not exists rubric_scores jsonb not null default '{}'::jsonb;
@@ -60,7 +60,7 @@ alter table public.lab_notebook_entries
   add constraint lab_notebook_entries_rubric_scores_object_check
   check (
     pg_catalog.jsonb_typeof(rubric_scores) = 'object'
-    and pg_catalog.jsonb_object_length(rubric_scores) <= 6
+    and (rubric_scores = '{}'::jsonb or private.lab_notebook_rubric_total(rubric_scores) is not null)
   );
 
 alter table public.lab_notebook_review_history

@@ -132,7 +132,11 @@ USING (
 );
 
 REVOKE ALL ON public.student_practice_questions FROM PUBLIC, anon, authenticated;
-GRANT SELECT, INSERT ON public.student_practice_questions TO authenticated;
+GRANT SELECT ON public.student_practice_questions TO authenticated;
+GRANT INSERT (
+  course_id, subject_id, concept_id, chapter_label, topic, difficulty,
+  question_text, options, correct_option, explanation, marks, is_published, created_by
+) ON public.student_practice_questions TO authenticated;
 GRANT UPDATE (
   course_id, subject_id, concept_id, chapter_label, topic, difficulty,
   question_text, options, correct_option, explanation, marks, is_published, updated_at
@@ -247,6 +251,8 @@ DECLARE
   v_attempt_id uuid;
   v_correct boolean;
   v_awarded numeric(8,2);
+  v_selected_text text;
+  v_correct_text text;
 BEGIN
   IF v_student_id IS NULL
     OR public.current_role() IS DISTINCT FROM 'student'::public.app_role THEN
@@ -299,6 +305,75 @@ BEGIN
 
   IF v_attempt_id IS NULL THEN
     RAISE EXCEPTION 'This practice question has already been answered' USING ERRCODE = '23505';
+  END IF;
+
+  INSERT INTO public.learning_events (
+    student_id, course_id, concept_id, event_type, score_percent,
+    source_id, occurred_at, metadata
+  ) VALUES (
+    v_student_id, v_question.course_id, v_question.concept_id,
+    'practice_submitted', CASE WHEN v_correct THEN 100 ELSE 0 END,
+    v_attempt_id, now(),
+    jsonb_build_object(
+      'source_type', 'student_practice',
+      'question_id', v_question.id,
+      'difficulty', v_question.difficulty,
+      'marks', v_question.marks
+    )
+  );
+
+  IF v_question.concept_id IS NOT NULL THEN
+    INSERT INTO public.learner_concept_mastery AS existing (
+      student_id, concept_id, mastery_score, confidence, evidence_count,
+      last_practiced_at, next_review_at, updated_at
+    ) VALUES (
+      v_student_id, v_question.concept_id,
+      CASE WHEN v_correct THEN 1 ELSE 0 END,
+      0.1, 1, now(),
+      now() + CASE WHEN v_correct THEN interval '7 days' ELSE interval '1 day' END,
+      now()
+    )
+    ON CONFLICT (student_id, concept_id) DO UPDATE SET
+      mastery_score = (
+        (existing.mastery_score * existing.evidence_count)
+        + EXCLUDED.mastery_score
+      ) / GREATEST(1, existing.evidence_count + 1),
+      confidence = LEAST(1, (existing.evidence_count + 1)::numeric / 10),
+      evidence_count = existing.evidence_count + 1,
+      last_practiced_at = EXCLUDED.last_practiced_at,
+      next_review_at = EXCLUDED.next_review_at,
+      updated_at = now();
+
+    IF NOT v_correct THEN
+      v_selected_text := v_question.options ->> p_selected_option;
+      v_correct_text := v_question.options ->> v_question.correct_option;
+      INSERT INTO public.learner_mistake_memory AS existing (
+        student_id, course_id, concept_id, source_type, source_id,
+        source_question_id, mistake_type, prompt_snapshot, response_snapshot,
+        correct_answer_snapshot, explanation_snapshot, occurrence_count,
+        first_seen_at, last_seen_at
+      ) VALUES (
+        v_student_id, v_question.course_id, v_question.concept_id,
+        'practice', v_attempt_id, v_question.id, 'other',
+        v_question.question_text, COALESCE(v_selected_text, ''),
+        COALESCE(v_correct_text, ''), v_question.explanation, 1, now(), now()
+      )
+      ON CONFLICT (student_id, source_type, source_question_id)
+        WHERE source_question_id IS NOT NULL
+      DO UPDATE SET
+        occurrence_count = existing.occurrence_count + 1,
+        last_seen_at = EXCLUDED.last_seen_at,
+        response_snapshot = EXCLUDED.response_snapshot,
+        source_id = EXCLUDED.source_id,
+        resolved_at = NULL;
+    ELSE
+      UPDATE public.learner_mistake_memory
+      SET resolved_at = now(), last_seen_at = now()
+      WHERE student_id = v_student_id
+        AND source_type = 'practice'
+        AND source_question_id = v_question.id
+        AND resolved_at IS NULL;
+    END IF;
   END IF;
 
   RETURN QUERY SELECT v_attempt_id, v_correct, v_question.correct_option,

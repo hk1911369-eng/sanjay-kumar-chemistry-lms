@@ -25,10 +25,10 @@ export async function createLabPracticalAssignment(formData: FormData) {
   const title = String(formData.get('title') ?? '').trim();
   const instructions = String(formData.get('instructions') ?? '').trim();
   const dueInput = String(formData.get('due_at') ?? '').trim();
-  const points = Number(formData.get('points') ?? 100);
+  const points = 100;
 
   if (!uuid.test(courseId) || !uuid.test(labId) || title.length < 3 || title.length > 180 ||
-      instructions.length < 1 || instructions.length > 8000 || !Number.isFinite(points) || points <= 0 || points > 1000) {
+      instructions.length < 1 || instructions.length > 8000) {
     redirect('/teacher/lab-notebooks?error=assignment');
   }
 
@@ -59,4 +59,30 @@ export async function createLabPracticalAssignment(formData: FormData) {
   revalidatePath('/teacher/lab-notebooks');
   revalidatePath('/student/lab-notebook');
   redirect('/teacher/lab-notebooks?assignment_created=1');
+}
+
+
+export async function archiveLabPracticalAssignment(formData: FormData) {
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
+  if (!['admin', 'teacher', 'staff'].includes(profile?.role ?? '')) redirect('/portal');
+
+  const assignmentId = String(formData.get('assignment_id') ?? '');
+  if (!uuid.test(assignmentId)) redirect('/teacher/lab-notebooks?error=archive');
+
+  const { data, error } = await db
+    .from('lab_practical_assignments')
+    .update({ status: 'archived', published_at: null })
+    .eq('id', assignmentId)
+    .eq('status', 'published')
+    .select('id')
+    .maybeSingle();
+
+  if (error || !data) redirect('/teacher/lab-notebooks?error=archive');
+  revalidatePath('/teacher/lab-notebooks');
+  revalidatePath('/student/lab-notebook');
+  redirect('/teacher/lab-notebooks?assignment_archived=1');
 }

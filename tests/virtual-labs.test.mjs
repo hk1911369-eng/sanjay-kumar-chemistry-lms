@@ -101,6 +101,8 @@ test('science simulations include safe, consequence-aware what-if challenges', a
   assert.match(component, /acid to water—not water to acid/);
   assert.match(component, /short circuit can cause a very large current/);
   assert.match(component, /cross-contamination/);
+  assert.match(component, /consequenceSteps/);
+  assert.match(component, /virtual-lab-consequence-chain/);
   assert.match(component, /approved process/);
   assert.match(css, /virtual-lab-safety-actions/);
   assert.match(css, /@media\(max-width:560px\)/);

@@ -37,9 +37,10 @@ export async function saveLabNotebook(formData: FormData) {
     error=result.error||(!result.data?{message:'Notebook unavailable'}:null);
   } else {
     const result=await db.from('lab_notebook_entries').insert({...payload,course_id:courseId,lab_id:labId,student_id:user.id,status:'draft',submitted_at:null}).select('id').single();
-    error=result.error;
-    if (!error&&intent==='submit') {
-      const submitted=await db.from('lab_notebook_entries').update({status:'submitted',submitted_at:new Date().toISOString()}).eq('id',result.data.id).eq('student_id',user.id).select('id').maybeSingle();
+    error=result.error||(!result.data?{message:'Notebook could not be created'}:null);
+    const createdId=result.data?.id;
+    if (!error&&createdId&&intent==='submit') {
+      const submitted=await db.from('lab_notebook_entries').update({status:'submitted',submitted_at:new Date().toISOString()}).eq('id',createdId).eq('student_id',user.id).select('id').maybeSingle();
       error=submitted.error||(!submitted.data?{message:'Submission was not accepted'}:null);
     }
   }

@@ -4,9 +4,10 @@ import { useMemo, useState } from 'react';
 import { recordSimulationCompletion } from '@/app/actions/virtual-labs';
 import { DoublePendulumLab } from '@/components/double-pendulum-lab';
 import { ProjectileMotionLab } from '@/components/projectile-motion-lab';
+import { VirtualMicroscopeLab } from '@/components/virtual-microscope-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
-type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile';
+type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
@@ -108,6 +109,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
 
       {selected.simulation_type === 'pendulum' && <DoublePendulumLab compact/>}
       {selected.simulation_type === 'projectile' && <ProjectileMotionLab/>}
+      {selected.simulation_type === 'microscope' && <VirtualMicroscopeLab onInteraction={() => setHasInteracted(true)}/ >}
 
       {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>

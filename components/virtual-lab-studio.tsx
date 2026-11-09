@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { recordSimulationCompletion } from '@/app/actions/virtual-labs';
 
-type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict';
+type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'quadratic';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
@@ -19,6 +19,9 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const [parentB, setParentB] = useState('Aa');
   const [slope, setSlope] = useState(2);
   const [intercept, setIntercept] = useState(1);
+  const [quadA, setQuadA] = useState(1);
+  const [quadB, setQuadB] = useState(-3);
+  const [quadC, setQuadC] = useState(2);
   const [binary, setBinary] = useState('101101');
   const [courseId, setCourseId] = useState(courses[0]?.id ?? '');
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -40,6 +43,12 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const binaryValid = /^[01]{1,16}$/.test(binary);
   const decimal = binaryValid ? Number.parseInt(binary, 2) : null;
   const points = [-2, -1, 0, 1, 2].map(x => ({ x, y: slope * x + intercept }));
+  const discriminant = quadB * quadB - 4 * quadA * quadC;
+  const quadraticRoots = discriminant >= 0 && quadA !== 0
+    ? [(-quadB - Math.sqrt(discriminant)) / (2 * quadA), (-quadB + Math.sqrt(discriminant)) / (2 * quadA)]
+    : null;
+  const vertexX = quadA === 0 ? null : -quadB / (2 * quadA);
+  const vertexY = vertexX === null ? null : quadA * vertexX * vertexX + quadB * vertexX + quadC;
 
   return <div className="virtual-lab-studio">
     {visibleLabs.length === 0 ? <article className="portal-card"><h2>No matching simulation yet</h2><p className="muted">Your currently enrolled courses do not have a supported simulation mapped to their subjects yet.</p></article> : <>
@@ -81,6 +90,16 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <label>Intercept (b): <b>{intercept}</b><input type="range" min="-8" max="8" value={intercept} onChange={e => { setHasInteracted(true); setIntercept(Number(e.target.value)); }}/></label>
         <p>Equation: <b>y = {slope}x {intercept < 0 ? '−' : '+ '} {Math.abs(intercept)}</b></p>
         <div className="virtual-lab-point-table">{points.map(point => <span key={point.x}>({point.x}, {point.y})</span>)}</div>
+      </div>}
+
+      {selected.simulation_type === 'quadratic' && <div className="virtual-lab-experiment">
+        <p>Explore the quadratic function <b>y = ax² + bx + c</b>.</p>
+        <label>Coefficient a: <b>{quadA}</b><input type="range" min="-5" max="5" step="0.5" value={quadA} onChange={e => { setHasInteracted(true); setQuadA(Number(e.target.value)); }}/></label>
+        <label>Coefficient b: <b>{quadB}</b><input type="range" min="-10" max="10" step="0.5" value={quadB} onChange={e => { setHasInteracted(true); setQuadB(Number(e.target.value)); }}/></label>
+        <label>Coefficient c: <b>{quadC}</b><input type="range" min="-10" max="10" step="0.5" value={quadC} onChange={e => { setHasInteracted(true); setQuadC(Number(e.target.value)); }}/></label>
+        <div className="virtual-lab-results"><div><strong>{discriminant.toFixed(2)}</strong><span>Discriminant (Δ)</span></div><div><strong>{vertexX === null ? '—' : `(${vertexX.toFixed(2)}, ${vertexY?.toFixed(2)})`}</strong><span>Turning point</span></div></div>
+        <p>{quadA === 0 ? 'When a = 0, this is not a quadratic function.' : discriminant > 0 ? `Two real roots: ${quadraticRoots?.map(root => root.toFixed(3)).join(' and ')}` : discriminant === 0 ? `One repeated real root: ${quadraticRoots?.[0].toFixed(3)}` : 'No real roots; the graph does not cross the x-axis.'}</p>
+        <small className="muted">The sign of a determines whether the parabola opens upward or downward; Δ determines the number of real roots.</small>
       </div>}
 
       {selected.simulation_type === 'ict' && <div className="virtual-lab-experiment">

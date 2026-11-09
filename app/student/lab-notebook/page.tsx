@@ -16,10 +16,12 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
  const [{data:courses},{data:courseSubjects},{data:notebooks}]=await Promise.all([
   courseIds.length?db.from('courses').select('id,title').in('id',courseIds).is('archived_at',null):Promise.resolve({data:[] as any[]}),
   courseIds.length?db.from('course_subjects').select('course_id,subject_id').in('course_id',courseIds):Promise.resolve({data:[] as any[]}),
-  db.from('lab_notebook_entries').select('id,course_id,lab_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,status,teacher_feedback,score,updated_at').eq('student_id',user.id).order('updated_at',{ascending:false}).limit(30)
+  db.from('lab_notebook_entries').select('id,course_id,lab_id,assignment_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,status,teacher_feedback,score,updated_at').eq('student_id',user.id).order('updated_at',{ascending:false}).limit(30)
  ]);
  const subjectIds=[...new Set((courseSubjects??[]).map(x=>x.subject_id))];
  const {data:labs}=subjectIds.length?await db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):{data:[] as any[]};
+ const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,title,instructions,due_at,points').in('course_id',courseIds).eq('status','published').order('due_at',{ascending:true,nullsFirst:false}).limit(100):{data:[] as any[]};
+ const assignmentEntry=new Map((notebooks??[]).filter(n=>n.assignment_id).map(n=>[n.assignment_id,n]));
  const labOptions=(courses??[]).flatMap(course=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(labs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title}))));
  const courseName=new Map((courses??[]).map(c=>[c.id,c.title])), labName=new Map((labs??[]).map(l=>[l.id,l.title]));
  return <PortalLayout role="student" active="overview" title="Practical lab notebook" returnTo="/student"><section className="portal-content">
@@ -36,6 +38,25 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
    <label>Observations<textarea name="observations" rows={4} maxLength={12000}/></label><label>Measurements (JSON array; optional)<textarea name="measurements" rows={3} placeholder={'[{"name":"Time","value":"1.2","unit":"s"}]'}/></label>
    <label>Conclusion<textarea name="conclusion" rows={3} maxLength={6000}/></label><button className="auth-submit" name="intent" value="draft">Save draft</button>
   </form>}
+  <h2>Assigned practicals</h2>
+  {!practicalAssignments?.length?<p className="muted">Your teachers have not published a practical assignment yet.</p>:<div className="portal-grid">{practicalAssignments.map(task=>{
+   const existing=assignmentEntry.get(task.id);
+   return <article className="portal-card" key={task.id}>
+    <span className="auth-kicker">ASSIGNED PRACTICAL</span><h3>{task.title}</h3>
+    <p>{task.instructions}</p>
+    <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
+    {existing?<p className="form-success">Notebook already started — current status: {existing.status}. Find it in Previous practical records below.</p>:<form action={saveLabNotebook} className="auth-form">
+     <input type="hidden" name="assignment_id" value={task.id}/><input type="hidden" name="course_id" value={task.course_id}/><input type="hidden" name="lab_id" value={task.lab_id}/>
+     <label>Notebook title<input name="title" required minLength={2} maxLength={180} defaultValue={task.title}/></label>
+     <label>Hypothesis<textarea name="hypothesis" rows={2} maxLength={4000}/></label>
+     <label>Procedure / method<textarea name="procedure_notes" rows={3} maxLength={8000}/></label>
+     <label>Observations<textarea name="observations" rows={3} maxLength={12000}/></label>
+     <label>Measurements (JSON array; optional)<textarea name="measurements" rows={2} placeholder={'[{"name":"Reading","value":"...","unit":"..."}]'}/></label>
+     <label>Conclusion<textarea name="conclusion" rows={2} maxLength={6000}/></label>
+     <button className="auth-submit" name="intent" value="draft">Start practical notebook</button>
+    </form>}
+   </article>;
+  })}</div>}
   <h2>Previous practical records</h2>
   {!notebooks?.length?<p className="muted">Your saved practical records will appear here.</p>:<div className="portal-grid">{notebooks.map(entry=><article className="portal-card" key={entry.id}>
    <span className="auth-kicker">{String(entry.status).toUpperCase()}</span><h3>{entry.title}</h3><p className="muted">{courseName.get(entry.course_id)??'Course'} · {labName.get(entry.lab_id)??'Virtual practical'} · {new Date(entry.updated_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p>

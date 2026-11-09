@@ -10,10 +10,10 @@ test('course assignment replacement is one validated database RPC', async () => 
   const action = await readFile(new URL('../app/actions/course-studio.ts', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/0038_atomic_course_assignments_and_password_reset_limit.sql', import.meta.url), 'utf8');
   assert.match(action, /rpc\(['"]replace_course_assignments['"]/);
-  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.replace_course_assignments/);
+  assert.match(migration, /create or replace function public\.replace_course_assignments/i);
   assert.match(migration, /Every assigned account must be a Teacher or Staff member/i);
-  assert.match(migration, /DELETE FROM public\.course_assignments/);
-  assert.match(migration, /INSERT INTO public\.course_assignments/);
+  assert.match(migration, /delete from public\.course_assignments/i);
+  assert.match(migration, /insert into public\.course_assignments/i);
   assert.doesNotMatch(action, /from\(['"]course_assignments['"]\)\.delete/);
 });
 

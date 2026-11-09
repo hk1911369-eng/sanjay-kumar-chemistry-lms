@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { currentBangladeshBillingPeriod } from '@/lib/pricing';
 import { paymentReviewErrorCode } from '@/lib/payment-review-error.js';
+import { parseWalletStatementCsv, reconcileWalletRows } from '@/lib/payment-reconciliation.js';
 
 const providers = ['bkash', 'nagad', 'rocket'] as const;
 type Provider = (typeof providers)[number];
@@ -184,4 +185,131 @@ export async function updatePaymentSettings(formData: FormData) {
   }).eq('provider', provider);
   if (error) redirect('/admin?settings_error=save_failed');
   redirect('/admin?settings_success=1');
+}
+
+
+type WalletStatementRow = {
+  provider: 'bkash' | 'nagad' | 'rocket';
+  transactionId: string;
+  amountBdt: number;
+  senderPhone: string;
+};
+
+async function getPaymentReconciliationContext() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'unauthorized' as const };
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'admin') return { error: 'forbidden' as const };
+  return { supabase, user };
+}
+
+async function loadReconciliationRecords(supabase: Awaited<ReturnType<typeof createClient>>, rows: WalletStatementRow[]) {
+  const transactionIds = [...new Set(rows.map(row => row.transactionId))];
+  const senderPhones = [...new Set(rows.map(row => row.senderPhone))];
+  const [transactionResult, senderResult] = await Promise.all([
+    supabase.from('manual_payment_submissions')
+      .select('id,student_id,course_id,provider,transaction_id,amount_bdt,sender_phone,status')
+      .in('transaction_id', transactionIds).limit(2000),
+    supabase.from('manual_payment_submissions')
+      .select('id,student_id,course_id,provider,transaction_id,amount_bdt,sender_phone,status')
+      .in('sender_phone', senderPhones).limit(2000),
+  ]);
+  if (transactionResult.error || senderResult.error) return { error: true as const, records: [] };
+  const byId = new Map<string, any>();
+  for (const record of [...(transactionResult.data ?? []), ...(senderResult.data ?? [])]) byId.set(record.id, record);
+  return { error: false as const, records: [...byId.values()] };
+}
+
+function validateWalletStatementRows(value: unknown): WalletStatementRow[] | null {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 500) return null;
+  const rows: WalletStatementRow[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const row = item as Record<string, unknown>;
+    if (!providers.includes(row.provider as Provider)
+        || typeof row.transactionId !== 'string' || row.transactionId.length < 5 || row.transactionId.length > 100
+        || !Number.isSafeInteger(row.amountBdt) || Number(row.amountBdt) <= 0
+        || typeof row.senderPhone !== 'string' || !/^01[3-9]\d{8}$/.test(row.senderPhone)) return null;
+    rows.push({
+      provider: row.provider as Provider,
+      transactionId: row.transactionId.toUpperCase(),
+      amountBdt: Number(row.amountBdt),
+      senderPhone: row.senderPhone,
+    });
+  }
+  return rows;
+}
+
+export async function previewPaymentStatement(formData: FormData) {
+  const context = await getPaymentReconciliationContext();
+  if ('error' in context) return { error: context.error };
+  const provider = String(formData.get('provider') ?? '') as Provider;
+  const file = formData.get('statement');
+  if (!providers.includes(provider) || !(file instanceof File) || file.size < 20 || file.size > 1024 * 1024) {
+    return { error: 'invalid_file' };
+  }
+
+  let rows: WalletStatementRow[];
+  try {
+    rows = parseWalletStatementCsv(await file.text(), provider) as WalletStatementRow[];
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'invalid_csv' };
+  }
+
+  const loaded = await loadReconciliationRecords(context.supabase, rows);
+  if (loaded.error) return { error: 'lookup_failed' };
+  const reconciled = reconcileWalletRows(rows, loaded.records);
+  const exact = reconciled.filter(row => row.status === 'exact_match');
+  const studentIds = [...new Set(exact.map(row => row.studentId))];
+  const courseIds = [...new Set(exact.map(row => row.courseId))];
+  const [{ data: students }, { data: courses }] = await Promise.all([
+    studentIds.length ? context.supabase.from('profiles').select('id,full_name').in('id', studentIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+    courseIds.length ? context.supabase.from('courses').select('id,title').in('id', courseIds)
+      : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+  ]);
+  const studentNames = new Map((students ?? []).map(item => [item.id, item.full_name] as const));
+  const courseNames = new Map((courses ?? []).map(item => [item.id, item.title] as const));
+  const matches = exact.map(row => ({
+    submissionId: row.submissionId,
+    transactionId: row.transactionId,
+    amountBdt: row.amountBdt,
+    senderLast4: row.senderPhone.slice(-4),
+    studentName: studentNames.get(row.studentId) ?? 'Student',
+    courseTitle: courseNames.get(row.courseId) ?? 'Course',
+  }));
+  const flagged = reconciled.filter(row => row.status !== 'exact_match').map(row => ({
+    transactionId: row.transactionId,
+    amountBdt: row.amountBdt,
+    reason: row.reason,
+  }));
+  return { rows, matches, flagged };
+}
+
+export async function approveReconciledPayments(statementRows: unknown) {
+  const context = await getPaymentReconciliationContext();
+  if ('error' in context) return { error: context.error };
+  const rows = validateWalletStatementRows(statementRows);
+  if (!rows) return { error: 'invalid_statement_rows' };
+  const loaded = await loadReconciliationRecords(context.supabase, rows);
+  if (loaded.error) return { error: 'lookup_failed' };
+  const exact = reconcileWalletRows(rows, loaded.records).filter(row => row.status === 'exact_match');
+  if (!exact.length) return { approved: 0, failed: 0, skipped: rows.length };
+
+  let approved = 0;
+  let failed = 0;
+  for (const row of exact) {
+    const { error } = await context.supabase.rpc('approve_manual_payment_submission', {
+      p_submission_id: row.submissionId,
+      p_admin_note: 'Bulk reconciled: exact provider, transaction ID, amount and sender match against uploaded wallet statement.',
+    });
+    if (error) {
+      failed += 1;
+      console.error('Bulk payment reconciliation approval failed', { code: error.code ?? 'unknown' });
+    } else {
+      approved += 1;
+    }
+  }
+  return { approved, failed, skipped: rows.length - exact.length };
 }

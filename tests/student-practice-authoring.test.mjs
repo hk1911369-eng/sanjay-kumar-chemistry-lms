@@ -25,6 +25,8 @@ test('practice authoring page only offers courses assigned to staff or courses t
   assert.match(page, /from\('course_subjects'\)/);
   assert.match(page, /createStudentPracticeQuestion/);
   assert.match(page, /Publish immediately/);
+  assert.match(page, /from\('learning_concepts'\)/);
+  assert.match(page, /name="concept_id"/);
 });
 
 test('practice authoring is available in teacher, staff and admin navigation', async () => {

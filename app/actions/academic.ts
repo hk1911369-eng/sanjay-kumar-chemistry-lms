@@ -63,7 +63,7 @@ export async function submitAssignment(formData:FormData) {
  if(!assignmentId||(!answer&&!url)||answer.length>12000||(url&&!/^https:\/\//i.test(url))) redirect('/academic?error=submission');
  const {data:existing}=await supabase.from('assignment_submissions').select('id,marks').eq('assignment_id',assignmentId).eq('student_id',user.id).maybeSingle();
  if(existing?.marks!==null&&existing?.marks!==undefined) redirect('/academic?error=already_graded');
- const submissionPayload={answer_text:answer,attachment_url:url||null,submitted_at:new Date().toISOString()};
+ const submissionPayload={answer_text:answer,attachment_url:url||null};
  const result=existing
   ? await supabase.from('assignment_submissions').update(submissionPayload).eq('id',existing.id)
   : await supabase.from('assignment_submissions').insert({assignment_id:assignmentId,student_id:user.id,...submissionPayload});

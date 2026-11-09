@@ -723,3 +723,17 @@ input,select,textarea,button{max-width:100%}
 .double-pendulum-note{margin:0;padding:.85rem;border-left:3px solid var(--accent);background:var(--surface-soft);border-radius:8px;color:var(--muted);font-size:.82rem;line-height:1.55}
 @media(max-width:560px){.double-pendulum-heading{display:grid}.double-pendulum-controls{grid-template-columns:1fr}.double-pendulum-readout{grid-template-columns:1fr}.double-pendulum-actions{display:grid;grid-template-columns:1fr}.double-pendulum-actions button{width:100%;min-height:50px}}
 @media(prefers-reduced-motion:reduce){.double-pendulum-stage canvas{scroll-behavior:auto}}
+
+.virtual-lab-titration-graph{display:grid;gap:.4rem;margin:.6rem 0;padding:.85rem;border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+.virtual-lab-titration-graph>div{display:grid;gap:.15rem}
+.virtual-lab-titration-graph>div span{font-size:.78rem;color:var(--muted)}
+.virtual-lab-titration-graph svg{display:block;width:100%;height:auto;overflow:visible}
+.virtual-lab-titration-graph svg line{stroke:var(--line);stroke-width:1}
+.virtual-lab-titration-graph svg text{fill:var(--muted);font-size:11px}
+.virtual-lab-titration-graph .virtual-lab-graph-axis{stroke:var(--muted);stroke-width:1.5}
+.virtual-lab-titration-graph .virtual-lab-equivalence-line{stroke:#d97736;stroke-dasharray:5 4;stroke-width:1.5}
+.virtual-lab-titration-graph .virtual-lab-curve-line{fill:none;stroke:#2677bd;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.virtual-lab-titration-graph .virtual-lab-current-point{fill:#d97736;stroke:#fff;stroke-width:2}
+.virtual-punnett-grid{display:grid;grid-template-columns:repeat(3,minmax(0,76px));gap:.45rem;justify-content:center}
+.virtual-punnett-grid strong{display:grid;place-items:center;min-height:56px;padding:.6rem;text-align:center;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-variant-numeric:tabular-nums}
+.virtual-punnett-grid strong.is-header{background:var(--surface-alt);color:var(--muted);font-size:.85rem}

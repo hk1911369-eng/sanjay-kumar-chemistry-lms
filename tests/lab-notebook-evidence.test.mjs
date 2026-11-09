@@ -52,7 +52,7 @@ test('evidence upload action verifies the notebook, file size and binary signatu
   assert.match(action, /8 \* 1024 \* 1024/);
   assert.match(action, /MAX_EVIDENCE_PER_NOTEBOOK = 8/);
   assert.match(action, /isAllowedLabEvidenceSignature\(file\.type, bytes\)/);
-  assert.match(action, /status'\)\.eq\('student_id', user\.id\)/);
+  assert.match(action, /\.eq\('student_id', user\.id\)/);
   assert.match(action, /upsert: false/);
   assert.match(action, /storage\.from\('lab-notebook-evidence'\)\.remove\(\[storagePath\]\)/);
 });
@@ -78,4 +78,15 @@ test('student and teacher workspaces expose evidence only through the guarded do
   assert.match(teacher, /\/api\/lab-notebook-evidence\//);
   assert.match(teacher, /Supporting evidence/);
   assert.match(config, /bodySizeLimit: '10mb'/);
+});
+
+test('evidence storage helper stays outside the exposed public schema', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110235000_refine_practical_evidence_security_policies.sql', import.meta.url), 'utf8');
+  assert.match(migration, /create schema if not exists private/i);
+  assert.match(migration, /private\.can_upload_lab_notebook_evidence/i);
+  assert.match(migration, /grant execute on function private\.can_upload_lab_notebook_evidence\(text\) to authenticated/i);
+  assert.match(migration, /revoke all on function private\.can_upload_lab_notebook_evidence\(text\) from public, anon/i);
+  assert.match(migration, /create policy "assigned teachers create practical assignments"[\s\S]*for insert/i);
+  assert.match(migration, /create policy "assigned teachers update practical assignments"[\s\S]*for update/i);
+  assert.doesNotMatch(migration, /create policy "assigned teachers manage practical assignments"[\s\S]*for all/i);
 });

@@ -181,10 +181,35 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
     ...(upcomingWrittenResult.data ?? []).map((item:any) => ({...item,kind:'Written exam',duration_minutes:null})),
   ].sort((a:any,b:any)=>new Date(a.starts_at).getTime()-new Date(b.starts_at).getTime()).slice(0,8);
   const upcomingAssignments = upcomingAssignmentResult.data ?? [];
+
+  const dueReviewConcepts = conceptMastery.filter((item:any) => item.next_review_at && new Date(item.next_review_at).getTime() <= Date.now() && Number(item.evidence_count) >= 1);
+  let dueReviewRecommendations: { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; next_review_at:string }[] = [];
+  if (dueReviewConcepts.length && eligibleCourseIds.length) {
+    const { data: dueMappings } = await supabase.from('lesson_concepts').select('lesson_id,concept_id')
+      .in('concept_id',dueReviewConcepts.map((item:any)=>item.concept_id)).limit(200);
+    const dueLessonIds = [...new Set((dueMappings ?? []).map((item:any)=>item.lesson_id))];
+    if (dueLessonIds.length) {
+      const { data: dueLessons } = await supabase.from('lessons').select('id,title,course_id')
+        .in('id',dueLessonIds).in('course_id',eligibleCourseIds).eq('is_published',true).limit(100);
+      const lessonById = new Map((dueLessons ?? []).map((lesson:any)=>[lesson.id,lesson]));
+      const masteryByConcept = new Map(dueReviewConcepts.map((item:any)=>[item.concept_id,item]));
+      const seenReviewLessons = new Set<string>();
+      for (const mapping of dueMappings ?? []) {
+        const lesson:any = lessonById.get(mapping.lesson_id);
+        const mastery:any = masteryByConcept.get(mapping.concept_id);
+        if (!lesson || !mastery || seenReviewLessons.has(lesson.id)) continue;
+        seenReviewLessons.add(lesson.id);
+        const relation = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : mastery.learning_concepts;
+        dueReviewRecommendations.push({lessonId:lesson.id,lessonTitle:lesson.title,courseId:lesson.course_id,conceptTitle:relation?.title ?? 'Learning topic',masteryScore:Number(mastery.mastery_score),next_review_at:mastery.next_review_at});
+      }
+    }
+  }
+
   const priorityLearningActions = rankLearningActions({
     revisionTasks,
     mistakes: mistakeMemory,
     recommendations: learningRecommendations,
+    dueReviews: dueReviewRecommendations,
     upcomingExams,
     upcomingAssignments,
   });

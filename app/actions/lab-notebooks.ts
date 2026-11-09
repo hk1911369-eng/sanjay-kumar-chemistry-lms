@@ -37,7 +37,10 @@ export async function saveLabNotebook(formData: FormData) {
   } else {
     const result=await db.from('lab_notebook_entries').insert({...payload,course_id:courseId,lab_id:labId,student_id:user.id,status:'draft',submitted_at:null}).select('id').single();
     error=result.error;
-    if (!error&&intent==='submit') error=(await db.from('lab_notebook_entries').update({status:'submitted',submitted_at:new Date().toISOString()}).eq('id',result.data.id).eq('student_id',user.id)).error;
+    if (!error&&intent==='submit') {
+      const submitted=await db.from('lab_notebook_entries').update({status:'submitted',submitted_at:new Date().toISOString()}).eq('id',result.data.id).eq('student_id',user.id).select('id').maybeSingle();
+      error=submitted.error||(!submitted.data?{message:'Submission was not accepted'}:null);
+    }
   }
   if(error) redirect('/student/lab-notebook?error=save');
   revalidatePath('/student/lab-notebook'); revalidatePath('/teacher/lab-notebooks'); revalidatePath('/student');
@@ -50,8 +53,8 @@ export async function reviewLabNotebook(formData: FormData) {
   const id=String(formData.get('entry_id')??''), decision=String(formData.get('decision')??''), feedback=String(formData.get('teacher_feedback')??'').trim();
   const scoreText=String(formData.get('score')??'').trim(), score=scoreText===''?null:Number(scoreText);
   if(!uuid.test(id)||!['returned','reviewed'].includes(decision)||!feedback||feedback.length>4000||(decision==='reviewed'&&(score===null||!Number.isFinite(score)||score<0||score>100))||(decision==='returned'&&score!==null)) redirect('/teacher/lab-notebooks?error=invalid');
-  const {error}=await db.from('lab_notebook_entries').update({status:decision,teacher_feedback:feedback,score,reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',id).eq('status','submitted');
-  if(error) redirect('/teacher/lab-notebooks?error=review');
+  const {data,error}=await db.from('lab_notebook_entries').update({status:decision,teacher_feedback:feedback,score,reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',id).eq('status','submitted').select('id').maybeSingle();
+  if(error||!data) redirect('/teacher/lab-notebooks?error=review');
   revalidatePath('/teacher/lab-notebooks'); revalidatePath('/student/lab-notebook'); revalidatePath('/student');
   redirect('/teacher/lab-notebooks?reviewed=1');
 }

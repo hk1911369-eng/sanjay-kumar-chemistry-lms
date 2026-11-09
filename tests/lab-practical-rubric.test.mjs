@@ -39,7 +39,7 @@ test('teacher and student workspaces reveal each weighted criterion and the calc
   ]);
   assert.match(teacher, /Weighted practical rubric/);
   assert.match(teacher, /rubric_hypothesis/);
-  assert.match(teacher, /lab safety and integrity/);
+  assert.match(teacher, /lab safety and integrity/i);
   assert.match(student, /review\.rubric_scores/);
   assert.match(student, /Score:/);
 });

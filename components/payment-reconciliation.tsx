@@ -52,7 +52,7 @@ export function PaymentReconciliation() {
             : (result.error ?? 'Unable to process the statement.'));
           return;
         }
-        setPreview(result);
+        setPreview({ rows: result.rows as StatementRow[], matches: result.matches as Match[], flagged: result.flagged as Flagged[] });
         setMessage('Statement checked. Only exact matches are eligible for bulk approval.');
       }).catch(() => setMessage('Could not process this statement. Please try again.'));
     });

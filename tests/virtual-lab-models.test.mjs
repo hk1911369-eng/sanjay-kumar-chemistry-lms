@@ -36,7 +36,7 @@ test('strong acid-base titration identifies acid excess, equivalence and base ex
   assert.equal(equivalence.pH, 7);
   assert.equal(base.limitingReagent, 'base-excess');
   assert.ok(base.pH > 7);
-  assert.equal(equivalence.equivalenceVolumeMl, 25);
+  assert.ok(Math.abs(equivalence.equivalenceVolumeMl - 25) < 1e-10);
   assert.match(equivalence.model, /activity effects/);
 });
 

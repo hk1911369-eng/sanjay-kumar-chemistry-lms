@@ -13,13 +13,14 @@ test('practical assignments may map to only a published concept in the experimen
 
 test('only graded review-history rounds emit practical learning evidence', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261110245000_link_practical_reviews_to_learning_concepts.sql', import.meta.url), 'utf8');
+  const rubricMigration = await readFile(new URL('../supabase/migrations/20261110247000_include_rubric_in_practical_learning_evidence.sql', import.meta.url), 'utf8');
   assert.match(migration, /'practical_reviewed'/i);
   assert.match(migration, /after insert on public\.lab_notebook_review_history/i);
   assert.match(migration, /new\.decision = 'reviewed' and new\.score is not null/i);
   assert.match(migration, /a\.concept_id is not null/i);
   assert.match(migration, /lc\.is_published is true/i);
   assert.match(migration, /new\.review_round/i);
-  assert.match(migration, /new\.rubric_scores/i);
+  assert.match(rubricMigration, /new\.rubric_scores/i);
   assert.match(migration, /new\.reviewed_at/i);
   assert.match(migration, /on conflict \(student_id, source_id\)[\s\S]*do nothing/i);
   assert.match(migration, /learning_events_one_practical_review_per_round/i);

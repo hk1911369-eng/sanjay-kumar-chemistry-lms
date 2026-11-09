@@ -61,3 +61,13 @@ test('administrators can configure database-driven subject-to-template mappings'
   assert.match(action, /onConflict: 'lab_key'/);
   assert.match(layout, /href: '\/admin\/virtual-labs'/);
 });
+
+test('published simulations are visible only to paid students enrolled in the mapped subject', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110110000_scope_virtual_lab_catalog_to_paid_subjects.sql', import.meta.url), 'utf8');
+  assert.match(migration, /current_role\(\)::text = 'student'/);
+  assert.match(migration, /cs\.subject_id = virtual_lab_catalog\.subject_id/);
+  assert.match(migration, /e\.student_id = \(SELECT auth\.uid\(\)\)/);
+  assert.match(migration, /e\.admission_fee_paid IS TRUE/);
+  assert.match(migration, /e\.paid_through >=/);
+  assert.match(migration, /c\.archived_at IS NULL/);
+});

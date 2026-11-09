@@ -129,3 +129,22 @@ test('double pendulum is a separately mapped physics simulation with educator-co
   assert.match(action, /'pendulum'\]\.includes\(simulationType\)/);
   assert.match(admin, /value="pendulum"/);
 });
+
+test('chemistry titration exposes a live pH-volume curve and identifies its modelled indicator', async () => {
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../app/globals.css', import.meta.url), 'utf8');
+  assert.match(component, /titrationCurve/);
+  assert.match(component, /Strong acid and base titration curve/);
+  assert.match(component, /Equivalence/);
+  assert.match(component, /Phenolphthalein/);
+  assert.match(css, /virtual-lab-titration-graph/);
+  assert.match(css, /virtual-lab-equivalence-line/);
+});
+
+test('biology inheritance square labels parental gametes and explains probability limitations', async () => {
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  assert.match(component, /parental gametes/);
+  assert.match(component, /inheritance\.gametesA/);
+  assert.match(component, /inheritance\.gametesB/);
+  assert.match(component, /not predictions for an individual child or family/);
+});

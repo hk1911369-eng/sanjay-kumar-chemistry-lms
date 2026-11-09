@@ -29,7 +29,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
  const {data:evidenceRows}=notebookIds.length?await db.from('lab_notebook_evidence').select('id,notebook_id,original_filename,content_type,size_bytes,created_at').in('notebook_id',notebookIds).order('created_at',{ascending:true}):{data:[] as any[]};
  const evidenceByNotebook=new Map<string,any[]>();
  for(const file of evidenceRows??[]){const list=evidenceByNotebook.get(file.notebook_id)??[];list.push(file);evidenceByNotebook.set(file.notebook_id,list);}
- const {data:reviewHistory}=notebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,reviewer_display_name,review_round,decision,feedback,score,submitted_at,reviewed_at').in('notebook_id',notebookIds).order('review_round',{ascending:false}):{data:[] as any[]};
+ const {data:reviewHistory}=notebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,reviewer_display_name,review_round,decision,feedback,score,rubric_scores,submitted_at,reviewed_at').in('notebook_id',notebookIds).order('review_round',{ascending:false}):{data:[] as any[]};
  const historyByNotebook=new Map<string,any[]>();
  for(const item of reviewHistory??[]){const list=historyByNotebook.get(item.notebook_id)??[];list.push(item);historyByNotebook.set(item.notebook_id,list);}
  return <PortalLayout role="student" active="overview" title="Practical lab notebook" returnTo="/student"><section className="portal-content">
@@ -84,7 +84,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
      <b>Round {review.review_round} · {review.decision==='reviewed'?'Graded':'Returned for correction'}</b>
      <p className="muted">{review.reviewer_display_name} · {new Date(review.reviewed_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
      <p>{review.feedback}</p>
-     {review.score!==null&&<p><b>Score:</b> {review.score}/100</p>}
+     {review.score!==null&&<><p><b>Total:</b> {review.score}/100</p><ul>{Object.entries(review.rubric_scores??{}).map(([key,value])=><li key={key}>{({hypothesis:'Hypothesis',method:'Method',observations_measurements:'Observations and measurements',analysis_interpretation:'Analysis and interpretation',conclusion_reflection:'Conclusion and reflection',safety_integrity:'Lab safety and integrity'} as Record<string,string>)[key]??key}: {String(value)}</li>)}</ul></>}
     </li>)}</ol>
    </section>}
    <section aria-label="Practical evidence">

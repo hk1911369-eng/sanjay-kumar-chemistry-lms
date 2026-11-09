@@ -16,7 +16,7 @@ export function VirtualMicroscopeLab({ onInteraction }: { onInteraction: () => v
   const [illumination, setIllumination] = useState(65);
   const [contrast, setContrast] = useState(55);
   const [labels, setLabels] = useState(true);
-  const fieldDiameter = 180 * 40 / magnification;
+  const fieldDiameter = 180000 / magnification;
   const blur = Math.abs(focus - 55) / 55 * 4.5;
   const cellCount = magnification === 40 ? 12 : magnification === 100 ? 7 : 3;
   const cells = useMemo(() => Array.from({ length: cellCount }, (_, i) => ({

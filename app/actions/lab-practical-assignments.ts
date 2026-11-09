@@ -33,6 +33,8 @@ export async function createLabPracticalAssignment(formData: FormData) {
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dueInput)) redirect('/teacher/lab-notebooks?error=assignment');
     const parsed = new Date(`${dueInput}:00+06:00`);
     if (Number.isNaN(parsed.getTime())) redirect('/teacher/lab-notebooks?error=assignment');
+    const dhakaLocal = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(parsed).replace(' ', 'T');
+    if (dhakaLocal !== dueInput) redirect('/teacher/lab-notebooks?error=assignment');
     dueAt = parsed.toISOString();
   }
 

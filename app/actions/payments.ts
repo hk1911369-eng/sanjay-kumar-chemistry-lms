@@ -295,7 +295,7 @@ export async function previewPaymentStatement(formData: FormData) {
   const flagged = reconciled.filter(row => row.status !== 'exact_match').map(row => ({
     transactionId: row.transactionId,
     amountBdt: row.amountBdt,
-    reason: row.reason,
+    reason: row.reason ?? 'unknown',
   }));
   return { rows, matches, flagged };
 }

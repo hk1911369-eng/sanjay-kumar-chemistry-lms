@@ -29,3 +29,14 @@ test('product scope explicitly defines JMT Academy as subject-agnostic', async (
   assert.ok(scope.includes('English'));
   assert.ok(scope.includes('Offline academy'));
 });
+
+test('admin course studio creates subject catalogue entries dynamically', async () => {
+  const action = await readFile(new URL('../app/actions/course-studio.ts', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../app/admin/courses/page.tsx', import.meta.url), 'utf8');
+  const catalogue = await readFile(new URL('../components/course-catalogue.tsx', import.meta.url), 'utf8');
+  assert.ok(action.includes("db.from('academic_subjects').upsert(subjectRows"));
+  assert.ok(action.includes("db.from('course_subjects').upsert(subjectLinks"));
+  assert.ok(action.includes("db.from('course_subjects').delete()"));
+  assert.ok(studio.includes('Subjects (comma separated)'));
+  assert.ok(catalogue.includes('...(c.subjects??[])'));
+});

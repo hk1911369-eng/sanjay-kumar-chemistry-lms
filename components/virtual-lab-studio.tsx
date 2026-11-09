@@ -7,6 +7,42 @@ type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'q
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
+type SafetyScenario = {
+  title: string;
+  riskLevel: 'High' | 'Moderate';
+  unsafeChoice: string;
+  consequence: string;
+  safeChoice: string;
+  safeFeedback: string;
+};
+
+const SAFETY_SCENARIOS: Partial<Record<SimulationType, SafetyScenario>> = {
+  chemistry: {
+    title: 'Acid dilution: recognise an unsafe sequence',
+    riskLevel: 'High',
+    unsafeChoice: 'Pour water into concentrated acid.',
+    consequence: 'The rapid release of heat can make the mixture boil or splash corrosive liquid. In a real laboratory this can cause serious eye and skin injuries.',
+    safeChoice: 'Follow the institution’s approved acid-dilution procedure, use suitable PPE and supervision, and add acid to water—not water to acid.',
+    safeFeedback: 'Correct safety principle. Follow your laboratory’s written procedure and teacher supervision; this simulation is not a substitute for practical training.',
+  },
+  physics: {
+    title: 'Electrical circuit: recognise a short-circuit hazard',
+    riskLevel: 'High',
+    unsafeChoice: 'Connect the supply terminals directly with a wire.',
+    consequence: 'A short circuit can cause a very large current, rapid heating, damaged components, burns or fire. The result depends on the source and its protection.',
+    safeChoice: 'Switch off before changing connections, use a circuit designed for the experiment, and follow the teacher’s current-limit and equipment instructions.',
+    safeFeedback: 'Correct. De-energise before rewiring and use only the approved circuit and protective equipment.',
+  },
+  biology: {
+    title: 'Specimen handling: prevent cross-contamination',
+    riskLevel: 'Moderate',
+    unsafeChoice: 'Reuse an unclean dropper or slide between specimens.',
+    consequence: 'Material can transfer between samples, contaminating observations and potentially exposing people to biological material. Results may become unreliable.',
+    safeChoice: 'Use clean or single-use tools as directed, label specimens, wash hands, and dispose of materials using the laboratory’s approved process.',
+    safeFeedback: 'Correct. Clean technique, labelling, hand hygiene and approved disposal protect both the sample and the people handling it.',
+  },
+};
+
 export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[]; catalogue: LabCatalogItem[] }) {
   const visibleLabs = catalogue;
   const [active, setActive] = useState<string>(catalogue[0]?.lab_key ?? '');
@@ -25,6 +61,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const [binary, setBinary] = useState('101101');
   const [courseId, setCourseId] = useState(courses[0]?.id ?? '');
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [safetyResult, setSafetyResult] = useState<'unsafe' | 'safe' | null>(null);
   const [startedAt, setStartedAt] = useState(Date.now());
 
   const activeLabId = visibleLabs.some(lab => lab.lab_key === active) ? active : (visibleLabs[0]?.lab_key ?? '');
@@ -53,7 +90,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   return <div className="virtual-lab-studio">
     {visibleLabs.length === 0 ? <article className="portal-card"><h2>No matching simulation yet</h2><p className="muted">Your currently enrolled courses do not have a supported simulation mapped to their subjects yet.</p></article> : <>
     <nav className="virtual-lab-catalogue" aria-label="Simulation catalogue">
-      {visibleLabs.map(lab => <button type="button" key={lab.lab_key} onClick={() => { setActive(lab.lab_key); setHasInteracted(false); setStartedAt(Date.now()); }} className={activeLabId === lab.lab_key ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
+      {visibleLabs.map(lab => <button type="button" key={lab.lab_key} onClick={() => { setActive(lab.lab_key); setHasInteracted(false); setSafetyResult(null); setStartedAt(Date.now()); }} className={activeLabId === lab.lab_key ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
         <small>{lab.subject_name}</small><b>{lab.title}</b><span>{lab.summary}</span>
       </button>)}
     </nav>
@@ -107,6 +144,27 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <div className="virtual-lab-results"><div><strong>{decimal === null ? 'Invalid' : decimal}</strong><span>Decimal value</span></div><div><strong>{binary.length}</strong><span>Binary digits</span></div></div>
         <small className="muted">Enter 1–16 binary digits (0 or 1).</small>
       </div>}
+
+      {SAFETY_SCENARIOS[selected.simulation_type] && <section className="virtual-lab-safety" aria-labelledby="virtual-lab-safety-title">
+        <div className="virtual-lab-safety-heading">
+          <div><span className="auth-kicker">LAB SAFETY · WHAT-IF CHALLENGE</span><h3 id="virtual-lab-safety-title">{SAFETY_SCENARIOS[selected.simulation_type]!.title}</h3></div>
+          <span className={`virtual-lab-risk is-${SAFETY_SCENARIOS[selected.simulation_type]!.riskLevel.toLowerCase()}`}>{SAFETY_SCENARIOS[selected.simulation_type]!.riskLevel} risk</span>
+        </div>
+        <p>Choose a response. You can explore a simulated mistake safely and learn why the real-world action is dangerous.</p>
+        <div className="virtual-lab-safety-actions">
+          <button type="button" className="virtual-lab-unsafe-choice" aria-pressed={safetyResult === 'unsafe'} onClick={() => setSafetyResult('unsafe')}>Simulate unsafe choice</button>
+          <button type="button" className="virtual-lab-safe-choice" aria-pressed={safetyResult === 'safe'} onClick={() => setSafetyResult('safe')}>Choose safe practice</button>
+        </div>
+        {safetyResult === 'unsafe' && <div className="virtual-lab-safety-feedback is-warning" role="status" aria-live="polite">
+          <b>Simulated mistake: {SAFETY_SCENARIOS[selected.simulation_type]!.unsafeChoice}</b>
+          <p>{SAFETY_SCENARIOS[selected.simulation_type]!.consequence}</p>
+          <b>Safer approach</b><p>{SAFETY_SCENARIOS[selected.simulation_type]!.safeChoice}</p>
+        </div>}
+        {safetyResult === 'safe' && <div className="virtual-lab-safety-feedback is-success" role="status" aria-live="polite">
+          <b>Safety principle understood</b><p>{SAFETY_SCENARIOS[selected.simulation_type]!.safeFeedback}</p>
+        </div>}
+        <small className="muted">This is an educational risk model, not a real equipment simulator or a substitute for local safety rules, supervision and practical training.</small>
+      </section>}
 
       <form action={recordSimulationCompletion} className="auth-form virtual-lab-completion">
         <label>Record this experiment under course

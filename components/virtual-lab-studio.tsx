@@ -25,7 +25,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const [startedAt, setStartedAt] = useState(Date.now());
 
   const activeLabId = visibleLabs.some(lab => lab.lab_key === active) ? active : (visibleLabs[0]?.lab_key ?? '');
-  const selected = visibleLabs.find(lab => lab.lab_key === activeLabId) ?? visibleLabs[0];
+  const selected = visibleLabs.find(lab => lab.lab_key === activeLabId) ?? visibleLabs[0]!;
   const selectedCourses = selected ? courses.filter(course => course.subjectIds.includes(selected.subject_id)) : [];
   const selectedCourseId = selectedCourses.some(course => course.id === courseId) ? courseId : (selectedCourses[0]?.id ?? '');
   const current = voltage / resistance;
@@ -44,7 +44,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   return <div className="virtual-lab-studio">
     {visibleLabs.length === 0 ? <article className="portal-card"><h2>No matching simulation yet</h2><p className="muted">Your currently enrolled courses do not have a supported simulation mapped to their subjects yet.</p></article> : <>
     <nav className="virtual-lab-catalogue" aria-label="Simulation catalogue">
-      {visibleLabs.map(lab => <button type="button" key={lab.lab_key} onClick={() => { setActive(lab.lab_key); setHasInteracted(false); setStartedAt(Date.now()); }} className={activeLabId === lab.id ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
+      {visibleLabs.map(lab => <button type="button" key={lab.lab_key} onClick={() => { setActive(lab.lab_key); setHasInteracted(false); setStartedAt(Date.now()); }} className={activeLabId === lab.lab_key ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
         <small>{lab.subject_name}</small><b>{lab.title}</b><span>{lab.summary}</span>
       </button>)}
     </nav>

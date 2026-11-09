@@ -39,6 +39,11 @@ export default async function StaffPracticePage({
     ? await db.from('academic_subjects').select('id,name').in('id', subjectIds).order('name')
     : { data: [] as { id: string; name: string }[] };
 
+  const { data: concepts } = subjectIds.length
+    ? await db.from('learning_concepts').select('id,title,subject_id')
+      .in('subject_id', subjectIds).eq('is_published', true).order('title')
+    : { data: [] as { id: string; title: string; subject_id: string }[] };
+
   const subjectNames = new Map((subjects ?? []).map(subject => [subject.id, subject.name]));
   const courseNames = new Map((courses ?? []).map(course => [course.id, course.title]));
   const choices = (mappings ?? []).flatMap(mapping => {
@@ -103,8 +108,11 @@ export default async function StaffPracticePage({
               <option value="5">F — sixth option</option>
             </select>
           </label>
-          <label>Concept ID <span className="muted">Optional UUID from the learning graph.</span>
-            <input name="concept_id" placeholder="Optional concept UUID"/>
+          <label>Learning concept <span className="muted">Optional; links performance to the adaptive learning map.</span>
+            <select name="concept_id" defaultValue="">
+              <option value="">No concept mapping</option>
+              {(concepts ?? []).map(concept => <option key={concept.id} value={concept.id}>{subjectNames.get(concept.subject_id) ?? 'Subject'} · {concept.title}</option>)}
+            </select>
           </label>
         </div>
         <label>Explanation

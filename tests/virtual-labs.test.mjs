@@ -59,7 +59,7 @@ test('administrators can configure database-driven subject-to-template mappings'
   assert.match(action, /profile\?\.role !== 'admin'/);
   assert.match(action, /upsert\(/);
   assert.match(action, /onConflict: 'lab_key'/);
-  assert.match(action, /'quadratic','pendulum'\]\.includes\(simulationType\)/);
+  assert.match(action, /'quadratic','pendulum','projectile'\]\.includes\(simulationType\)/);
   assert.match(layout, /href: '\/admin\/virtual-labs'/);
 });
 
@@ -126,7 +126,7 @@ test('double pendulum is a separately mapped physics simulation with educator-co
   assert.match(lab, /Pause experiment/);
   assert.match(lab, /Reset experiment/);
   assert.match(lab, /ResizeObserver/);
-  assert.match(action, /'pendulum'\]\.includes\(simulationType\)/);
+  assert.match(action, /'pendulum','projectile'\]\.includes\(simulationType\)/);
   assert.match(admin, /value="pendulum"/);
 });
 

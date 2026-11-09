@@ -116,6 +116,17 @@ Recommendations must explain the reason (“revise mole concept: repeated stoich
 - Support low-bandwidth delivery and accessible alternatives to interaction-heavy activities.
 - Do not label a static animation as an interactive lab.
 
+
+### Virtual laboratory safety and interaction standard
+Every laboratory module that models a real-world hazard must include a reviewed, age-appropriate safety challenge:
+- Let learners choose a safe response or deliberately trigger a clearly labelled, non-graphic simulated mistake.
+- Explain the causal chain and plausible consequences (injury, contamination, equipment damage, unreliable results) without sensationalism.
+- Follow immediately with the approved safer principle and require local teacher supervision for real experiments.
+- Never turn a hazard challenge into instructions for creating a dangerous condition. Keep dangerous states simulated, bounded and physically disconnected from real equipment.
+- Distinguish modelled outcomes from guaranteed outcomes; show relevant assumptions and uncertainty where they matter.
+- Support keyboard operation, screen readers, reduced motion, large touch targets and narrow mobile screens; desktop controls must remain usable without a mouse.
+- Validate the scenario content with a qualified subject educator and safety reviewer before publication. Keep content unpublished until reviewed.
+
 ## 10. Social and collaborative learning
 
 - Course discussions, study groups, peer explanation, moderated Q&A, and teacher-led sessions.

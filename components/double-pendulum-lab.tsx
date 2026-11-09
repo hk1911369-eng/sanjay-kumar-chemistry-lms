@@ -10,6 +10,7 @@ type Props = { compact?: boolean };
 
 export function DoublePendulumLab({ compact = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawRef = useRef<() => void>(() => {});
   const stateRef = useRef<[number, number, number, number]>([
     INITIAL.angle1 * Math.PI / 180, INITIAL.angle2 * Math.PI / 180, 0, 0,
   ]);
@@ -22,7 +23,6 @@ export function DoublePendulumLab({ compact = false }: Props) {
   const [gravity, setGravity] = useState(INITIAL.gravity);
   const [running, setRunning] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [stepRequest, setStepRequest] = useState(0);
   const [energy, setEnergy] = useState(() => doublePendulumEnergy(stateRef.current, {
     gravity: INITIAL.gravity, mass1: INITIAL.mass1, mass2: INITIAL.mass2,
     length1: INITIAL.length1, length2: INITIAL.length2,
@@ -36,6 +36,11 @@ export function DoublePendulumLab({ compact = false }: Props) {
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    stateRef.current = [angle1 * Math.PI / 180, angle2 * Math.PI / 180, 0, 0];
+    setEnergy(doublePendulumEnergy(stateRef.current, parameters).totalJoules);
+  }, [angle1, angle2, parameters]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -137,7 +142,6 @@ export function DoublePendulumLab({ compact = false }: Props) {
       frame = window.requestAnimationFrame(animate);
     };
 
-    stateRef.current = [angle1 * Math.PI / 180, angle2 * Math.PI / 180, 0, 0];
     trail.length = 0;
     resize();
     if (running && !reducedMotion) frame = window.requestAnimationFrame(animate);
@@ -149,7 +153,8 @@ export function DoublePendulumLab({ compact = false }: Props) {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [angle1, angle2, mass1, mass2, length1, length2, gravity, parameters, running, reducedMotion, stepRequest]);
+      drawRef.current = () => {};
+  }, [mass1, mass2, length1, length2, gravity, parameters, running, reducedMotion]);
 
   const reset = () => {
     setRunning(false);
@@ -183,7 +188,7 @@ export function DoublePendulumLab({ compact = false }: Props) {
     <div className="double-pendulum-readout"><div><strong>{energy.toFixed(3)} J</strong><span>Instantaneous mechanical energy</span></div><div><strong>RK4</strong><span>Fourth-order Runge–Kutta integration</span></div><div><strong>1/240 s</strong><span>Fixed simulation time step</span></div></div>
     <div className="double-pendulum-actions">
       {!reducedMotion && <button type="button" onClick={() => setRunning(value => !value)}>{running ? 'Pause experiment' : 'Start experiment'}</button>}
-      {reducedMotion && <button type="button" onClick={() => { stateRef.current = stepDoublePendulum(stateRef.current, parameters, DT); setStepRequest(value => value + 1); setEnergy(doublePendulumEnergy(stateRef.current, parameters).totalJoules); }}>Step forward</button>}
+      {reducedMotion && <button type="button" onClick={() => { stateRef.current = stepDoublePendulum(stateRef.current, parameters, DT); drawRef.current(); setEnergy(doublePendulumEnergy(stateRef.current, parameters).totalJoules); }}>Step forward</button>}
       <button type="button" className="is-secondary" onClick={reset}>Reset experiment</button>
     </div>
     <p className="double-pendulum-note">Idealised model: rigid, massless rods; point masses; no air resistance or pivot friction. Energy should remain nearly constant in this model. Real apparatus loses energy and may differ. Use the controls to explore sensitivity to initial conditions.</p>

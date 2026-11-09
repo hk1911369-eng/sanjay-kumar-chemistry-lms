@@ -4,6 +4,7 @@ import {
   calculateOhmsLaw,
   calculateStrongAcidBaseTitration,
   calculatePunnettSquare,
+  calculateIllustrativeShortCircuit,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -61,4 +62,21 @@ test('Punnett square returns genotype counts and probabilities summing to one', 
 test('Punnett square supports homozygous crosses and rejects malformed genotypes', () => {
   assert.deepEqual(calculatePunnettSquare('AA', 'aa').cells, ['Aa', 'Aa', 'Aa', 'Aa']);
   assert.throws(() => calculatePunnettSquare('AB', 'Aa'), RangeError);
+});
+
+test('short-circuit teaching model is bounded and discloses idealised assumptions', () => {
+  const result = calculateIllustrativeShortCircuit({
+    sourceVoltage: 6, sourceInternalResistance: 0.5, pathResistance: 0.1, durationSeconds: 2,
+  });
+  assert.equal(result.currentAmps, 10);
+  assert.equal(result.pathPowerWatts, 10);
+  assert.equal(result.energyJoules, 20);
+  assert.equal(result.severity, 'high');
+  assert.match(result.assumptions, /excludes changing battery chemistry/);
+  assert.throws(() => calculateIllustrativeShortCircuit({
+    sourceVoltage: 240, sourceInternalResistance: 0.5, pathResistance: 0.1, durationSeconds: 2,
+  }), RangeError);
+  assert.throws(() => calculateIllustrativeShortCircuit({
+    sourceVoltage: 6, sourceInternalResistance: 0, pathResistance: 0.1, durationSeconds: 2,
+  }), RangeError);
 });

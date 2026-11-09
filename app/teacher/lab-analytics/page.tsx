@@ -165,7 +165,7 @@ export default async function TeacherLabAnalyticsPage() {
           </>
         )}
         <p className="muted small-note">
-          Cohort averages are descriptive, not predictions of an individual student's ability. Do not use this report alone for high-stakes decisions.
+          Cohort averages are descriptive, not predictions of an individual student&apos;s ability. Do not use this report alone for high-stakes decisions.
         </p>
       </section>
     </PortalLayout>

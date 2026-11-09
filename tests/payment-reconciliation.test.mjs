@@ -74,3 +74,16 @@ test('reconciliation flags duplicate statement rows, amount mismatch, sender mis
   assert.equal(result[2].reason,'amount_mismatch');
   assert.equal(result[3].reason,'sender_mismatch');
 });
+
+test('bulk reconciliation is admin-only, rechecks exact matches and requires explicit approval', async () => {
+  const actions = await readFile(new URL('../app/actions/payments.ts', import.meta.url), 'utf8');
+  const dashboard = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
+  const component = await readFile(new URL('../components/payment-reconciliation.tsx', import.meta.url), 'utf8');
+  assert.ok(actions.includes("profile?.role !== 'admin'"));
+  assert.ok(actions.includes('reconcileWalletRows(rows, loaded.records)'));
+  assert.ok(actions.includes("'approve_manual_payment_submission'"));
+  assert.ok(actions.includes('file.text()'));
+  assert.ok(dashboard.includes('<PaymentReconciliation />'));
+  assert.ok(component.includes('window.confirm'));
+  assert.ok(component.includes('Approve'));
+});

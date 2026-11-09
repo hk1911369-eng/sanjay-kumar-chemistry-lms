@@ -110,3 +110,22 @@ test('science simulations include safe, consequence-aware what-if challenges', a
   assert.match(standard, /Virtual laboratory safety and interaction standard/);
   assert.match(standard, /physically disconnected from real equipment/);
 });
+
+test('double pendulum is a separately mapped physics simulation with educator-configurable template', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110150000_add_double_pendulum_simulation.sql', import.meta.url), 'utf8');
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const lab = await readFile(new URL('../components/double-pendulum-lab.tsx', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  assert.match(migration, /'pendulum'/);
+  assert.match(migration, /physics-double-pendulum/);
+  assert.match(component, /simulation_type === 'pendulum'/);
+  assert.match(component, /DoublePendulumLab/);
+  assert.match(lab, /prefers-reduced-motion/);
+  assert.match(lab, /Step forward/);
+  assert.match(lab, /Pause experiment/);
+  assert.match(lab, /Reset experiment/);
+  assert.match(lab, /ResizeObserver/);
+  assert.match(action, /'pendulum'\]\.includes\(simulationType\)/);
+  assert.match(admin, /value="pendulum"/);
+});

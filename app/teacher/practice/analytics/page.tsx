@@ -4,17 +4,14 @@ import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 
 type Question = {
-  id: string;
-  course_id: string;
-  subject_id: string;
-  topic: string;
-  chapter_label: string;
-  question_text: string;
-  options: unknown;
-  correct_option: number;
-  marks: number;
+  id: string; course_id: string; subject_id: string; topic: string;
+  chapter_label: string; question_text: string; options: unknown;
+  correct_option: number; marks: number;
 };
-type Attempt = { question_id: string; selected_option: number; is_correct: boolean; awarded_marks: number };
+type Aggregate = {
+  question_id: string; attempt_count: number; correct_count: number;
+  option_counts: Record<string, number> | null;
+};
 
 export default async function PracticeAnalyticsPage() {
   const db = await createClient();
@@ -31,7 +28,12 @@ export default async function PracticeAnalyticsPage() {
     courseIds = (data ?? []).map(course => course.id);
   } else {
     const { data } = await db.from('course_assignments').select('course_id').eq('teacher_id', user.id);
-    courseIds = [...new Set((data ?? []).map(item => item.course_id))];
+    const assignedIds = [...new Set((data ?? []).map(item => item.course_id))];
+    if (assignedIds.length) {
+      const { data: activeCourses } = await db.from('courses').select('id')
+        .in('id', assignedIds).is('archived_at', null);
+      courseIds = (activeCourses ?? []).map(course => course.id);
+    }
   }
 
   const { data: questions } = courseIds.length
@@ -40,15 +42,17 @@ export default async function PracticeAnalyticsPage() {
       .in('course_id', courseIds)
     : { data: [] as Question[] };
   const questionRows = (questions ?? []) as Question[];
-  const questionIds = questionRows.map(question => question.id);
 
-  const { data: attempts, error } = questionIds.length
-    ? await db.from('student_practice_attempts')
-      .select('question_id,selected_option,is_correct,awarded_marks')
-      .in('question_id', questionIds)
-      .order('answered_at', { ascending: false })
-      .limit(5000)
-    : { data: [] as Attempt[], error: null };
+  const { data: aggregates, error } = await db.rpc('get_staff_practice_analytics');
+  const aggregateRows = (aggregates ?? []) as Aggregate[];
+  const questionStats = new Map<string, { total: number; correct: number; options: Map<number, number> }>();
+  for (const aggregate of aggregateRows) {
+    questionStats.set(aggregate.question_id, {
+      total: Number(aggregate.attempt_count),
+      correct: Number(aggregate.correct_count),
+      options: new Map(Object.entries(aggregate.option_counts ?? {}).map(([index, count]) => [Number(index), Number(count)])),
+    });
+  }
 
   const { data: subjects } = questionRows.length
     ? await db.from('academic_subjects').select('id,name')
@@ -56,37 +60,30 @@ export default async function PracticeAnalyticsPage() {
     : { data: [] as { id: string; name: string }[] };
   const subjectNames = new Map((subjects ?? []).map(subject => [subject.id, subject.name]));
   const courseQuestionCounts = questionRows.length;
-  const attemptRows = (attempts ?? []) as Attempt[];
-  const questionStats = new Map<string, { total: number; correct: number; options: Map<number, number> }>();
-
-  for (const attempt of attemptRows) {
-    const stats = questionStats.get(attempt.question_id) ?? { total: 0, correct: 0, options: new Map<number, number>() };
-    stats.total += 1;
-    if (attempt.is_correct) stats.correct += 1;
-    stats.options.set(attempt.selected_option, (stats.options.get(attempt.selected_option) ?? 0) + 1);
-    questionStats.set(attempt.question_id, stats);
-  }
+  const totalAttempts = aggregateRows.reduce((sum, item) => sum + Number(item.attempt_count), 0);
+  const totalCorrect = aggregateRows.reduce((sum, item) => sum + Number(item.correct_count), 0);
+  const accuracy = totalAttempts ? Math.round(totalCorrect / totalAttempts * 100) : null;
 
   const questionsWithStats = questionRows.map(question => {
     const stats = questionStats.get(question.id) ?? { total: 0, correct: 0, options: new Map<number, number>() };
+    const options = Array.isArray(question.options)
+      ? question.options.filter((option): option is string => typeof option === 'string')
+      : [];
     return {
       ...question,
       subject: subjectNames.get(question.subject_id) ?? 'Subject',
       attempts: stats.total,
       correctCount: stats.correct,
       accuracy: stats.total ? stats.correct / stats.total * 100 : null,
-      options: Array.isArray(question.options) ? question.options.filter((option): option is string => typeof option === 'string') : [],
+      options,
       mostSelectedWrongOption: [...stats.options.entries()]
         .filter(([index]) => index !== question.correct_option)
         .sort((a, b) => b[1] - a[1])[0] ?? null,
     };
   });
   const activeQuestions = questionsWithStats.filter(question => question.attempts > 0);
-  const totalCorrect = attemptRows.filter(attempt => attempt.is_correct).length;
-  const accuracy = attemptRows.length ? Math.round(totalCorrect / attemptRows.length * 100) : null;
   const weakQuestions = activeQuestions.filter(question => question.attempts >= 3 && (question.accuracy ?? 100) < 60)
-    .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100))
-    .slice(0, 8);
+    .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100)).slice(0, 8);
   const subjectStats = [...new Set(activeQuestions.map(question => question.subject))]
     .map(subject => {
       const rows = activeQuestions.filter(question => question.subject === subject);
@@ -104,11 +101,11 @@ export default async function PracticeAnalyticsPage() {
         <Link href="/teacher/practice">← Back to question studio</Link>
       </header>
 
-      {error && <p className="form-error">Some practice attempts could not be loaded. The report may be incomplete.</p>}
+      {error && <p className="form-error">Some practice aggregates could not be loaded. The report may be incomplete.</p>}
       <div className="practice-analytics-kpis">
         <article className="portal-card"><span>Questions authored</span><strong>{courseQuestionCounts}</strong><small>Across your assigned subjects</small></article>
-        <article className="portal-card"><span>Student attempts</span><strong>{attemptRows.length}{attemptRows.length === 5000 ? '+' : ''}</strong><small>Most recent 5,000 responses</small></article>
-        <article className="portal-card"><span>Overall accuracy</span><strong>{accuracy === null ? '—' : accuracy + '%'}</strong><small>Correct responses across attempts</small></article>
+        <article className="portal-card"><span>Student attempts</span><strong>{totalAttempts}</strong><small>Responses in the last 90 days</small></article>
+        <article className="portal-card"><span>Overall accuracy</span><strong>{accuracy === null ? '—' : accuracy + '%'}</strong><small>Correct responses in the last 90 days</small></article>
       </div>
 
       <section className="portal-card practice-analytics-section">
@@ -123,7 +120,7 @@ export default async function PracticeAnalyticsPage() {
       </section>
 
       <section className="portal-card practice-analytics-section">
-        <div className="practice-analytics-section-heading"><div><span className="auth-kicker">INTERVENTION CANDIDATES</span><h2>Questions learners find difficult</h2><p className="muted">At least three attempts and below 60% accuracy.</p></div></div>
+        <div className="practice-analytics-section-heading"><div><span className="auth-kicker">INTERVENTION CANDIDATES</span><h2>Questions learners find difficult</h2><p className="muted">At least three attempts and below 60% accuracy in the last 90 days.</p></div></div>
         {!weakQuestions.length ? <p className="muted">No clear difficulty pattern yet. More responses are needed before highlighting an intervention.</p> : <div className="practice-weak-question-list">
           {weakQuestions.map(question => <article key={question.id} className="practice-weak-question">
             <div className="practice-weak-question-meta"><span>{question.subject}{question.chapter_label ? ' · ' + question.chapter_label : ''}</span><b>{Math.round(question.accuracy ?? 0)}% accuracy</b></div>

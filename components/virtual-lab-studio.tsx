@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { recordSimulationCompletion } from '@/app/actions/virtual-labs';
+import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare } from '@/lib/virtual-lab-models.mjs';
 
 type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'quadratic';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
@@ -72,15 +73,10 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const selected = visibleLabs.find(lab => lab.lab_key === activeLabId) ?? visibleLabs[0]!;
   const selectedCourses = selected ? courses.filter(course => course.subjectIds.includes(selected.subject_id)) : [];
   const selectedCourseId = selectedCourses.some(course => course.id === courseId) ? courseId : (selectedCourses[0]?.id ?? '');
-  const current = voltage / resistance;
-  const acidMoles = acid * 0.025;
-  const baseMoles = base * baseMl / 1000;
-  const totalLitres = (25 + baseMl) / 1000;
-  const excess = acidMoles - baseMoles;
-  const concentration = Math.max(Math.abs(excess) / totalLitres, 1e-14);
-  const pH = Math.max(0, Math.min(14, Math.abs(excess) < 1e-12 ? 7 : excess > 0 ? -Math.log10(concentration) : 14 + Math.log10(concentration)));
-  const equivalence = acid * 25 / base;
-  const punnett = useMemo(() => parentA.split('').flatMap(a => parentB.split('').map(b => a + b)), [parentA, parentB]);
+  const circuit = calculateOhmsLaw(voltage, resistance);
+  const titration = calculateStrongAcidBaseTitration({ acidMolarity: acid, acidVolumeMl: 25, baseMolarity: base, baseVolumeMl: baseMl });
+  const inheritance = useMemo(() => calculatePunnettSquare(parentA, parentB), [parentA, parentB]);
+  const punnett = inheritance.cells;
   const binaryValid = /^[01]{1,16}$/.test(binary);
   const decimal = binaryValid ? Number.parseInt(binary, 2) : null;
   const points = [-2, -1, 0, 1, 2].map(x => ({ x, y: slope * x + intercept }));
@@ -105,16 +101,16 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
       {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>
         <label>Resistance: <b>{resistance} Ω</b><input type="range" min="1" max="100" value={resistance} onChange={e => { setHasInteracted(true); setResistance(Number(e.target.value)); }}/></label>
-        <div className="virtual-lab-results"><div><strong>{current.toFixed(3)} A</strong><span>Current</span></div><div><strong>{(voltage * current).toFixed(2)} W</strong><span>Power</span></div></div>
+        <div className="virtual-lab-results"><div><strong>{circuit.currentAmps.toFixed(3)} A</strong><span>Current</span></div><div><strong>{circuit.powerWatts.toFixed(2)} W</strong><span>Power</span></div></div>
       </div>}
 
       {selected.simulation_type === 'chemistry' && <div className="virtual-lab-experiment">
         <label>Acid concentration: <b>{acid.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={acid} onChange={e => { setHasInteracted(true); setAcid(Number(e.target.value)); }}/></label>
         <label>Base concentration: <b>{base.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={base} onChange={e => { setHasInteracted(true); setBase(Number(e.target.value)); }}/></label>
         <label>Base added: <b>{baseMl} mL</b><input type="range" min="0" max="60" value={baseMl} onChange={e => { setHasInteracted(true); setBaseMl(Number(e.target.value)); }}/></label>
-        <div className="virtual-lab-results"><div><strong>{pH.toFixed(2)}</strong><span>Estimated pH</span></div><div><strong>{equivalence.toFixed(1)} mL</strong><span>Equivalence volume</span></div></div>
-        <p>Indicator model: <b>{pH >= 8.2 ? 'pink — base side' : 'colourless — acid / near-neutral side'}</b></p>
-        <small className="muted">Simplified model: 25 mL strong monoprotic acid, strong base and 25°C.</small>
+        <div className="virtual-lab-results"><div><strong>{titration.pH.toFixed(2)}</strong><span>Estimated pH</span></div><div><strong>{titration.equivalenceVolumeMl.toFixed(1)} mL</strong><span>Equivalence volume</span></div></div>
+        <p>Indicator model: <b>{titration.pH >= 8.2 ? 'pink — base side' : 'colourless — acid / near-neutral side'}</b></p>
+        <small className="muted">Simplified model: {titration.model}.</small>
       </div>}
 
       {selected.simulation_type === 'biology' && <div className="virtual-lab-experiment">
@@ -123,7 +119,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
           <label>Parent 2<select value={parentB} onChange={e => { setHasInteracted(true); setParentB(e.target.value); }}><option>Aa</option><option>AA</option><option>aa</option></select></label>
         </div>
         <div className="virtual-punnett-grid" aria-label="Punnett square">{punnett.map((value, index) => <strong key={index}>{value}</strong>)}</div>
-        <p>Possible combinations: {Object.entries(punnett.reduce<Record<string, number>>((acc, value) => { const key = value === 'aA' ? 'Aa' : value; acc[key] = (acc[key] ?? 0) + 1; return acc; }, {})).map(([key, count]) => key + ' ' + count * 25 + '%').join(' · ')}</p>
+        <p>Possible combinations: {inheritance.outcomes.map(outcome => outcome.genotype + ' ' + outcome.percentage + '%').join(' · ')}</p>
       </div>}
 
       {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">

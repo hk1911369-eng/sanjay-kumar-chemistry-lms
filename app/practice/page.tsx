@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { PortalLayout } from '@/components/portal-layout';
 import { StudentPracticeWorkspace, type StudentPracticeQuestion } from '@/components/student-practice-workspace';
 import { createClient } from '@/lib/supabase/server';
@@ -122,7 +123,7 @@ export default async function StudentPracticePage({
       {!availableCourses.length ? <section className="portal-card practice-empty">
         <h2>Active course access required</h2>
         <p className="muted">Practice questions are available to students with an active, paid course for the current Bangladesh billing period.</p>
-        <a href="/student#courses">View my courses</a>
+        <Link href="/student#courses">View my courses</Link>
       </section> : !availableSubjects.length ? <section className="portal-card practice-empty">
         <h2>No subject mapping found</h2>
         <p className="muted">This course needs subject mappings before subject-specific practice can be published.</p>

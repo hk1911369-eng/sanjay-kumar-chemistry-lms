@@ -17,15 +17,16 @@ A production backup additionally requires the exact production host and `JMT_BAC
 
 ## Restore
 
-Restore is test-only. It requires the expected test host and the exact confirmation string:
+Restore is test-only. It requires both the expected test host and the expected production host, plus the exact confirmation string:
 
 ```bash
 JMT_RESTORE_TARGET=test \
 JMT_TEST_DB_HOST="your-test-db-host" \
+JMT_PRODUCTION_DB_HOST="your-production-db-host" \
 JMT_RESTORE_CONFIRMATION="RESTORE JMT TEST DATABASE" \
 JMT_RESTORE_DATABASE_URL="$TEST_DATABASE_URL" \
 JMT_RESTORE_FILE="./backups/test-YYYYMMDDTHHMMSSZ.dump" \
 bash scripts/restore-db.sh
 ```
 
-The restore uses `pg_restore --clean` and replaces objects in the target database. It refuses any URL that does not match the configured test host and refuses a URL matching `JMT_PRODUCTION_DB_HOST`. Never point it at production. Never commit database URLs, passwords, service-role keys or backup files.
+The restore uses `pg_restore --clean` and replaces objects in the target database. It first refuses a URL matching the configured production host, then requires an exact match to the configured test host. Both host variables are mandatory so the second guard cannot silently be skipped. Never point it at production. Never commit database URLs, passwords, service-role keys or backup files.

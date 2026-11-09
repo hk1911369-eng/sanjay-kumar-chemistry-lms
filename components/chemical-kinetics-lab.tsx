@@ -188,7 +188,7 @@ export function ChemicalKineticsLab({ onInteraction }: Props) {
     <div className="virtual-lab-principle chemical-kinetics-challenge">
       <b>Prediction challenge</b>
       <p>If the reactant concentration doubles instantly while temperature and k stay unchanged, the initial rate becomes <strong>{doublingLabel}</strong> at {orderLabel.toLowerCase()}.</p>
-      <p>At this setting the modelled catalyst lowers activation energy from {activationEnergy.toFixed(1)} to {result.effectiveActivationEnergyKJMol.toFixed(1)} kJ/mol. It changes the rate, not the equilibrium position.</p>
+      <p>At this setting the modelled catalyst lowers activation energy from {activationEnergy.toFixed(1)} to {result.effectiveActivationEnergyKJMol.toFixed(1)} kJ/mol. It changes the rate but does not change the equilibrium position.</p>
       <small>Selected uncatalysed half-life: {result.uncatalysedHalfLifeMinutes.toFixed(3)} min. Selected catalysed half-life: {result.catalysedHalfLifeMinutes.toFixed(3)} min.</small>
     </div>
 

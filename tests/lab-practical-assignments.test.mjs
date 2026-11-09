@@ -49,3 +49,34 @@ test('teacher review queue identifies late work from server-stored due and submi
   assert.match(page, /No automatic mark deduction is applied/);
   assert.match(page, /review\.submitted_at/);
 });
+
+
+test('the practical assignment mark total matches the fixed six-part rubric', async () => {
+  const [migration, action, page, rubric] = await Promise.all([
+    readFile(new URL('../supabase/migrations/20261110250000_align_practical_assignment_rubric_and_archival.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../app/actions/lab-practical-assignments.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../app/teacher/lab-notebooks/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110242000_add_weighted_lab_practical_rubric.sql', import.meta.url), 'utf8'),
+  ]);
+  assert.match(migration, /check \(points = 100\)/i);
+  assert.match(action, /const points = 100/);
+  assert.doesNotMatch(action, /formData\.get\('points'\)/);
+  assert.doesNotMatch(page, /name="points"/);
+  assert.match(page, /Assessment total: 100 marks/);
+  assert.match(rubric, /array\[15,20,25,20,15,5\]/i);
+});
+
+test('assignment archiving is scoped, idempotent and preserves started notebooks', async () => {
+  const [action, page, timestampMigration] = await Promise.all([
+    readFile(new URL('../app/actions/lab-practical-assignments.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../app/teacher/lab-notebooks/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110251000_fix_practical_assignment_publication_timestamp_integrity.sql', import.meta.url), 'utf8'),
+  ]);
+  assert.match(action, /export async function archiveLabPracticalAssignment/);
+  assert.match(action, /\.update\(\{ status: 'archived', published_at: null \}\)/);
+  assert.match(action, /\.eq\('status', 'published'\)/);
+  assert.match(page, /archiveLabPracticalAssignment/);
+  assert.match(page, /Archiving stops new notebooks\. Existing student notebooks remain editable and reviewable\./);
+  assert.match(timestampMigration, /old\.status = 'published'[\s\S]*old\.published_at/);
+  assert.match(timestampMigration, /new\.published_at := pg_catalog\.now\(\)/);
+});

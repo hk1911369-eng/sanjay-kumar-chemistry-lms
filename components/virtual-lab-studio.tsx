@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { recordSimulationCompletion } from '@/app/actions/virtual-labs';
-import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare } from '@/lib/virtual-lab-models.mjs';
+import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
 type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict' | 'quadratic';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
@@ -74,6 +74,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const selectedCourses = selected ? courses.filter(course => course.subjectIds.includes(selected.subject_id)) : [];
   const selectedCourseId = selectedCourses.some(course => course.id === courseId) ? courseId : (selectedCourses[0]?.id ?? '');
   const circuit = calculateOhmsLaw(voltage, resistance);
+  const shortCircuit = calculateIllustrativeShortCircuit({ sourceVoltage: 6, sourceInternalResistance: 0.5, pathResistance: 0.1, durationSeconds: 2 });
   const titration = calculateStrongAcidBaseTitration({ acidMolarity: acid, acidVolumeMl: 25, baseMolarity: base, baseVolumeMl: baseMl });
   const inheritance = useMemo(() => calculatePunnettSquare(parentA, parentB), [parentA, parentB]);
   const punnett = inheritance.cells;
@@ -159,6 +160,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
           <b>Simulated mistake: {SAFETY_SCENARIOS[selected.simulation_type]!.unsafeChoice}</b>
           <p>{SAFETY_SCENARIOS[selected.simulation_type]!.consequence}</p>
           <ol className="virtual-lab-consequence-chain">{SAFETY_SCENARIOS[selected.simulation_type]!.consequenceSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol>
+          {selected.simulation_type === 'physics' && <div className="virtual-lab-safety-meter"><b>Illustrative fault model</b><div><strong>{shortCircuit.currentAmps.toFixed(1)} A</strong><span>Modelled current</span></div><div><strong>{shortCircuit.pathPowerWatts.toFixed(1)} W</strong><span>Power dissipated in the modelled path</span></div><div><strong>{shortCircuit.energyJoules.toFixed(1)} J</strong><span>Energy over 2 seconds</span></div><small>{shortCircuit.assumptions}</small></div>}
           <b>Safer approach</b><p>{SAFETY_SCENARIOS[selected.simulation_type]!.safeChoice}</p>
         </div>}
         {safetyResult === 'safe' && <div className="virtual-lab-safety-feedback is-success" role="status" aria-live="polite">

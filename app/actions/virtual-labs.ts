@@ -13,7 +13,7 @@ export async function recordSimulationCompletion(formData: FormData) {
   const labId = String(formData.get('lab_id') ?? '');
   const durationSeconds = Number(formData.get('duration_seconds') ?? 0);
   if (!/^[0-9a-f-]{36}$/i.test(courseId)
-    || !['physics','chemistry','biology','maths','ict'].includes(labId)
+    || !/^[a-z0-9][a-z0-9_-]{1,79}$/.test(labId)
     || !Number.isInteger(durationSeconds) || durationSeconds < 0 || durationSeconds > 7200) {
     redirect('/labs?error=invalid');
   }

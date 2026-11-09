@@ -28,6 +28,15 @@ test('lesson concepts can only be mapped when course and concept subjects match'
   assert.ok(actions.includes("error=subject_mismatch"));
 });
 
+test('prerequisite action rejects cross-subject edges before attempting a database write', async () => {
+  const actions = await read('app/actions/learning-os.ts');
+  assert.ok(actions.includes("select('id,subject_id').eq('id', conceptId)"));
+  assert.ok(actions.includes("select('id,subject_id').eq('id', prerequisiteId)"));
+  assert.ok(actions.includes('concept.subject_id !== prerequisite.subject_id'));
+  assert.ok(actions.includes("error=prerequisite_subject"));
+  assert.ok(actions.includes('if (!concept || !prerequisite || edgesError)'));
+});
+
 test('teacher workspace surfaces evidence-based learning signals within RLS scope', async () => {
   const page = await read('app/students/manage/page.tsx');
   assert.ok(page.includes("from('learning_events')"));

@@ -737,3 +737,20 @@ input,select,textarea,button{max-width:100%}
 .virtual-punnett-grid{display:grid;grid-template-columns:repeat(3,minmax(0,76px));gap:.45rem;justify-content:center}
 .virtual-punnett-grid strong{display:grid;place-items:center;min-height:56px;padding:.6rem;text-align:center;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-variant-numeric:tabular-nums}
 .virtual-punnett-grid strong.is-header{background:var(--surface-alt);color:var(--muted);font-size:.85rem}
+
+/* Projectile motion lab: responsive scientific plot and touch-friendly controls. */
+.projectile-motion-lab{display:grid;gap:1rem}
+.projectile-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
+.projectile-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.projectile-controls label b{font-variant-numeric:tabular-nums}
+.projectile-controls input{width:100%;min-height:34px;accent-color:var(--accent);touch-action:pan-y}
+.projectile-plot{min-width:0;padding:.85rem;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.projectile-plot svg{display:block;width:100%;height:auto;overflow:visible}
+.projectile-plot svg text{fill:var(--muted);font-size:11px}
+.projectile-gridline{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.projectile-trajectory{fill:none;stroke:#2677bd;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.projectile-comparison{padding:.9rem;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft);line-height:1.6}
+.projectile-comparison p{margin:.35rem 0}
+.projectile-motion-lab .virtual-lab-secondary-action{min-height:46px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
+.projectile-motion-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:560px){.projectile-controls{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-results{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-secondary-action{width:100%;min-height:50px}}

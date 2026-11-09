@@ -48,7 +48,8 @@ exception
 end;
 $function$;
 
-revoke all on function private.lab_notebook_rubric_total(jsonb) from public, anon;\ngrant execute on function private.lab_notebook_rubric_total(jsonb) to authenticated, service_role;
+revoke all on function private.lab_notebook_rubric_total(jsonb) from public, anon;
+grant execute on function private.lab_notebook_rubric_total(jsonb) to authenticated, service_role;
 
 alter table public.lab_notebook_entries
   add column if not exists rubric_scores jsonb not null default '{}'::jsonb;

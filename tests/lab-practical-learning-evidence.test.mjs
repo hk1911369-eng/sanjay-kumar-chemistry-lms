@@ -47,3 +47,17 @@ test('teacher assignment form offers only concepts that match each experiment su
   assert.match(student, /concept_id,title,instructions/);
   assert.match(student, /conceptName\.get\(task\.concept_id\)/);
 });
+
+
+test('practical cohort analytics splits by assessed concept and keeps the five-learner privacy threshold', async () => {
+  const [migration, page] = await Promise.all([
+    readFile(new URL('../supabase/migrations/20261110246000_group_lab_analytics_by_concept.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../app/teacher/lab-analytics/page.tsx', import.meta.url), 'utf8'),
+  ]);
+  assert.match(migration, /security_invoker = true/i);
+  assert.match(migration, /a\.concept_id/i);
+  assert.match(migration, /lc\.title as concept_title/i);
+  assert.match(migration, /group by[\s\S]*a\.concept_id[\s\S]*lc\.title/i);
+  assert.match(migration, /having count\(distinct h\.student_id\) >= 5/i);
+  assert.match(page, /Assessed concept: \{row\.concept_title\}/);
+});

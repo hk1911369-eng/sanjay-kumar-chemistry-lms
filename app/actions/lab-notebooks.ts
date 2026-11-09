@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 function parseMeasurements(raw: string) {
+  if (raw.length > 30000) throw new Error('measurements');
   if (!raw.trim()) return [];
   const value = JSON.parse(raw);
   if (!Array.isArray(value) || value.length > 100) throw new Error('measurements');

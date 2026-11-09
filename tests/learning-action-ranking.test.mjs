@@ -16,12 +16,24 @@ test('adaptive action ranking combines revision, mistakes, lessons and assessmen
   assert.deepEqual(actions.map(action => action.kind), ['revision', 'mistake', 'assignment', 'exam', 'lesson']);
 });
 
+test('overdue mastery reviews enter the queue and rank by urgency', () => {
+  const actions = rankLearningActions({
+    now, revisionTasks: [], mistakes: [], recommendations: [],
+    dueReviews: [{ lessonId: 'l-review', lessonTitle: 'Atomic structure', courseId: 'c1', conceptTitle: 'Electron configuration', masteryScore: 0.4, next_review_at: '2026-11-06T00:00:00.000Z' }],
+    upcomingExams: [], upcomingAssignments: [],
+  });
+  assert.equal(actions.length, 1);
+  assert.equal(actions[0].kind, 'review');
+  assert.match(actions[0].detail, /overdue by 3 day/);
+});
+
 test('ranking excludes distant or expired assessment actions and respects limit', () => {
   const actions = rankLearningActions({
     now,
     revisionTasks: [],
     mistakes: [],
     recommendations: [],
+    dueReviews: [],
     upcomingExams: [
       { id: 'past', title: 'Past', course_id: 'c1', starts_at: '2026-11-08T00:00:00.000Z', kind: 'Quiz' },
       { id: 'far', title: 'Far', course_id: 'c1', starts_at: '2026-12-15T00:00:00.000Z', kind: 'Quiz' },

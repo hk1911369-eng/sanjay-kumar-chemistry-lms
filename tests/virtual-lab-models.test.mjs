@@ -5,6 +5,7 @@ import {
   calculateStrongAcidBaseTitration,
   calculatePunnettSquare,
   calculateIllustrativeShortCircuit,
+  calculateChemicalKinetics,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -79,4 +80,100 @@ test('short-circuit teaching model is bounded and discloses idealised assumption
   assert.throws(() => calculateIllustrativeShortCircuit({
     sourceVoltage: 6, sourceInternalResistance: 0, pathResistance: 0.1, durationSeconds: 2,
   }), RangeError);
+});
+
+
+test('first-order kinetics reproduces the exponential law and analytical half-life', () => {
+  const result = calculateChemicalKinetics({
+    initialConcentrationMolar: 1,
+    reactionOrder: 1,
+    referenceRateConstant: 0.1,
+    activationEnergyKJMol: 50,
+    temperatureKelvin: 298.15,
+    sampleCount: 21,
+  });
+  assert.ok(Math.abs(result.uncatalysedRateConstant - 0.1) < 1e-12);
+  assert.ok(Math.abs(result.uncatalysedHalfLifeMinutes - Math.log(2) / 0.1) < 1e-10);
+  assert.ok(Math.abs(result.curve[0].uncatalysedConcentrationMolar - 1) < 1e-12);
+  assert.equal(result.reactionOrder, 1);
+  assert.equal(result.rateConstantUnits, 'min^-1');
+  assert.equal(result.initialRateUnits, 'mol L^-1 min^-1');
+});
+
+test('zero- and second-order kinetics follow their integrated concentration laws', () => {
+  const zero = calculateChemicalKinetics({
+    initialConcentrationMolar: 1,
+    reactionOrder: 0,
+    referenceRateConstant: 0.1,
+    activationEnergyKJMol: 20,
+    temperatureKelvin: 298.15,
+    catalystActivationEnergyReductionKJMol: 0,
+    sampleCount: 21,
+  });
+  const second = calculateChemicalKinetics({
+    initialConcentrationMolar: 1,
+    reactionOrder: 2,
+    referenceRateConstant: 0.1,
+    activationEnergyKJMol: 20,
+    temperatureKelvin: 298.15,
+    catalystActivationEnergyReductionKJMol: 0,
+    sampleCount: 21,
+  });
+  assert.equal(zero.curve.at(-1).uncatalysedConcentrationMolar, 0);
+  assert.ok(Math.abs(zero.uncatalysedHalfLifeMinutes - 5) < 1e-12);
+  assert.ok(Math.abs(second.uncatalysedHalfLifeMinutes - 10) < 1e-12);
+  assert.ok(Math.abs(second.curve[0].uncatalysedRate - 0.1) < 1e-12);
+  assert.equal(zero.rateConstantUnits, 'mol L^-1 min^-1');
+  assert.equal(second.rateConstantUnits, 'L mol^-1 min^-1');
+});
+
+test('higher temperature and reduced activation energy increase the predicted rate constant', () => {
+  const base = {
+    initialConcentrationMolar: 0.8,
+    reactionOrder: 1,
+    referenceRateConstant: 0.05,
+    activationEnergyKJMol: 60,
+  };
+  const reference = calculateChemicalKinetics({ ...base, temperatureKelvin: 298.15 });
+  const warmer = calculateChemicalKinetics({ ...base, temperatureKelvin: 318.15 });
+  const catalysed = calculateChemicalKinetics({
+    ...base,
+    temperatureKelvin: 298.15,
+    catalystActivationEnergyReductionKJMol: 8,
+  });
+  assert.ok(warmer.uncatalysedRateConstant > reference.uncatalysedRateConstant);
+  assert.ok(catalysed.catalysedRateConstant > catalysed.uncatalysedRateConstant);
+  assert.ok(catalysed.catalystRateFactor > 1);
+  assert.ok(catalysed.catalysedHalfLifeMinutes < catalysed.uncatalysedHalfLifeMinutes);
+  assert.ok(Math.abs(reference.catalystRateFactor - 1) < 1e-12);
+});
+
+test('kinetics model validates physical bounds, reaction order and catalyst reduction', () => {
+  const valid = {
+    initialConcentrationMolar: 0.5,
+    reactionOrder: 1,
+    referenceRateConstant: 0.1,
+    activationEnergyKJMol: 45,
+    temperatureKelvin: 300,
+  };
+  assert.throws(() => calculateChemicalKinetics({ ...valid, reactionOrder: 3 }), RangeError);
+  assert.throws(() => calculateChemicalKinetics({ ...valid, temperatureKelvin: 260 }), RangeError);
+  assert.throws(() => calculateChemicalKinetics({ ...valid, initialConcentrationMolar: 0 }), RangeError);
+  assert.throws(() => calculateChemicalKinetics({
+    ...valid, catalystActivationEnergyReductionKJMol: 46,
+  }), RangeError);
+  assert.throws(() => calculateChemicalKinetics({ ...valid, sampleCount: 5 }), RangeError);
+});
+
+test('concentration doubling changes the initial rate by 2 to the reaction order', () => {
+  for (const order of [0, 1, 2]) {
+    const result = calculateChemicalKinetics({
+      initialConcentrationMolar: 0.5,
+      reactionOrder: order,
+      referenceRateConstant: 0.2,
+      activationEnergyKJMol: 30,
+      temperatureKelvin: 298.15,
+    });
+    assert.equal(result.concentrationDoublingFactor, Math.pow(2, order));
+  }
 });

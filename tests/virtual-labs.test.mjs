@@ -85,3 +85,26 @@ test('higher mathematics has an interactive quadratic simulation template', asyn
   assert.match(migration, /higher-maths-quadratic/);
   assert.match(migration, /10000000-0000-4000-8000-000000000008/);
 });
+
+test('science simulations include safe, consequence-aware what-if challenges', async () => {
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../app/globals.css', import.meta.url), 'utf8');
+  const standard = await readFile(new URL('../docs/JMT_NORTH_STAR_PRODUCT_STANDARD.md', import.meta.url), 'utf8');
+  for (const subject of ['chemistry', 'physics', 'biology']) {
+    assert.match(component, new RegExp(subject + ':\\s*\\{'));
+  }
+  assert.match(component, /Simulate unsafe choice/);
+  assert.match(component, /Choose safe practice/);
+  assert.match(component, /aria-live="polite"/);
+  assert.match(component, /setSafetyResult\('unsafe'\)/);
+  assert.match(component, /setSafetyResult\('safe'\)/);
+  assert.match(component, /acid to water—not water to acid/);
+  assert.match(component, /short circuit can cause a very large current/);
+  assert.match(component, /cross-contamination/);
+  assert.match(component, /approved process/);
+  assert.match(css, /virtual-lab-safety-actions/);
+  assert.match(css, /@media\(max-width:560px\)/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
+  assert.match(standard, /Virtual laboratory safety and interaction standard/);
+  assert.match(standard, /physically disconnected from real equipment/);
+});

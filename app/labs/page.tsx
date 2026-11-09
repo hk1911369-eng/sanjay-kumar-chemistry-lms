@@ -27,10 +27,12 @@ export default async function VirtualLabsPage({ searchParams }: { searchParams: 
       .eq('is_published', true).order('sort_order').order('title'),
   ]);
 
-  const subjects = [...new Map((mappings ?? []).map(mapping => [
-    mapping.subject_id,
-    (mapping.academic_subjects as unknown as { name: string } | null)?.name ?? '',
-  ]).filter(([, name]) => Boolean(name))).values()].sort();
+  const subjectNames = new Map<string, string>();
+  for (const mapping of mappings ?? []) {
+    const subject = mapping.academic_subjects as unknown as { name: string } | null;
+    if (subject?.name) subjectNames.set(mapping.subject_id, subject.name);
+  }
+  const subjects = [...subjectNames.values()].sort();
 
   const labCourses = (courses ?? []).map(course => ({
     id: course.id,

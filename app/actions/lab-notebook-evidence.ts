@@ -11,9 +11,9 @@ const MAX_EVIDENCE_PER_NOTEBOOK = 8;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function safeOriginalFilename(value: string) {
-  const basename = value.replaceAll('\\\\', '/').split('/').pop() ?? '';
+  const basename = value.split(/[\\/]/).pop() ?? '';
   return basename.normalize('NFKC')
-    .replace(/[\\u0000-\\u001f\\u007f]/g, '')
+    .replace(/[\x00-\x1f\x7f]/g, '')
     .replace(/[<>:"|?*]/g, '_')
     .trim()
     .slice(0, 180);
@@ -61,7 +61,7 @@ export async function uploadLabNotebookEvidence(formData: FormData) {
     redirect('/student/lab-notebook?evidence=invalid');
   }
 
-  const storagePath = `${user.id}/${notebookId}/${randomUUID()}.${extension}`;
+  const storagePath = user.id + '/' + notebookId + '/' + randomUUID() + '.' + extension;
   const { error: uploadError } = await db.storage.from('lab-notebook-evidence').upload(storagePath, bytes, {
     contentType: file.type,
     cacheControl: '0',

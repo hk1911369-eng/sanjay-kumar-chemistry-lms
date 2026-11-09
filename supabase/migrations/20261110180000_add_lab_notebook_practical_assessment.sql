@@ -177,17 +177,23 @@ begin
        or new.course_id is distinct from old.course_id
        or new.lab_id is distinct from old.lab_id
        or new.created_at is distinct from old.created_at
-       or new.reviewed_by is distinct from old.reviewed_by
-       or new.reviewed_at is distinct from old.reviewed_at
-       or new.score is distinct from old.score
-       or new.teacher_feedback is distinct from old.teacher_feedback
-       or new.submitted_at is distinct from old.submitted_at and new.status <> 'submitted'
+       or (new.status = 'draft' and (
+         new.reviewed_by is distinct from old.reviewed_by
+         or new.reviewed_at is distinct from old.reviewed_at
+         or new.score is distinct from old.score
+         or new.teacher_feedback is distinct from old.teacher_feedback
+         or new.submitted_at is distinct from old.submitted_at
+       ))
+       or (new.status = 'submitted' and (
+         new.reviewed_by is not null or new.reviewed_at is not null
+         or new.score is not null or new.teacher_feedback is not null
+       ))
        or new.status not in ('draft','submitted')
        or (new.status = 'submitted' and length(btrim(new.observations)) = 0)
     then
       raise exception 'Notebook is not editable or submission fields are invalid' using errcode = '42501';
     end if;
-    if new.status = 'submitted' then new.submitted_at := coalesce(new.submitted_at, now()); end if;
+    if new.status = 'submitted' then new.submitted_at := now(); end if;
     new.updated_at := now();
     return new;
   end if;

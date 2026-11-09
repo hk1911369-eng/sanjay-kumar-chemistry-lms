@@ -64,7 +64,6 @@ export async function saveVirtualLabCatalogItem(formData: FormData) {
     simulation_type: simulationType,
     sort_order: sortOrder,
     is_published: isPublished,
-    created_by: user.id,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'lab_key' });
 

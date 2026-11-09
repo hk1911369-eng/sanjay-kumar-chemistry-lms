@@ -29,6 +29,9 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
  const {data:evidenceRows}=notebookIds.length?await db.from('lab_notebook_evidence').select('id,notebook_id,original_filename,content_type,size_bytes,created_at').in('notebook_id',notebookIds).order('created_at',{ascending:true}):{data:[] as any[]};
  const evidenceByNotebook=new Map<string,any[]>();
  for(const file of evidenceRows??[]){const list=evidenceByNotebook.get(file.notebook_id)??[];list.push(file);evidenceByNotebook.set(file.notebook_id,list);}
+ const {data:reviewHistory}=notebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,reviewer_display_name,review_round,decision,feedback,score,submitted_at,reviewed_at').in('notebook_id',notebookIds).order('review_round',{ascending:false}):{data:[] as any[]};
+ const historyByNotebook=new Map<string,any[]>();
+ for(const item of reviewHistory??[]){const list=historyByNotebook.get(item.notebook_id)??[];list.push(item);historyByNotebook.set(item.notebook_id,list);}
  return <PortalLayout role="student" active="overview" title="Practical lab notebook" returnTo="/student"><section className="portal-content">
   <span className="auth-kicker">EXPERIMENT RECORD · STUDENT WORKSPACE</span><h1>My lab notebook</h1>
   <p className="muted">Record your hypothesis, method, observations, measurements and conclusion. Your notebook is visible to you and authorised teaching staff.</p>
@@ -75,6 +78,15 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
     {entry.status==='returned'&&<p className="form-error">Teacher feedback: {entry.teacher_feedback}</p>}
     {entry.status==='draft'?<><button className="auth-submit" name="intent" value="draft">Save draft</button><button className="auth-submit" name="intent" value="submit">Submit for teacher review</button></>:<button className="auth-submit" name="intent" value="submit">Resubmit for teacher review</button>}
    </form>:<><p>{entry.observations}</p>{entry.teacher_feedback&&<p><b>Teacher feedback:</b> {entry.teacher_feedback}</p>}{entry.score!==null&&<p><b>Score:</b> {entry.score}/100</p>}</>}
+   {(historyByNotebook.get(entry.id)??[]).length>0&&<section aria-label="Teacher review history">
+    <h4>Teacher review history</h4>
+    <ol>{(historyByNotebook.get(entry.id)??[]).map((review:any)=><li key={review.id}>
+     <b>Round {review.review_round} · {review.decision==='reviewed'?'Graded':'Returned for correction'}</b>
+     <p className="muted">{review.reviewer_display_name} · {new Date(review.reviewed_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
+     <p>{review.feedback}</p>
+     {review.score!==null&&<p><b>Score:</b> {review.score}/100</p>}
+    </li>)}</ol>
+   </section>}
    <section aria-label="Practical evidence">
     <h4>Evidence files ({(evidenceByNotebook.get(entry.id)??[]).length}/8)</h4>
     {(evidenceByNotebook.get(entry.id)??[]).length?<ul>{(evidenceByNotebook.get(entry.id)??[]).map((file:any)=><li key={file.id}><a href={'/api/lab-notebook-evidence/'+file.id}>{file.original_filename}</a> <span className="muted">· {file.content_type==='application/pdf'?'PDF':file.content_type.split('/')[1].toUpperCase()} · {(Number(file.size_bytes)/1024).toFixed(0)} KB</span></li>)}</ul>:<p className="muted">No supporting evidence uploaded.</p>}

@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation';
 import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import { saveLabNotebook } from '@/app/actions/lab-notebooks';
+import { uploadLabNotebookEvidence } from '@/app/actions/lab-notebook-evidence';
 import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
-export default async function StudentLabNotebookPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}) {
+export default async function StudentLabNotebookPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string;evidence?:string}>}) {
  const params=await searchParams, db=await createClient(), {data:{user}}=await db.auth.getUser();
  if(!user) redirect('/login');
  const {data:profile}=await db.from('profiles').select('role,full_name').eq('id',user.id).single();
@@ -24,11 +25,17 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
  const assignmentEntry=new Map((notebooks??[]).filter(n=>n.assignment_id).map(n=>[n.assignment_id,n]));
  const labOptions=(courses??[]).flatMap(course=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(labs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title}))));
  const courseName=new Map((courses??[]).map(c=>[c.id,c.title])), labName=new Map((labs??[]).map(l=>[l.id,l.title]));
+ const notebookIds=(notebooks??[]).map(n=>n.id);
+ const {data:evidenceRows}=notebookIds.length?await db.from('lab_notebook_evidence').select('id,notebook_id,original_filename,content_type,size_bytes,created_at').in('notebook_id',notebookIds).order('created_at',{ascending:true}):{data:[] as any[]};
+ const evidenceByNotebook=new Map<string,any[]>();
+ for(const file of evidenceRows??[]){const list=evidenceByNotebook.get(file.notebook_id)??[];list.push(file);evidenceByNotebook.set(file.notebook_id,list);}
  return <PortalLayout role="student" active="overview" title="Practical lab notebook" returnTo="/student"><section className="portal-content">
   <span className="auth-kicker">EXPERIMENT RECORD · STUDENT WORKSPACE</span><h1>My lab notebook</h1>
   <p className="muted">Record your hypothesis, method, observations, measurements and conclusion. Your notebook is visible to you and authorised teaching staff.</p>
   <p><Link className="btn" href="/labs">Open virtual laboratories</Link></p>
   {params.saved&&<p className="form-success">Notebook saved.</p>}{params.error&&<p className="form-error">{params.error==='measurements'?'Measurements must be a JSON array of up to 100 entries.':'The notebook could not be saved. Check your course access and fields.'}</p>}
+  {params.evidence==='uploaded'&&<p className="form-success">Evidence uploaded and attached to your notebook.</p>}
+  {params.evidence&&params.evidence!=='uploaded'&&<p className="form-error">{params.evidence==='limit'?'This notebook already has the maximum of eight evidence files.':params.evidence==='locked'?'Evidence can only be added while a notebook is a draft or returned for correction.':params.evidence==='invalid'?'Upload a valid PDF, JPEG, PNG or WebP file no larger than 8 MB.':params.evidence==='record_failed'?'The evidence record could not be saved; the unreferenced upload was cleaned up.':'The evidence upload failed. Please try again.'}</p>}
   <h2>Start a practical record</h2>
   {!labOptions.length?<article className="portal-card"><p className="muted">No published virtual practical is currently mapped to your active paid courses.</p></article>:
   <form action={saveLabNotebook} className="auth-form portal-card">
@@ -58,7 +65,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
    </article>;
   })}</div>}
   <h2>Previous practical records</h2>
-  {!notebooks?.length?<p className="muted">Your saved practical records will appear here.</p>:<div className="portal-grid">{notebooks.map(entry=><article className="portal-card" key={entry.id}>
+  {!notebooks?.length?<p className="muted">Your saved practical records will appear here.</p>:<div className="portal-grid">{notebooks.map(entry=><article className="portal-card" id={'notebook-'+entry.id} key={entry.id}>
    <span className="auth-kicker">{String(entry.status).toUpperCase()}</span><h3>{entry.title}</h3><p className="muted">{courseName.get(entry.course_id)??'Course'} · {labName.get(entry.lab_id)??'Virtual practical'} · {new Date(entry.updated_at).toLocaleDateString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
    {entry.status==='draft'||entry.status==='returned'?<form action={saveLabNotebook} className="auth-form">
     <input type="hidden" name="entry_id" value={entry.id}/><input type="hidden" name="course_id" value={entry.course_id}/><input type="hidden" name="lab_id" value={entry.lab_id}/>
@@ -68,6 +75,15 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
     {entry.status==='returned'&&<p className="form-error">Teacher feedback: {entry.teacher_feedback}</p>}
     {entry.status==='draft'?<><button className="auth-submit" name="intent" value="draft">Save draft</button><button className="auth-submit" name="intent" value="submit">Submit for teacher review</button></>:<button className="auth-submit" name="intent" value="submit">Resubmit for teacher review</button>}
    </form>:<><p>{entry.observations}</p>{entry.teacher_feedback&&<p><b>Teacher feedback:</b> {entry.teacher_feedback}</p>}{entry.score!==null&&<p><b>Score:</b> {entry.score}/100</p>}</>}
+   <section aria-label="Practical evidence">
+    <h4>Evidence files ({(evidenceByNotebook.get(entry.id)??[]).length}/8)</h4>
+    {(evidenceByNotebook.get(entry.id)??[]).length?<ul>{(evidenceByNotebook.get(entry.id)??[]).map((file:any)=><li key={file.id}><a href={'/api/lab-notebook-evidence/'+file.id}>{file.original_filename}</a> <span className="muted">· {file.content_type==='application/pdf'?'PDF':file.content_type.split('/')[1].toUpperCase()} · {(Number(file.size_bytes)/1024).toFixed(0)} KB</span></li>)}</ul>:<p className="muted">No supporting evidence uploaded.</p>}
+    {(entry.status==='draft'||entry.status==='returned')&&<form action={uploadLabNotebookEvidence} className="auth-form">
+     <input type="hidden" name="notebook_id" value={entry.id}/>
+     <label>Add supporting evidence (PDF, JPEG, PNG or WebP · max 8 MB)<input type="file" name="evidence_file" accept="application/pdf,image/jpeg,image/png,image/webp" required/></label>
+     <button className="auth-submit">Upload evidence</button>
+    </form>}
+   </section>
   </article>)}</div>}
  </section></PortalLayout>;
 }

@@ -69,12 +69,15 @@ export async function saveConceptPrerequisite(formData: FormData) {
   const prerequisiteId = String(formData.get('prerequisite_concept_id') ?? '');
   if (!conceptId || !prerequisiteId || conceptId === prerequisiteId) redirect('/admin/learning?error=prerequisite');
 
-  const [{ data: concept }, { data: prerequisite }, { data: edges }] = await Promise.all([
-    db.from('learning_concepts').select('id').eq('id', conceptId).maybeSingle(),
-    db.from('learning_concepts').select('id').eq('id', prerequisiteId).maybeSingle(),
+  const [{ data: concept }, { data: prerequisite }, { data: edges, error: edgesError }] = await Promise.all([
+    db.from('learning_concepts').select('id,subject_id').eq('id', conceptId).maybeSingle(),
+    db.from('learning_concepts').select('id,subject_id').eq('id', prerequisiteId).maybeSingle(),
     db.from('concept_prerequisites').select('concept_id,prerequisite_concept_id'),
   ]);
-  if (!concept || !prerequisite) redirect('/admin/learning?error=prerequisite');
+  if (!concept || !prerequisite || edgesError) redirect('/admin/learning?error=prerequisite');
+  if (concept.subject_id !== prerequisite.subject_id) {
+    redirect('/admin/learning?error=prerequisite_subject');
+  }
 
   // An edge A -> B means A requires B. Reject any edge that would close a cycle.
   const graph = new Map<string, string[]>();

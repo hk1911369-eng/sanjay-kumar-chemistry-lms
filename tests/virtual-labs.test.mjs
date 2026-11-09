@@ -59,7 +59,7 @@ test('administrators can configure database-driven subject-to-template mappings'
   assert.match(action, /profile\?\.role !== 'admin'/);
   assert.match(action, /upsert\(/);
   assert.match(action, /onConflict: 'lab_key'/);
-  assert.match(action, /'quadratic','pendulum','projectile'\]\.includes\(simulationType\)/);
+  assert.match(action, /'quadratic','pendulum','projectile','microscope'\]\.includes\(simulationType\)/);
   assert.match(layout, /href: '\/admin\/virtual-labs'/);
 });
 
@@ -126,7 +126,7 @@ test('double pendulum is a separately mapped physics simulation with educator-co
   assert.match(lab, /Pause experiment/);
   assert.match(lab, /Reset experiment/);
   assert.match(lab, /ResizeObserver/);
-  assert.match(action, /'pendulum','projectile'\]\.includes\(simulationType\)/);
+  assert.match(action, /'pendulum','projectile','microscope'\]\.includes\(simulationType\)/);
   assert.match(admin, /value="pendulum"/);
 });
 
@@ -147,4 +147,25 @@ test('biology inheritance square labels parental gametes and explains probabilit
   assert.match(component, /inheritance\.gametesA/);
   assert.match(component, /inheritance\.gametesB/);
   assert.match(component, /not predictions for an individual child or family/);
+});
+
+
+test('biology virtual microscope exposes specimen, optics and explicit schematic limitations', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110170000_add_virtual_microscope_lab.sql', import.meta.url), 'utf8');
+  const component = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const lab = await readFile(new URL('../components/virtual-microscope-lab.tsx', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
+  assert.match(migration, /biology-virtual-microscope/);
+  assert.match(migration, /'microscope'/);
+  assert.match(component, /simulation_type === 'microscope'/);
+  assert.match(component, /VirtualMicroscopeLab/);
+  assert.match(lab, /Onion epidermis/);
+  assert.match(lab, /Cheek epithelial cells/);
+  assert.match(lab, /Leaf epidermis/);
+  assert.match(lab, /fieldDiameter = 180000 \/ magnification/);
+  assert.match(lab, /not a photomicrograph/);
+  assert.match(lab, /numerical aperture/);
+  assert.match(admin, /value="microscope"/);
+  assert.match(action, /'microscope'\]\.includes\(simulationType\)/);
 });

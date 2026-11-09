@@ -21,7 +21,18 @@ INSERT INTO public.courses (
   ('20000000-0000-4000-8000-000000000001', 'JMT Academy HSC 2027 Multi-Subject Demo', 'jmt-hsc-2027-multi-subject-demo', 'HSC', 'Unpublished synthetic HSC 2027 course for local and test-environment learning graph validation.', 0, 0, 0, 'HSC 2027', ARRAY['Chemistry','Physics','Biology','Mathematics','Higher Mathematics','English','Bangla','ICT']::text[], false, false),
   ('20000000-0000-4000-8000-000000000002', 'JMT Academy HSC 2028 Multi-Subject Demo', 'jmt-hsc-2028-multi-subject-demo', 'HSC', 'Unpublished synthetic HSC 2028 course for local and test-environment learning graph validation.', 0, 0, 0, 'HSC 2028', ARRAY['Chemistry','Physics','Biology','Mathematics','Higher Mathematics','English','Bangla','ICT']::text[], false, false),
   ('20000000-0000-4000-8000-000000000003', 'JMT Academy Admission Multi-Subject Demo', 'jmt-admission-multi-subject-demo', 'ADMISSION', 'Unpublished synthetic admission course for local and test-environment learning graph validation.', 0, 0, 0, 'Admission Batch', ARRAY['Chemistry','Physics','Biology','Mathematics','Higher Mathematics','English','Bangla','ICT']::text[], false, false)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  slug = EXCLUDED.slug,
+  level = EXCLUDED.level,
+  description = EXCLUDED.description,
+  price_bdt = EXCLUDED.price_bdt,
+  monthly_fee_bdt = EXCLUDED.monthly_fee_bdt,
+  admission_fee_bdt = EXCLUDED.admission_fee_bdt,
+  programme_group = EXCLUDED.programme_group,
+  subjects = EXCLUDED.subjects,
+  is_published = false,
+  enrollment_open = false;
 
 INSERT INTO public.course_subjects (course_id, subject_id, is_primary)
 SELECT c.id, s.id, s.slug = 'chemistry'

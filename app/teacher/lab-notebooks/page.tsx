@@ -18,10 +18,14 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,title,instructions,due_at,points,status,created_at').in('course_id',courseIds).order('created_at',{ascending:false}).limit(50):{data:[] as any[]};
  const {data:entries}=courseIds.length?await db.from('lab_notebook_entries').select('id,course_id,lab_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):{data:[] as any[]};
  const studentIds=[...new Set((entries??[]).map(e=>e.student_id))], labIds=[...new Set((entries??[]).map(e=>e.lab_id))];
- const [{data:students},{data:labs}]=await Promise.all([
+ const entryIds=(entries??[]).map(e=>e.id);
+ const [{data:students},{data:labs},{data:evidenceRows}]=await Promise.all([
   studentIds.length?db.from('profiles').select('id,full_name,student_code').in('id',studentIds):Promise.resolve({data:[] as any[]}),
-  labIds.length?db.from('virtual_lab_catalog').select('id,title').in('id',labIds):Promise.resolve({data:[] as any[]})
+  labIds.length?db.from('virtual_lab_catalog').select('id,title').in('id',labIds):Promise.resolve({data:[] as any[]}),
+  entryIds.length?db.from('lab_notebook_evidence').select('id,notebook_id,original_filename,content_type,size_bytes').in('notebook_id',entryIds).order('created_at',{ascending:true}):Promise.resolve({data:[] as any[]})
  ]);
+ const evidenceByNotebook=new Map<string,any[]>();
+ for(const file of evidenceRows??[]){const list=evidenceByNotebook.get(file.notebook_id)??[];list.push(file);evidenceByNotebook.set(file.notebook_id,list);}
  const studentName=new Map((students??[]).map(s=>[s.id,s.full_name+(s.student_code?' · '+s.student_code:'')])), labName=new Map((labs??[]).map(l=>[l.id,l.title])), courseName=new Map(courses.map((c:any)=>[c.id,c.title]));
  return <PortalLayout role={profile!.role as 'admin'|'teacher'|'staff'} active="overview" title="Practical assessment" returnTo="/teacher"><section className="portal-content">
   <span className="auth-kicker">TEACHER REVIEW WORKSPACE</span><h1>Submitted lab notebooks</h1><p className="muted">Review scientific reasoning, method quality, observations and conclusions. Only assigned courses are included.</p>
@@ -44,6 +48,8 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
    <span className="auth-kicker">AWAITING REVIEW</span><h2>{entry.title}</h2><p className="muted">{studentName.get(entry.student_id)??'Enrolled student'} · {courseName.get(entry.course_id)??'Assigned course'} · {labName.get(entry.lab_id)??'Practical'}</p>
    <h3>Hypothesis</h3><p>{entry.hypothesis||'Not provided'}</p><h3>Method</h3><p>{entry.procedure_notes||'Not provided'}</p><h3>Observations</h3><p>{entry.observations}</p>
    <h3>Measurements</h3><pre>{JSON.stringify(entry.measurements,null,2)}</pre><h3>Conclusion</h3><p>{entry.conclusion||'Not provided'}</p>
+   <h3>Supporting evidence ({(evidenceByNotebook.get(entry.id)??[]).length})</h3>
+   {(evidenceByNotebook.get(entry.id)??[]).length?<ul>{(evidenceByNotebook.get(entry.id)??[]).map((file:any)=><li key={file.id}><a href={'/api/lab-notebook-evidence/'+file.id}>{file.original_filename}</a> <span className="muted">· {file.content_type==='application/pdf'?'PDF':file.content_type.split('/')[1].toUpperCase()} · {(Number(file.size_bytes)/1024).toFixed(0)} KB</span></li>)}</ul>:<p className="muted">No supporting evidence attached.</p>}
    <form action={reviewLabNotebook} className="auth-form"><input type="hidden" name="entry_id" value={entry.id}/>
     <label>Feedback for student<textarea name="teacher_feedback" required maxLength={4000} rows={4}/></label>
     <label>Decision<select name="decision" defaultValue="reviewed"><option value="reviewed">Reviewed and graded</option><option value="returned">Return for correction</option></select></label>

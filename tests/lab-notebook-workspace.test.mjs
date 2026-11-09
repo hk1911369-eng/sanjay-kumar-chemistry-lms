@@ -23,7 +23,7 @@ test('notebook server actions validate payloads and defer authorisation to RLS',
   assert.match(actions, /parseMeasurements/);
   assert.match(actions, /value\.length > 100/);
   assert.match(actions, /feedback\.length > 4000/);
-  assert.match(actions, /score\\s*>\\s*100/);
+  assert.match(actions, /score\s*>\s*100/);
   assert.match(actions, /\.eq\('student_id',user\.id\)/);
   assert.match(actions, /\.eq\('status','submitted'\)/);
 });

@@ -167,6 +167,11 @@ export function DoublePendulumLab({ compact = false }: Props) {
     setLength2(INITIAL.length2);
     setGravity(INITIAL.gravity);
     stateRef.current = [INITIAL.angle1 * Math.PI / 180, INITIAL.angle2 * Math.PI / 180, 0, 0];
+    setEnergy(doublePendulumEnergy(stateRef.current, {
+      gravity: INITIAL.gravity, mass1: INITIAL.mass1, mass2: INITIAL.mass2,
+      length1: INITIAL.length1, length2: INITIAL.length2,
+    }).totalJoules);
+    drawRef.current();
   };
 
   return <section className={compact ? 'double-pendulum-lab is-compact' : 'double-pendulum-lab'} aria-labelledby="double-pendulum-title">

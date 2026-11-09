@@ -80,3 +80,27 @@ test('assignment archiving is scoped, idempotent and preserves started notebooks
   assert.match(timestampMigration, /old\.status = 'published'[\s\S]*old\.published_at/);
   assert.match(timestampMigration, /new\.published_at := pg_catalog\.now\(\)/);
 });
+
+
+test('assignment creation and updates preserve server-authored publication timestamps and fixed rubric marks', async () => {
+  const [migration, followup] = await Promise.all([
+    readFile(new URL('../supabase/migrations/20261110250000_align_practical_assignment_rubric_and_archival.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110251000_fix_practical_assignment_publication_timestamp_integrity.sql', import.meta.url), 'utf8'),
+  ]);
+  assert.match(migration, /check \(points = 100\)/i);
+  assert.match(followup, /new\.published_at := case when new\.status = 'published' then pg_catalog\.now\(\) else null end/i);
+  assert.match(followup, /new\.published_at := old\.published_at/i);
+  assert.match(followup, /new\.published_at := pg_catalog\.now\(\)/i);
+  assert.match(followup, /new\.points <> 100/i);
+});
+
+test('task instructions and due dates become immutable after a learner starts, while archival remains available', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110252000_freeze_practical_task_terms_after_start.sql', import.meta.url), 'utf8');
+  assert.match(migration, /new\.title is distinct from old\.title/i);
+  assert.match(migration, /new\.instructions is distinct from old\.instructions/i);
+  assert.match(migration, /new\.due_at is distinct from old\.due_at/i);
+  assert.match(migration, /from public\.lab_notebook_entries n[\s\S]*where n\.assignment_id = old\.id/i);
+  assert.match(migration, /Practical task terms cannot change after a learner starts a notebook/i);
+  assert.match(migration, /new\.status = 'published'[\s\S]*old\.status = 'published'[\s\S]*old\.published_at/i);
+  assert.match(migration, /else[\s\S]*new\.published_at := null/i);
+});

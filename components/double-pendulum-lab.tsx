@@ -113,6 +113,7 @@ export function DoublePendulumLab({ compact = false }: Props) {
       context.fillText('m₂', x2 + 12, y2 - 8);
       context.fillText('Angles measured from downward vertical', 12, height - 12);
     };
+    drawRef.current = draw;
 
     const animate = (time: number) => {
       if (!active) return;
@@ -152,9 +153,9 @@ export function DoublePendulumLab({ compact = false }: Props) {
       active = false;
       window.cancelAnimationFrame(frame);
       observer.disconnect();
-    };
       drawRef.current = () => {};
-  }, [mass1, mass2, length1, length2, gravity, parameters, running, reducedMotion]);
+    };
+  }, [angle1, angle2, mass1, mass2, length1, length2, gravity, parameters, running, reducedMotion]);
 
   const reset = () => {
     setRunning(false);

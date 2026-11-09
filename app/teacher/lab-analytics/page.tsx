@@ -114,6 +114,7 @@ export default async function TeacherLabAnalyticsPage() {
                   </span>
                   <h2>{courseName.get(row.course_id) ?? 'Course'}</h2>
                   <h3>{labName.get(row.lab_id) ?? 'Virtual practical'}</h3>
+                  {row.concept_title&&<p className="muted">Assessed concept: {row.concept_title}</p>}
 
                   <div className="portal-grid">
                     <div>

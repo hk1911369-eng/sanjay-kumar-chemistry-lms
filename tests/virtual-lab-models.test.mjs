@@ -120,6 +120,7 @@ test('zero- and second-order kinetics follow their integrated concentration laws
     sampleCount: 21,
   });
   assert.equal(zero.curve.at(-1).uncatalysedConcentrationMolar, 0);
+  assert.equal(zero.curve.at(-1).uncatalysedRate, 0);
   assert.ok(Math.abs(zero.uncatalysedHalfLifeMinutes - 5) < 1e-12);
   assert.ok(Math.abs(second.uncatalysedHalfLifeMinutes - 10) < 1e-12);
   assert.ok(Math.abs(second.curve[0].uncatalysedRate - 0.1) < 1e-12);

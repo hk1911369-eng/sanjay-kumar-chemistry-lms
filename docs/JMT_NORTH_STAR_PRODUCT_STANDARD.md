@@ -176,6 +176,18 @@ Design for tenant isolation from the start, but do not expose tenant switching o
 - Data retention, export, correction, and deletion policies appropriate to student data.
 - Never run destructive production migrations or deploy unreviewed changes.
 
+
+### Open-source and third-party code adoption
+Open-source code is an engineering option, never a shortcut around design or review:
+- Prefer small, actively maintained libraries with a clear need and a measurable benefit over adding dependencies for convenience.
+- Review the exact upstream repository, maintainer activity, release history, issue health, security advisories, transitive dependencies, and supported runtime before adoption.
+- Verify the actual licence and all bundled assets. MIT, Apache-2.0 and BSD-style licences may be considered after notice obligations are met; copyleft, source-available, non-commercial, unclear or incompatible terms require explicit legal/product review before use.
+- Pin and lock dependencies, retain licence notices, run vulnerability/dependency audits, and document why the package is needed and who owns upgrades.
+- Never paste unreviewed code from a GitHub gist, random repository, generated snippet or abandoned project into production paths.
+- Review imported code for telemetry, network calls, unsafe HTML, dynamic code execution, secrets handling, supply-chain risk, accessibility, mobile performance and data collection.
+- Keep a first-party fallback or an exit plan for critical capabilities. Do not let one unmaintained package own the core learning, assessment, payment, identity or safety logic.
+- Re-run tests, type checks, lint, build and dependency audits after each adoption. A package is not approved merely because it makes a feature appear faster.
+
 ## 15. Quality gates — definition of done
 
 A module is complete only when:

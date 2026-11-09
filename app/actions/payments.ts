@@ -194,6 +194,19 @@ type WalletStatementRow = {
   amountBdt: number;
   senderPhone: string;
 };
+type ReconciledWalletRow = WalletStatementRow & {
+  status: 'exact_match' | 'flagged';
+  reason: string | null;
+  submissionId: string | null;
+  studentId?: string;
+  courseId?: string;
+};
+type ExactWalletMatch = ReconciledWalletRow & {
+  status: 'exact_match';
+  submissionId: string;
+  studentId: string;
+  courseId: string;
+};
 
 async function getPaymentReconciliationContext() {
   const supabase = await createClient();
@@ -259,8 +272,8 @@ export async function previewPaymentStatement(formData: FormData) {
 
   const loaded = await loadReconciliationRecords(context.supabase, rows);
   if (loaded.error) return { error: 'lookup_failed' };
-  const reconciled = reconcileWalletRows(rows, loaded.records);
-  const exact = reconciled.filter(row => row.status === 'exact_match');
+  const reconciled = reconcileWalletRows(rows, loaded.records) as ReconciledWalletRow[];
+  const exact = reconciled.filter((row): row is ExactWalletMatch => row.status === 'exact_match' && Boolean(row.submissionId && row.studentId && row.courseId));
   const studentIds = [...new Set(exact.map(row => row.studentId))];
   const courseIds = [...new Set(exact.map(row => row.courseId))];
   const [{ data: students }, { data: courses }] = await Promise.all([
@@ -294,7 +307,8 @@ export async function approveReconciledPayments(statementRows: unknown) {
   if (!rows) return { error: 'invalid_statement_rows' };
   const loaded = await loadReconciliationRecords(context.supabase, rows);
   if (loaded.error) return { error: 'lookup_failed' };
-  const exact = reconcileWalletRows(rows, loaded.records).filter(row => row.status === 'exact_match');
+  const reconciled = reconcileWalletRows(rows, loaded.records) as ReconciledWalletRow[];
+  const exact = reconciled.filter((row): row is ExactWalletMatch => row.status === 'exact_match' && Boolean(row.submissionId && row.studentId && row.courseId));
   if (!exact.length) return { approved: 0, failed: 0, skipped: rows.length };
 
   let approved = 0;

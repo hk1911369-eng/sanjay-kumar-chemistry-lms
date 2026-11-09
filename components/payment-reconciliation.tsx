@@ -17,7 +17,7 @@ type Match = {
   studentName: string;
   courseTitle: string;
 };
-type Flagged = { transactionId: string; amountBdt: number; reason: string };
+type Flagged = { transactionId: string; amountBdt: number; reason: string | null };
 type Preview = { rows: StatementRow[]; matches: Match[]; flagged: Flagged[] };
 
 const reasonLabels: Record<string, string> = {
@@ -46,10 +46,10 @@ export function PaymentReconciliation() {
     setPreview(null);
     startTransition(() => {
       void previewPaymentStatement(formData).then(result => {
-        if ('error' in result) {
+        if (!('rows' in result)) {
           setMessage(result.error === 'invalid_file'
             ? 'Choose a CSV file under 1 MB and select a wallet provider.'
-            : result.error);
+            : (result.error ?? 'Unable to process the statement.'));
           return;
         }
         setPreview(result);

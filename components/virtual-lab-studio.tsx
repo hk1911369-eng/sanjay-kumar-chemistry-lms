@@ -3,21 +3,13 @@
 import { useMemo, useState } from 'react';
 import { recordSimulationCompletion } from '@/app/actions/virtual-labs';
 
-const labs = [
-  { id: 'physics', subject: 'Physics', title: "Ohm's law circuit", summary: 'Explore how voltage and resistance affect current.', principle: 'For an ideal resistor, current I = V ÷ R and power P = V × I.' },
-  { id: 'chemistry', subject: 'Chemistry', title: 'Acid–base titration', summary: 'Add a simulated base and observe the equivalence point.', principle: 'At equivalence for a strong monoprotic acid and strong base, acid and base moles are equal.' },
-  { id: 'biology', subject: 'Biology', title: 'Inheritance simulator', summary: 'Explore genotype outcomes in a monohybrid cross.', principle: 'A Punnett square shows theoretical allele combinations, not guaranteed outcomes for an individual family.' },
-  { id: 'maths', subject: 'Mathematics', title: 'Linear function explorer', summary: 'Change slope and intercept and inspect y = mx + b.', principle: 'The slope m controls the line direction and steepness; b is the y-intercept.' },
-  { id: 'ict', subject: 'ICT', title: 'Binary number converter', summary: 'Convert binary digits into a decimal number.', principle: 'Each binary digit represents a power of two, starting with 2⁰ at the right.' },
-] as const;
+type SimulationType = 'physics' | 'chemistry' | 'biology' | 'maths' | 'ict';
+type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
+type LabCourse = { id: string; title: string; subjectIds: string[] };
 
-const subjectKey = (value: string) => value.toLowerCase().replace(/[^a-z]/g, '').replace('mathematics', 'math').replace('maths', 'math');
-
-type LabCourse = { id: string; title: string; subjects: string[] | null };
-
-export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; subjects: string[] }) {
-  const visibleLabs = labs.filter(lab => subjects.some(subject => subjectKey(subject) === subjectKey(lab.subject)));
-  const [active, setActive] = useState<string>('physics');
+export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[]; catalogue: LabCatalogItem[] }) {
+  const visibleLabs = catalogue;
+  const [active, setActive] = useState<string>(catalogue[0]?.lab_key ?? '');
   const [voltage, setVoltage] = useState(6);
   const [resistance, setResistance] = useState(12);
   const [acid, setAcid] = useState(0.1);
@@ -32,9 +24,9 @@ export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; 
   const [hasInteracted, setHasInteracted] = useState(false);
   const [startedAt, setStartedAt] = useState(Date.now());
 
-  const activeLabId = visibleLabs.some(lab => lab.id === active) ? active : (visibleLabs[0]?.id ?? '');
-  const selected = labs.find(lab => lab.id === activeLabId) ?? labs[0];
-  const selectedCourses = courses.filter(course => (course.subjects ?? []).some(subject => subjectKey(subject) === subjectKey(selected.subject)));
+  const activeLabId = visibleLabs.some(lab => lab.lab_key === active) ? active : (visibleLabs[0]?.lab_key ?? '');
+  const selected = visibleLabs.find(lab => lab.lab_key === activeLabId) ?? visibleLabs[0];
+  const selectedCourses = selected ? courses.filter(course => course.subjectIds.includes(selected.subject_id)) : [];
   const selectedCourseId = selectedCourses.some(course => course.id === courseId) ? courseId : (selectedCourses[0]?.id ?? '');
   const current = voltage / resistance;
   const acidMoles = acid * 0.025;
@@ -52,21 +44,21 @@ export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; 
   return <div className="virtual-lab-studio">
     {visibleLabs.length === 0 ? <article className="portal-card"><h2>No matching simulation yet</h2><p className="muted">Your currently enrolled courses do not have a supported simulation mapped to their subjects yet.</p></article> : <>
     <nav className="virtual-lab-catalogue" aria-label="Simulation catalogue">
-      {visibleLabs.map(lab => <button type="button" key={lab.id} onClick={() => { setActive(lab.id); setHasInteracted(false); setStartedAt(Date.now()); }} className={activeLabId === lab.id ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
-        <small>{lab.subject}</small><b>{lab.title}</b><span>{lab.summary}</span>
+      {visibleLabs.map(lab => <button type="button" key={lab.lab_key} onClick={() => { setActive(lab.lab_key); setHasInteracted(false); setStartedAt(Date.now()); }} className={activeLabId === lab.id ? 'virtual-lab-choice is-active' : 'virtual-lab-choice'}>
+        <small>{lab.subject_name}</small><b>{lab.title}</b><span>{lab.summary}</span>
       </button>)}
     </nav>
     <article className="portal-card virtual-lab-workspace">
-      <span className="auth-kicker">{selected.subject.toUpperCase()} SIMULATION</span>
+      <span className="auth-kicker">{selected.subject_name.toUpperCase()} SIMULATION</span>
       <h2>{selected.title}</h2><p className="muted">{selected.summary}</p>
 
-      {activeLabId === 'physics' && <div className="virtual-lab-experiment">
+      {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>
         <label>Resistance: <b>{resistance} Ω</b><input type="range" min="1" max="100" value={resistance} onChange={e => { setHasInteracted(true); setResistance(Number(e.target.value)); }}/></label>
         <div className="virtual-lab-results"><div><strong>{current.toFixed(3)} A</strong><span>Current</span></div><div><strong>{(voltage * current).toFixed(2)} W</strong><span>Power</span></div></div>
       </div>}
 
-      {activeLabId === 'chemistry' && <div className="virtual-lab-experiment">
+      {selected.simulation_type === 'chemistry' && <div className="virtual-lab-experiment">
         <label>Acid concentration: <b>{acid.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={acid} onChange={e => { setHasInteracted(true); setAcid(Number(e.target.value)); }}/></label>
         <label>Base concentration: <b>{base.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={base} onChange={e => { setHasInteracted(true); setBase(Number(e.target.value)); }}/></label>
         <label>Base added: <b>{baseMl} mL</b><input type="range" min="0" max="60" value={baseMl} onChange={e => { setHasInteracted(true); setBaseMl(Number(e.target.value)); }}/></label>
@@ -75,7 +67,7 @@ export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; 
         <small className="muted">Simplified model: 25 mL strong monoprotic acid, strong base and 25°C.</small>
       </div>}
 
-      {activeLabId === 'biology' && <div className="virtual-lab-experiment">
+      {selected.simulation_type === 'biology' && <div className="virtual-lab-experiment">
         <div className="virtual-lab-selects">
           <label>Parent 1<select value={parentA} onChange={e => { setHasInteracted(true); setParentA(e.target.value); }}><option>Aa</option><option>AA</option><option>aa</option></select></label>
           <label>Parent 2<select value={parentB} onChange={e => { setHasInteracted(true); setParentB(e.target.value); }}><option>Aa</option><option>AA</option><option>aa</option></select></label>
@@ -84,14 +76,14 @@ export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; 
         <p>Possible combinations: {Object.entries(punnett.reduce<Record<string, number>>((acc, value) => { const key = value === 'aA' ? 'Aa' : value; acc[key] = (acc[key] ?? 0) + 1; return acc; }, {})).map(([key, count]) => key + ' ' + count * 25 + '%').join(' · ')}</p>
       </div>}
 
-      {activeLabId === 'maths' && <div className="virtual-lab-experiment">
+      {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">
         <label>Slope (m): <b>{slope}</b><input type="range" min="-5" max="5" step="0.5" value={slope} onChange={e => { setHasInteracted(true); setSlope(Number(e.target.value)); }}/></label>
         <label>Intercept (b): <b>{intercept}</b><input type="range" min="-8" max="8" value={intercept} onChange={e => { setHasInteracted(true); setIntercept(Number(e.target.value)); }}/></label>
         <p>Equation: <b>y = {slope}x {intercept < 0 ? '−' : '+ '} {Math.abs(intercept)}</b></p>
         <div className="virtual-lab-point-table">{points.map(point => <span key={point.x}>({point.x}, {point.y})</span>)}</div>
       </div>}
 
-      {activeLabId === 'ict' && <div className="virtual-lab-experiment">
+      {selected.simulation_type === 'ict' && <div className="virtual-lab-experiment">
         <label>Binary value<input value={binary} onChange={e => { setHasInteracted(true); setBinary(e.target.value.replace(/[^01]/g, '').slice(0, 16)); }} inputMode="numeric" maxLength={16}/></label>
         <div className="virtual-lab-results"><div><strong>{decimal === null ? 'Invalid' : decimal}</strong><span>Decimal value</span></div><div><strong>{binary.length}</strong><span>Binary digits</span></div></div>
         <small className="muted">Enter 1–16 binary digits (0 or 1).</small>
@@ -103,7 +95,7 @@ export function VirtualLabStudio({ courses, subjects }: { courses: LabCourse[]; 
             {selectedCourses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
           </select>
         </label>
-        <input type="hidden" name="lab_id" value={selected.id}/>
+        <input type="hidden" name="lab_id" value={selected.lab_key}/>
         <input type="hidden" name="duration_seconds" value={Math.min(7200, Math.max(0, Math.round((Date.now() - startedAt) / 1000)))}/>
         <button type="submit" disabled={!hasInteracted || !selectedCourseId}>Mark simulation complete</button>
         <small className="muted">Change at least one experiment setting before recording it. Time is an approximate learning signal, not a graded result.</small>

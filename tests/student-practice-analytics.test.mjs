@@ -44,3 +44,14 @@ test('practice analytics is available from the staff portal navigation', async (
   const layout = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
   assert.match(layout, /key: 'practice-analytics', label: 'Practice analytics', href: '\/teacher\/practice\/analytics'/);
 });
+
+
+test('staff practice aggregates suppress cohorts smaller than five responses', async () => {
+  const migration = await readFile(
+    new URL('../supabase/migrations/20261109298000_suppress_small_practice_cohorts.sql', import.meta.url),
+    'utf8',
+  );
+  assert.match(migration, /HAVING count\(\*\) >= 5/i);
+  assert.match(migration, /eligible_questions AS/i);
+  assert.match(migration, /JOIN eligible_questions/i);
+});

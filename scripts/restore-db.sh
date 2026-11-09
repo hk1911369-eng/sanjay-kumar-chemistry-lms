@@ -7,6 +7,7 @@ umask 077
 : "${JMT_RESTORE_TARGET:?Set JMT_RESTORE_TARGET=test}"
 : "${JMT_RESTORE_CONFIRMATION:?Type RESTORE JMT TEST DATABASE to continue}"
 : "${JMT_TEST_DB_HOST:?Set the expected test database host}"
+: "${JMT_PRODUCTION_DB_HOST:?Set the expected production database host for a second safety check}"
 
 database_url_host() {
   node -e 'const u = new URL(process.argv[1]); if (!["postgres:", "postgresql:"].includes(u.protocol)) process.exit(2); process.stdout.write(u.hostname.toLowerCase())' "$1"
@@ -22,13 +23,14 @@ if [[ "$JMT_RESTORE_CONFIRMATION" != "RESTORE JMT TEST DATABASE" ]]; then
   exit 2
 fi
 
-if [[ "$(database_url_host "$JMT_RESTORE_DATABASE_URL")" != "${JMT_TEST_DB_HOST,,}" ]]; then
-  echo "Refusing: restore URL does not match JMT_TEST_DB_HOST." >&2
+restore_host="$(database_url_host "$JMT_RESTORE_DATABASE_URL")"
+if [[ "$restore_host" == "${JMT_PRODUCTION_DB_HOST,,}" ]]; then
+  echo "Refusing: restore URL matches the configured production database host." >&2
   exit 2
 fi
 
-if [[ -n "${JMT_PRODUCTION_DB_HOST:-}" && "$(database_url_host "$JMT_RESTORE_DATABASE_URL")" == "${JMT_PRODUCTION_DB_HOST,,}" ]]; then
-  echo "Refusing: restore URL matches the configured production database host." >&2
+if [[ "$restore_host" != "${JMT_TEST_DB_HOST,,}" ]]; then
+  echo "Refusing: restore URL does not match JMT_TEST_DB_HOST." >&2
   exit 2
 fi
 

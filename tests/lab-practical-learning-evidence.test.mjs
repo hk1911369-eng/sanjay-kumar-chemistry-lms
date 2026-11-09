@@ -62,3 +62,37 @@ test('practical cohort analytics splits by assessed concept and keeps the five-l
   assert.match(migration, /having count\(distinct h\.student_id\) >= 5/i);
   assert.match(page, /Assessed concept: \{row\.concept_title\}/);
 });
+
+
+test('one practical review contributes one weighted concept-evidence point, not six rubric points', async () => {
+  const [practical, quiz] = await Promise.all([
+    readFile(new URL('../supabase/migrations/20261110248000_feed_practical_results_into_adaptive_learning.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261108214832_learning_os_quiz_concept_evidence_and_mistake_memory.sql', import.meta.url), 'utf8'),
+  ]);
+  assert.match(practical, /v_mastery := new\.score_percent \/ 100\.0/i);
+  assert.match(practical, /confidence,\s*evidence_count/i);
+  assert.match(practical, /0\.1,\s*1,/i);
+  assert.match(practical, /existing\.mastery_score \* existing\.evidence_count/i);
+  assert.match(practical, /existing\.evidence_count \+ excluded\.evidence_count/i);
+  assert.match(practical, /evidence_count = existing\.evidence_count \+ excluded\.evidence_count/i);
+  assert.match(quiz, /existing\.mastery_score \* existing\.evidence_count/i);
+});
+
+test('low practical results schedule one targeted revision using existing concept deduplication', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110248000_feed_practical_results_into_adaptive_learning.sql', import.meta.url), 'utf8');
+  assert.match(migration, /if v_mastery < 0\.70 then/i);
+  assert.match(migration, /when v_mastery < 0\.50 then 5 else 4/i);
+  assert.match(migration, /new\.occurred_at \+ interval '1 day'/i);
+  assert.match(migration, /on conflict \(student_id, concept_id\)[\s\S]*where status = 'pending' and concept_id is not null[\s\S]*do nothing/i);
+  assert.match(migration, /new\.event_type <> 'practical_reviewed'/i);
+});
+
+test('practical mastery trigger is database-owned and cannot be called as an API function', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261110248000_feed_practical_results_into_adaptive_learning.sql', import.meta.url), 'utf8');
+  assert.match(migration, /create or replace function public\.capture_practical_learning_mastery\(\)/i);
+  assert.match(migration, /security definer/i);
+  assert.match(migration, /set search_path = ''/i);
+  assert.match(migration, /after insert on public\.learning_events/i);
+  assert.match(migration, /when \(new\.event_type = 'practical_reviewed'\)/i);
+  assert.match(migration, /revoke all on function public\.capture_practical_learning_mastery\(\) from public, anon, authenticated/i);
+});

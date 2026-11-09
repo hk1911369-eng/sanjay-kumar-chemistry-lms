@@ -652,3 +652,14 @@ input,select,textarea,button{max-width:100%}
 .practice-weak-question p,.practice-weak-question small{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
 .practice-weak-question small{display:block;margin-top:4px}
 @media(max-width:650px){.practice-analytics-kpis{grid-template-columns:1fr}.practice-subject-row{grid-template-columns:minmax(100px,1fr) 1fr 42px;gap:8px}.practice-subject-row small{font-size:9px}}
+
+.learning-graph-readiness { display:grid; gap:.9rem; }
+.learning-graph-readiness>p { margin:0; }
+.learning-graph-readiness-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.65rem; }
+.learning-graph-readiness-metrics>span { display:grid; gap:.2rem; padding:.8rem; border:1px solid var(--line); border-radius:10px; color:var(--muted); font-size:.86rem; }
+.learning-graph-readiness-metrics b { color:var(--foreground); font-size:1.35rem; }
+.learning-graph-readiness-blockers { padding:.9rem 1rem; border:1px solid var(--line); border-radius:10px; }
+.learning-graph-readiness-blockers ul { margin:.55rem 0 0; padding-left:1.2rem; display:grid; gap:.4rem; }
+.learning-graph-readiness-subjects { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:.6rem; }
+.learning-graph-readiness-subjects>div { display:grid; gap:.2rem; padding:.7rem .8rem; background:var(--surface-muted,transparent); border:1px solid var(--line); border-radius:9px; }
+.learning-graph-readiness-subjects span { color:var(--muted); font-size:.84rem; }

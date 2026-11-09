@@ -50,9 +50,45 @@ ALTER TABLE public.student_practice_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_practice_attempts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "assigned staff manage student practice questions" ON public.student_practice_questions;
-CREATE POLICY "assigned staff manage student practice questions"
+DROP POLICY IF EXISTS "assigned staff read student practice questions" ON public.student_practice_questions;
+CREATE POLICY "assigned staff read student practice questions"
 ON public.student_practice_questions
-FOR ALL TO authenticated
+FOR SELECT TO authenticated
+USING (
+  public.current_role() = 'admin'
+  OR (
+    public.current_role()::text IN ('teacher','staff')
+    AND EXISTS (
+      SELECT 1 FROM public.course_assignments a
+      WHERE a.course_id = student_practice_questions.course_id
+        AND a.teacher_id = auth.uid()
+    )
+  )
+);
+
+DROP POLICY IF EXISTS "assigned staff create student practice questions" ON public.student_practice_questions;
+CREATE POLICY "assigned staff create student practice questions"
+ON public.student_practice_questions
+FOR INSERT TO authenticated
+WITH CHECK (
+  created_by = auth.uid()
+  AND (
+    public.current_role() = 'admin'
+    OR (
+      public.current_role()::text IN ('teacher','staff')
+      AND EXISTS (
+        SELECT 1 FROM public.course_assignments a
+        WHERE a.course_id = student_practice_questions.course_id
+          AND a.teacher_id = auth.uid()
+      )
+    )
+  )
+);
+
+DROP POLICY IF EXISTS "assigned staff update student practice questions" ON public.student_practice_questions;
+CREATE POLICY "assigned staff update student practice questions"
+ON public.student_practice_questions
+FOR UPDATE TO authenticated
 USING (
   public.current_role() = 'admin'
   OR (
@@ -65,16 +101,13 @@ USING (
   )
 )
 WITH CHECK (
-  created_by = auth.uid()
-  AND (
-    public.current_role() = 'admin'
-    OR (
-      public.current_role()::text IN ('teacher','staff')
-      AND EXISTS (
-        SELECT 1 FROM public.course_assignments a
-        WHERE a.course_id = student_practice_questions.course_id
-          AND a.teacher_id = auth.uid()
-      )
+  public.current_role() = 'admin'
+  OR (
+    public.current_role()::text IN ('teacher','staff')
+    AND EXISTS (
+      SELECT 1 FROM public.course_assignments a
+      WHERE a.course_id = student_practice_questions.course_id
+        AND a.teacher_id = auth.uid()
     )
   )
 );

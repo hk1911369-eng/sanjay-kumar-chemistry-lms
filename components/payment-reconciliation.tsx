@@ -17,7 +17,7 @@ type Match = {
   studentName: string;
   courseTitle: string;
 };
-type Flagged = { transactionId: string; amountBdt: number; reason: string | null };
+type Flagged = { transactionId: string; amountBdt: number; reason: string };
 type Preview = { rows: StatementRow[]; matches: Match[]; flagged: Flagged[] };
 
 const reasonLabels: Record<string, string> = {

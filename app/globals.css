@@ -776,3 +776,39 @@ input,select,textarea,button{max-width:100%}
 .virtual-microscope .virtual-lab-secondary-action{min-height:48px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
 .virtual-microscope button:focus-visible,.virtual-microscope input:focus-visible,.virtual-microscope select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(max-width:560px){.microscope-controls{grid-template-columns:1fr}.microscope-readouts{grid-template-columns:1fr}.microscope-viewer{padding:.6rem}}
+
+
+/* Chemical kinetics virtual laboratory: responsive controls, paired rate/concentration plots. */
+.chemical-kinetics-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.chemical-kinetics-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.chemical-kinetics-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
+.chemical-kinetics-heading p{margin:.35rem 0;line-height:1.55}
+.chemical-kinetics-model-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
+.chemical-kinetics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.chemical-kinetics-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.chemical-kinetics-controls label b{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.chemical-kinetics-controls input[type=range],.chemical-kinetics-controls select{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.chemical-kinetics-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
+.chemical-kinetics-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.chemical-kinetics-plot{margin:.1rem 0}
+.chemical-kinetics-legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--muted)}
+.chemical-kinetics-legend span{display:inline-flex;align-items:center;gap:.4rem}
+.chemical-kinetics-legend i{display:inline-block;width:20px;height:4px;border-radius:99px}
+.chemical-kinetics-legend i.is-uncatalysed{background:#2677bd}
+.chemical-kinetics-legend i.is-catalysed{background:#d97736}
+.chemical-kinetics-line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.chemical-kinetics-line.is-uncatalysed{stroke:#2677bd}
+.chemical-kinetics-line.is-catalysed{stroke:#d97736}
+.chemical-kinetics-plot svg{min-width:0}
+.chemical-kinetics-challenge{display:grid;gap:.35rem}
+.chemical-kinetics-challenge p{margin:.25rem 0;line-height:1.55}
+.chemical-kinetics-challenge small{color:var(--muted);line-height:1.5}
+.chemical-kinetics-lab input:focus-visible,.chemical-kinetics-lab select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:620px){
+  .chemical-kinetics-controls{grid-template-columns:1fr;padding:.85rem}
+  .chemical-kinetics-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chemical-kinetics-heading{display:grid}
+}
+@media(max-width:380px){
+  .chemical-kinetics-results{grid-template-columns:1fr}
+}

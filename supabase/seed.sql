@@ -69,7 +69,7 @@ FROM (VALUES
   ('mathematics','functions','algebra'),
   ('english','reading-comprehension','grammar-foundations'),
   ('ict','algorithmic-thinking','data-representation'),
-  ('bangla','reading-comprehension','grammar-foundations'),
+  ('bangla','bangla-reading-comprehension','bangla-language-grammar'),
   ('higher-mathematics','differentiation','matrices-determinants')
 ) AS edge(subject_slug, child_slug, parent_slug)
 JOIN public.academic_subjects s ON s.slug = edge.subject_slug

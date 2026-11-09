@@ -123,64 +123,20 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public, pg_temp
 as $function$
-declare
-  v_role text := public.current_role()::text;
-  v_max numeric;
 begin
-  if tg_op = 'INSERT' then
-    if tg_table_name = 'assignment_submissions' then
-      if new.marks is not null or new.teacher_feedback is not null
-         or new.graded_by is not null or new.graded_at is not null then
-        raise exception 'Students cannot submit assignment grading fields'
-          using errcode = '42501';
-      end if;
-    elsif tg_table_name = 'written_exam_submissions' then
-      if new.score is not null or new.teacher_feedback <> ''
-         or new.graded_by is not null or new.graded_at is not null then
-        raise exception 'Students cannot submit written-exam grading fields'
-          using errcode = '42501';
-      end if;
+  if tg_table_name = 'assignment_submissions' then
+    if new.marks is not null or new.teacher_feedback is not null
+       or new.graded_by is not null or new.graded_at is not null then
+      raise exception 'Students cannot submit assignment grading fields'
+        using errcode = '42501';
     end if;
-    return new;
-  end if;
-
-  if v_role in ('teacher','staff') then
-    if tg_table_name = 'assignment_submissions' then
-      if new.answer_text is distinct from old.answer_text
-         or new.attachment_url is distinct from old.attachment_url
-         or new.submitted_at is distinct from old.submitted_at then
-        raise exception 'Teaching staff cannot alter a student assignment response'
-          using errcode = '42501';
-      end if;
-      select a.max_marks into v_max
-      from public.assignments a where a.id = new.assignment_id;
-      if new.marks is not null and (new.marks < 0 or new.marks > v_max) then
-        raise exception 'Assignment grade exceeds the configured mark range'
-          using errcode = '22023';
-      end if;
-      if new.marks is not null and (new.graded_by is distinct from auth.uid() or new.graded_at is null) then
-        raise exception 'Assignment grading metadata is invalid'
-          using errcode = '22023';
-      end if;
-    elsif tg_table_name = 'written_exam_submissions' then
-      if new.answers is distinct from old.answers
-         or new.submitted_at is distinct from old.submitted_at then
-        raise exception 'Teaching staff cannot alter a student written-exam response'
-          using errcode = '42501';
-      end if;
-      select x.total_marks into v_max
-      from public.written_exams x where x.id = new.exam_id;
-      if new.score is not null and (new.score < 0 or new.score > v_max) then
-        raise exception 'Written-exam grade exceeds the configured mark range'
-          using errcode = '22023';
-      end if;
-      if new.score is not null and (new.graded_by is distinct from auth.uid() or new.graded_at is null) then
-        raise exception 'Written-exam grading metadata is invalid'
-          using errcode = '22023';
-      end if;
+  elsif tg_table_name = 'written_exam_submissions' then
+    if new.score is not null or new.teacher_feedback <> ''
+       or new.graded_by is not null or new.graded_at is not null then
+      raise exception 'Students cannot submit written-exam grading fields'
+        using errcode = '42501';
     end if;
   end if;
-
   return new;
 end;
 $function$;
@@ -189,10 +145,10 @@ revoke all on function public.guard_assessment_submission_edits() from public, a
 
 drop trigger if exists guard_assignment_submission_edits on public.assignment_submissions;
 create trigger guard_assignment_submission_edits
-before insert or update on public.assignment_submissions
+before insert on public.assignment_submissions
 for each row execute function public.guard_assessment_submission_edits();
 
 drop trigger if exists guard_written_exam_submission_edits on public.written_exam_submissions;
 create trigger guard_written_exam_submission_edits
-before insert or update on public.written_exam_submissions
+before insert on public.written_exam_submissions
 for each row execute function public.guard_assessment_submission_edits();

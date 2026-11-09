@@ -46,3 +46,18 @@ test('virtual labs are still linked from the student workspace', async () => {
   const source = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
   assert.ok(source.includes("key: 'labs', label: 'Virtual labs', href: '/labs'"));
 });
+
+test('administrators can configure database-driven subject-to-template mappings', async () => {
+  const page = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
+  const layout = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
+  assert.match(page, /profile\?\.role !== 'admin'/);
+  assert.match(page, /from\('academic_subjects'\)/);
+  assert.match(page, /from\('virtual_lab_catalog'\)/);
+  assert.match(page, /name="lab_key"/);
+  assert.match(page, /name="simulation_type"/);
+  assert.match(action, /profile\?\.role !== 'admin'/);
+  assert.match(action, /upsert\(/);
+  assert.match(action, /onConflict: 'lab_key'/);
+  assert.match(layout, /href: '\/admin\/virtual-labs'/);
+});

@@ -77,6 +77,11 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
   const circuit = calculateOhmsLaw(voltage, resistance);
   const shortCircuit = calculateIllustrativeShortCircuit({ sourceVoltage: 6, sourceInternalResistance: 0.5, pathResistance: 0.1, durationSeconds: 2 });
   const titration = calculateStrongAcidBaseTitration({ acidMolarity: acid, acidVolumeMl: 25, baseMolarity: base, baseVolumeMl: baseMl });
+  const titrationCurve = useMemo(() => Array.from({ length: 31 }, (_, index) => {
+    const volumeMl = index * 2;
+    const result = calculateStrongAcidBaseTitration({ acidMolarity: acid, acidVolumeMl: 25, baseMolarity: base, baseVolumeMl: volumeMl });
+    return { volumeMl, pH: result.pH };
+  }), [acid, base]);
   const inheritance = useMemo(() => calculatePunnettSquare(parentA, parentB), [parentA, parentB]);
   const punnett = inheritance.cells;
   const binaryValid = /^[01]{1,16}$/.test(binary);
@@ -113,7 +118,20 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <label>Base concentration: <b>{base.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={base} onChange={e => { setHasInteracted(true); setBase(Number(e.target.value)); }}/></label>
         <label>Base added: <b>{baseMl} mL</b><input type="range" min="0" max="60" value={baseMl} onChange={e => { setHasInteracted(true); setBaseMl(Number(e.target.value)); }}/></label>
         <div className="virtual-lab-results"><div><strong>{titration.pH.toFixed(2)}</strong><span>Estimated pH</span></div><div><strong>{titration.equivalenceVolumeMl.toFixed(1)} mL</strong><span>Equivalence volume</span></div></div>
-        <p>Indicator model: <b>{titration.pH >= 8.2 ? 'pink — base side' : 'colourless — acid / near-neutral side'}</b></p>
+        <div className="virtual-lab-titration-graph">
+          <div><b>Titration curve</b><span>Modelled pH against base volume</span></div>
+          <svg viewBox="0 0 560 250" role="img" aria-label={`Strong acid and base titration curve. Current pH ${titration.pH.toFixed(2)} at ${baseMl} millilitres of base. Equivalence at ${titration.equivalenceVolumeMl.toFixed(1)} millilitres.`}>
+            {[0, 7, 14].map(value => <g key={value}><line x1="48" x2="540" y1={210 - value / 14 * 180} y2={210 - value / 14 * 180}/><text x="36" y={214 - value / 14 * 180}>{value}</text></g>)}
+            <line className="virtual-lab-graph-axis" x1="48" y1="30" x2="48" y2="210"/>
+            <line className="virtual-lab-graph-axis" x1="48" y1="210" x2="540" y2="210"/>
+            {titration.equivalenceVolumeMl <= 60 && <g><line className="virtual-lab-equivalence-line" x1={48 + titration.equivalenceVolumeMl / 60 * 492} x2={48 + titration.equivalenceVolumeMl / 60 * 492} y1="30" y2="210"/><text x={Math.min(440, 54 + titration.equivalenceVolumeMl / 60 * 492)} y="22">Equivalence</text></g>}
+            <polyline className="virtual-lab-curve-line" points={titrationCurve.map(point => `${48 + point.volumeMl / 60 * 492},${210 - point.pH / 14 * 180}`).join(' ')}/>
+            <circle className="virtual-lab-current-point" cx={48 + baseMl / 60 * 492} cy={210 - titration.pH / 14 * 180} r="5"/>
+            <text x="48" y="235">0 mL</text><text x="540" y="235" textAnchor="end">60 mL base added</text>
+            <text x="12" y="16">pH</text>
+          </svg>
+        </div>
+        <p>Indicator: <b>Phenolphthalein</b> — {titration.pH >= 8.2 ? 'pink in its transition range / alkaline solution' : 'colourless below its approximate transition range'}.</p>
         <small className="muted">Simplified model: {titration.model}.</small>
       </div>}
 
@@ -122,8 +140,17 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
           <label>Parent 1<select value={parentA} onChange={e => { setHasInteracted(true); setParentA(e.target.value); }}><option>Aa</option><option>AA</option><option>aa</option></select></label>
           <label>Parent 2<select value={parentB} onChange={e => { setHasInteracted(true); setParentB(e.target.value); }}><option>Aa</option><option>AA</option><option>aa</option></select></label>
         </div>
-        <div className="virtual-punnett-grid" aria-label="Punnett square">{punnett.map((value, index) => <strong key={index}>{value}</strong>)}</div>
+        <div className="virtual-punnett-grid" role="group" aria-label="Punnett square showing parental gametes and possible offspring genotypes">
+          <span aria-hidden="true"/>
+          {inheritance.gametesB.map((gamete, index) => <strong className="is-header" key={`b-${index}`}>{gamete}</strong>)}
+          {inheritance.gametesA.map((gamete, row) => [
+            <strong className="is-header" key={`a-${row}`}>{gamete}</strong>,
+            <strong key={`cell-${row}-0`}>{punnett[row * 2]}</strong>,
+            <strong key={`cell-${row}-1`}>{punnett[row * 2 + 1]}</strong>,
+          ])}
+        </div>
         <p>Possible combinations: {inheritance.outcomes.map(outcome => outcome.genotype + ' ' + outcome.percentage + '%').join(' · ')}</p>
+        <small className="muted">These are theoretical probabilities for this simplified single-gene model, not predictions for an individual child or family.</small>
       </div>}
 
       {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">

@@ -95,6 +95,7 @@ test('first-order kinetics reproduces the exponential law and analytical half-li
   assert.ok(Math.abs(result.uncatalysedRateConstant - 0.1) < 1e-12);
   assert.ok(Math.abs(result.uncatalysedHalfLifeMinutes - Math.log(2) / 0.1) < 1e-10);
   assert.ok(Math.abs(result.curve[0].uncatalysedConcentrationMolar - 1) < 1e-12);
+  assert.equal(result.effectiveActivationEnergyKJMol, 50);
   assert.equal(result.reactionOrder, 1);
   assert.equal(result.rateConstantUnits, 'min^-1');
   assert.equal(result.initialRateUnits, 'mol L^-1 min^-1');
@@ -145,6 +146,7 @@ test('higher temperature and reduced activation energy increase the predicted ra
   assert.ok(warmer.uncatalysedRateConstant > reference.uncatalysedRateConstant);
   assert.ok(catalysed.catalysedRateConstant > catalysed.uncatalysedRateConstant);
   assert.ok(catalysed.catalystRateFactor > 1);
+  assert.equal(catalysed.effectiveActivationEnergyKJMol, 52);
   assert.ok(catalysed.catalysedHalfLifeMinutes < catalysed.uncatalysedHalfLifeMinutes);
   assert.ok(Math.abs(reference.catalystRateFactor - 1) < 1e-12);
 });

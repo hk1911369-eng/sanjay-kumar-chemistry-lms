@@ -35,7 +35,7 @@ test('database analytics RPC is staff-scoped, time-bounded and identity-free', a
 
 test('intervention flags require repeated evidence and low accuracy, not one response', async () => {
   const page = await readFile(new URL('../app/teacher/practice/analytics/page.tsx', import.meta.url), 'utf8');
-  assert.match(page, /question\.attempts >= 3/);
+  assert.match(page, /question\.attempts >= 5/);
   assert.match(page, /question\.accuracy \?\? 100\) < 60/);
   assert.match(page, /No clear difficulty pattern yet/);
 });

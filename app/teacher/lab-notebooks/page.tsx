@@ -22,12 +22,19 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const conceptName=new Map((availableConcepts??[]).map((concept:any)=>[concept.id,concept.title]));
  const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,concept_id,title,instructions,due_at,points,status,created_at').in('course_id',courseIds).order('created_at',{ascending:false}).limit(50):{data:[] as any[]};
  const [{data:entries},{data:historyNotebooks}]=await Promise.all([
-  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,lab_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):Promise.resolve({data:[] as any[]}),
-  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,student_id,title,updated_at').in('course_id',courseIds).order('updated_at',{ascending:false}).limit(200):Promise.resolve({data:[] as any[]})
+  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,lab_id,assignment_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):Promise.resolve({data:[] as any[]}),
+  courseIds.length?db.from('lab_notebook_entries').select('id,course_id,student_id,assignment_id,title,updated_at').in('course_id',courseIds).order('updated_at',{ascending:false}).limit(200):Promise.resolve({data:[] as any[]})
  ]);
  const historyNotebookIds=(historyNotebooks??[]).map(n=>n.id);
- const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,rubric_scores,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
+ const {data:reviewHistory}=historyNotebookIds.length?await db.from('lab_notebook_review_history').select('id,notebook_id,student_id,reviewer_display_name,review_round,decision,feedback,score,rubric_scores,submitted_at,reviewed_at').in('notebook_id',historyNotebookIds).order('reviewed_at',{ascending:false}).limit(200):{data:[] as any[]};
  const historyNotebookById=new Map((historyNotebooks??[]).map(n=>[n.id,n]));
+ const assignmentIds=[...new Set([...(entries??[]).map(e=>e.assignment_id),...(historyNotebooks??[]).map(n=>n.assignment_id)].filter(Boolean))];
+ const {data:assignmentDueRows}=assignmentIds.length?await db.from('lab_practical_assignments').select('id,due_at').in('id',assignmentIds):{data:[] as any[]};
+ const assignmentDue=new Map((assignmentDueRows??[]).map((item:any)=>[item.id,item.due_at]));
+ const lateEntryIds=new Set((entries??[]).filter((entry:any)=>{
+  const due=entry.assignment_id?assignmentDue.get(entry.assignment_id):null;
+  return Boolean(due&&entry.submitted_at&&new Date(entry.submitted_at).getTime()>new Date(due).getTime());
+ }).map((entry:any)=>entry.id));
  const studentIds=[...new Set([...(entries??[]).map(e=>e.student_id),...(historyNotebooks??[]).map(n=>n.student_id)])], labIds=[...new Set((entries??[]).map(e=>e.lab_id))];
  const entryIds=(entries??[]).map(e=>e.id);
  const [{data:students},{data:labs},{data:evidenceRows}]=await Promise.all([
@@ -70,11 +77,13 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
     <h3>{notebook?.title??'Practical notebook'}</h3>
     <p className="muted">{studentName.get(review.student_id)??'Enrolled student'} · {courseName.get(notebook?.course_id)??'Assigned course'} · {review.reviewer_display_name} · {new Date(review.reviewed_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</p>
     <p>{review.feedback}</p>
+    {notebook?.assignment_id&&assignmentDue.get(notebook.assignment_id)&&review.submitted_at&&new Date(review.submitted_at).getTime()>new Date(assignmentDue.get(notebook.assignment_id)).getTime()&&<p className="muted">Submitted after the due time ({new Date(assignmentDue.get(notebook.assignment_id)).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}). Late work is flagged for review; no automatic mark deduction is applied.</p>}
     {review.score!==null&&<><p><b>Total:</b> {review.score}/100</p><ul>{Object.entries(review.rubric_scores??{}).map(([key,value])=><li key={key}>{({hypothesis:'Hypothesis',method:'Method',observations_measurements:'Observations and measurements',analysis_interpretation:'Analysis and interpretation',conclusion_reflection:'Conclusion and reflection',safety_integrity:'Lab safety and integrity'} as Record<string,string>)[key]??key}: {String(value)}</li>)}</ul></>}
    </article>;
   })}</div>}
   {!entries?.length?<article className="portal-card"><p className="muted">No practical notebooks are waiting for review.</p></article>:<div className="portal-grid">{entries.map(entry=><article className="portal-card" key={entry.id}>
    <span className="auth-kicker">AWAITING REVIEW</span><h2>{entry.title}</h2><p className="muted">{studentName.get(entry.student_id)??'Enrolled student'} · {courseName.get(entry.course_id)??'Assigned course'} · {labName.get(entry.lab_id)??'Practical'}</p>
+   {lateEntryIds.has(entry.id)&&<p className="form-error">Late submission — received after the published due time. No automatic mark deduction is applied.</p>}
    <h3>Hypothesis</h3><p>{entry.hypothesis||'Not provided'}</p><h3>Method</h3><p>{entry.procedure_notes||'Not provided'}</p><h3>Observations</h3><p>{entry.observations}</p>
    <h3>Measurements</h3><pre>{JSON.stringify(entry.measurements,null,2)}</pre><h3>Conclusion</h3><p>{entry.conclusion||'Not provided'}</p>
    <h3>Supporting evidence ({(evidenceByNotebook.get(entry.id)??[]).length})</h3>

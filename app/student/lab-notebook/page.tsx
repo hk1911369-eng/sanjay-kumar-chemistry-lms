@@ -30,8 +30,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
   <h2>Start a practical record</h2>
   {!labOptions.length?<article className="portal-card"><p className="muted">No published virtual practical is currently mapped to your active paid courses.</p></article>:
   <form action={saveLabNotebook} className="auth-form portal-card">
-   <label>Course<select name="course_id" required defaultValue=""><option value="" disabled>Select course</option>{(courses??[]).map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
-   <label>Experiment<select name="lab_id" required defaultValue=""><option value="" disabled>Select experiment</option>{labOptions.map(o=><option key={o.courseId+o.labId} value={o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
+   <label>Course and experiment<select name="lab_choice" required defaultValue=""><option value="" disabled>Select a mapped course experiment</option>{labOptions.map(o=><option key={o.courseId+o.labId} value={o.courseId+':'+o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
    <label>Record title<input name="title" required minLength={2} maxLength={180} placeholder="e.g. Investigating projectile range"/></label>
    <label>Hypothesis<textarea name="hypothesis" rows={2} maxLength={4000}/></label><label>Procedure / method<textarea name="procedure_notes" rows={3} maxLength={8000}/></label>
    <label>Observations<textarea name="observations" rows={4} maxLength={12000}/></label><label>Measurements (JSON array; optional)<textarea name="measurements" rows={3} placeholder={'[{"name":"Time","value":"1.2","unit":"s"}]'}/></label>
@@ -46,7 +45,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
     <label>Procedure<textarea name="procedure_notes" rows={2} defaultValue={entry.procedure_notes}/></label><label>Observations<textarea name="observations" rows={3} defaultValue={entry.observations}/></label>
     <label>Measurements JSON<textarea name="measurements" rows={2} defaultValue={JSON.stringify(entry.measurements,null,2)}/></label><label>Conclusion<textarea name="conclusion" rows={2} defaultValue={entry.conclusion}/></label>
     {entry.status==='returned'&&<p className="form-error">Teacher feedback: {entry.teacher_feedback}</p>}
-    <button className="auth-submit" name="intent" value={entry.status==='returned'?'submit':'draft'}>{entry.status==='returned'?'Resubmit for teacher review':'Save draft'}</button>
+    {entry.status==='draft'?<><button className="auth-submit" name="intent" value="draft">Save draft</button><button className="auth-submit" name="intent" value="submit">Submit for teacher review</button></>:<button className="auth-submit" name="intent" value="submit">Resubmit for teacher review</button>}
    </form>:<><p>{entry.observations}</p>{entry.teacher_feedback&&<p><b>Teacher feedback:</b> {entry.teacher_feedback}</p>}{entry.score!==null&&<p><b>Score:</b> {entry.score}/100</p>}</>}
   </article>)}</div>}
  </section></PortalLayout>;

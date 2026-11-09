@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankLearningActions } from '../lib/learning-action-ranking.ts';
+import { rankLearningActions } from '../lib/learning-action-ranking.mjs';
 
 const now = new Date('2026-11-09T00:00:00.000Z');
 
@@ -13,7 +13,7 @@ test('adaptive action ranking combines revision, mistakes, lessons and assessmen
     upcomingExams: [{ id: 'e1', title: 'Chapter test', course_id: 'c1', starts_at: '2026-11-12T00:00:00.000Z', kind: 'Quiz' }],
     upcomingAssignments: [{ id: 'a1', title: 'Worksheet', course_id: 'c1', due_at: '2026-11-10T00:00:00.000Z' }],
   });
-  assert.deepEqual(actions.map(action => action.kind), ['revision', 'mistake', 'exam', 'assignment', 'lesson']);
+  assert.deepEqual(actions.map(action => action.kind), ['revision', 'mistake', 'assignment', 'exam', 'lesson']);
 });
 
 test('ranking excludes distant or expired assessment actions and respects limit', () => {

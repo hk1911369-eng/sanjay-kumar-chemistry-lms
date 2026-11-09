@@ -7,7 +7,7 @@ import { submitManualPayment } from '@/app/actions/payments';
 import { LearningOSDashboard } from '@/components/learning-os-dashboard';
 import { updateStudentDetails } from '@/app/actions/student-management';
 import { MONTHLY_FEE_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
-import { rankLearningActions } from '@/lib/learning-action-ranking';
+import { rankLearningActions } from '@/lib/learning-action-ranking.mjs';
 
 const paymentErrors: Record<string, string> = {
   invalid: 'তথ্যগুলো যাচাই করুন। Transaction ID কমপক্ষে ৫ অক্ষরের হতে হবে।',

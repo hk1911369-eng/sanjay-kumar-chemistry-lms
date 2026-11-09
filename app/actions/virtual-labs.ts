@@ -50,7 +50,7 @@ export async function saveVirtualLabCatalogItem(formData: FormData) {
     || !/^[0-9a-f-]{36}$/i.test(subjectId)
     || title.length < 2 || title.length > 160
     || summary.length > 500 || principle.length > 2000
-    || !['physics','chemistry','biology','maths','ict'].includes(simulationType)
+    || !['physics','chemistry','biology','maths','ict','quadratic'].includes(simulationType)
     || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000) {
     redirect('/admin/virtual-labs?error=invalid');
   }

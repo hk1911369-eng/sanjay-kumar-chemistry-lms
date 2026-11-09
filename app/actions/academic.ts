@@ -34,9 +34,11 @@ export async function createLiveClass(formData:FormData) {
  const starts=String(formData.get('starts_at')||'');
  const ends=String(formData.get('ends_at')||'');
  const meeting=String(formData.get('meeting_url')||'').trim();
- if(!courseId||title.length<3||!starts||!ends||new Date(ends)<=new Date(starts)|| (meeting&&!/^https:\/\//i.test(meeting))) redirect('/academic?error=class');
+ const startsAt=parseDhakaDateTime(starts);
+ const endsAt=parseDhakaDateTime(ends);
+ if(!courseId||title.length<3||title.length>180||!startsAt||!endsAt||new Date(endsAt)<=new Date(startsAt)||(meeting&&!/^https:\/\//i.test(meeting))) redirect('/academic?error=class');
  if(!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=permission');
- const {error}=await supabase.from('live_classes').insert({course_id:courseId,title,starts_at:new Date(starts).toISOString(),ends_at:new Date(ends).toISOString(),meeting_url:meeting||null,created_by:user.id});
+ const {error}=await supabase.from('live_classes').insert({course_id:courseId,title,starts_at:startsAt,ends_at:endsAt,meeting_url:meeting||null,created_by:user.id});
  redirect(error?'/academic?error=class':'/academic?saved=class');
 }
 
@@ -46,11 +48,12 @@ export async function createAssignment(formData:FormData) {
  const title=String(formData.get('title')||'').trim();
  const instructions=String(formData.get('instructions')||'').trim();
  const due=String(formData.get('due_at')||'');
+ const dueAt=due?parseDhakaDateTime(due):null;
  const marks=Number(formData.get('max_marks')||100);
  const url=String(formData.get('attachment_url')||'').trim();
- if(!courseId||title.length<3||instructions.length>10000||!Number.isFinite(marks)||marks<=0||(url&&!/^https:\/\//i.test(url))) redirect('/academic?error=assignment');
+ if(!courseId||title.length<3||title.length>180||instructions.length>10000||(due&&!dueAt)||!Number.isSafeInteger(marks)||marks<=0||marks>100000||(url&&!/^https:\/\//i.test(url))) redirect('/academic?error=assignment');
  if(!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=permission');
- const {error}=await supabase.from('assignments').insert({course_id:courseId,title,instructions,due_at:due?new Date(due).toISOString():null,max_marks:marks,attachment_url:url||null,published:formData.get('published')==='on',created_by:user.id});
+ const {error}=await supabase.from('assignments').insert({course_id:courseId,title,instructions,due_at:dueAt,max_marks:marks,attachment_url:url||null,published:formData.get('published')==='on',created_by:user.id});
  redirect(error?'/academic?error=assignment':'/academic?saved=assignment');
 }
 
@@ -189,7 +192,9 @@ export async function createWrittenExam(formData:FormData) {
  const start=String(formData.get('starts_at')||'');
  const end=String(formData.get('ends_at')||'');
  const raw=String(formData.get('questions_json')||'');
- if(!courseId||title.length<3||title.length>180||instructions.length>10000||raw.length>50000||(start&&end&&new Date(end)<=new Date(start))||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=written_exam');
+ const startsAt=start?parseDhakaDateTime(start):null;
+ const endsAt=end?parseDhakaDateTime(end):null;
+ if(!courseId||title.length<3||title.length>180||instructions.length>10000||raw.length>50000||Boolean(start)!==Boolean(end)||(start&&(!startsAt||!endsAt||new Date(endsAt)<=new Date(startsAt)))||!await canTeach(supabase,user.id,role,courseId)) redirect('/academic?error=written_exam');
  let questions:any[];
  try { questions=JSON.parse(raw); } catch { redirect('/academic?error=written_format'); }
  if(!Array.isArray(questions)||questions.length<1||questions.length>30||questions.some(q=>{
@@ -198,7 +203,7 @@ export async function createWrittenExam(formData:FormData) {
   return (q.options&&q.options.length>0)||typeof q.model_answer!=='string'||q.model_answer.length>5000;
  })) redirect('/academic?error=written_format');
  const total=questions.reduce((sum,q)=>sum+Number(q.marks),0);
- const {data:exam,error}=await supabase.from('written_exams').insert({course_id:courseId,title,instructions,starts_at:start?new Date(start).toISOString():null,ends_at:end?new Date(end).toISOString():null,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
+ const {data:exam,error}=await supabase.from('written_exams').insert({course_id:courseId,title,instructions,starts_at:startsAt,ends_at:endsAt,total_marks:total,published:formData.get('published')==='on',created_by:user.id}).select('id').single();
  if(error||!exam) redirect('/academic?error=written_exam');
  const rows=questions.map((q,i)=>({exam_id:exam.id,question_type:q.question_type,question_text:q.question_text.trim(),options:q.question_type==='mcq'?q.options:[],marks:Number(q.marks),position:i+1}));
  const inserted=await supabase.from('written_exam_questions').insert(rows).select('id');

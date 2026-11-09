@@ -13,9 +13,14 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
  const courses=(assignments??[]).map((item:any)=>profile?.role==='admin'?item:item.courses).filter(Boolean), courseIds=courses.map((c:any)=>c.id);
  const {data:courseSubjects}=courseIds.length?await db.from('course_subjects').select('course_id,subject_id').in('course_id',courseIds):{data:[] as any[]};
  const subjectIds=[...new Set((courseSubjects??[]).map(x=>x.subject_id))];
- const {data:availableLabs}=subjectIds.length?await db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):{data:[] as any[]};
- const labOptions=courses.flatMap((course:any)=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(availableLabs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title}))));
- const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,title,instructions,due_at,points,status,created_at').in('course_id',courseIds).order('created_at',{ascending:false}).limit(50):{data:[] as any[]};
+ const [{data:availableLabs},{data:availableConcepts}]=await Promise.all([
+  subjectIds.length?db.from('virtual_lab_catalog').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):Promise.resolve({data:[] as any[]}),
+  subjectIds.length?db.from('learning_concepts').select('id,title,subject_id').eq('is_published',true).in('subject_id',subjectIds).order('sort_order'):Promise.resolve({data:[] as any[]})
+ ]);
+ const labOptions=courses.flatMap((course:any)=>(courseSubjects??[]).filter(cs=>cs.course_id===course.id).flatMap(cs=>(availableLabs??[]).filter(l=>l.subject_id===cs.subject_id).map(l=>({courseId:course.id,courseTitle:course.title,labId:l.id,labTitle:l.title,subjectId:cs.subject_id}))));
+ const conceptOptions=labOptions.flatMap((lab:any)=>(availableConcepts??[]).filter((concept:any)=>concept.subject_id===lab.subjectId).map((concept:any)=>({...lab,conceptId:concept.id,conceptTitle:concept.title})));
+ const conceptName=new Map((availableConcepts??[]).map((concept:any)=>[concept.id,concept.title]));
+ const {data:practicalAssignments}=courseIds.length?await db.from('lab_practical_assignments').select('id,course_id,lab_id,concept_id,title,instructions,due_at,points,status,created_at').in('course_id',courseIds).order('created_at',{ascending:false}).limit(50):{data:[] as any[]};
  const [{data:entries},{data:historyNotebooks}]=await Promise.all([
   courseIds.length?db.from('lab_notebook_entries').select('id,course_id,lab_id,student_id,title,hypothesis,procedure_notes,observations,measurements,conclusion,submitted_at').in('course_id',courseIds).eq('status','submitted').order('submitted_at',{ascending:true}).limit(100):Promise.resolve({data:[] as any[]}),
   courseIds.length?db.from('lab_notebook_entries').select('id,course_id,student_id,title,updated_at').in('course_id',courseIds).order('updated_at',{ascending:false}).limit(200):Promise.resolve({data:[] as any[]})
@@ -39,6 +44,13 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
   <h2>Create a practical assignment</h2>
   {!labOptions.length?<p className="muted">No published experiments are mapped to your assigned courses yet.</p>:<form action={createLabPracticalAssignment} className="auth-form portal-card">
    <label>Course and experiment<select name="lab_choice" required defaultValue=""><option value="" disabled>Select a course experiment</option>{labOptions.map((o:any)=><option key={o.courseId+o.labId} value={o.courseId+':'+o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
+   <label>Learning concept (optional)
+    <select name="concept_choice" defaultValue="">
+     <option value="">No concept link — assessment stays in the practical record only</option>
+     {conceptOptions.map((option:any)=><option key={option.courseId+':'+option.labId+':'+option.conceptId} value={option.courseId+':'+option.labId+':'+option.conceptId}>{option.courseTitle} — {option.labTitle} → {option.conceptTitle}</option>)}
+    </select>
+    <span className="muted">Only published concepts from the selected experiment subject can be linked. A graded review then becomes verified learning evidence.</span>
+   </label>
    <label>Assignment title<input name="title" required minLength={3} maxLength={180} placeholder="e.g. Measure and compare projectile range"/></label>
    <label>Instructions<textarea name="instructions" required minLength={1} maxLength={8000} rows={4} placeholder="Describe the scientific task, expected observations and submission requirements."/></label>
    <label>Due date and time (Bangladesh time)<input name="due_at" type="datetime-local"/></label>
@@ -48,7 +60,7 @@ export default async function TeacherLabNotebooksPage({searchParams}:{searchPara
   <h2>Published and past assignments</h2>
   {!practicalAssignments?.length?<p className="muted">No practical assignments have been created for these courses.</p>:<div className="portal-grid">{practicalAssignments.map((task:any)=><article className="portal-card" key={task.id}>
    <span className="auth-kicker">{String(task.status).toUpperCase()}</span><h3>{task.title}</h3><p>{task.instructions}</p>
-   <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
+   <p className="muted">{courseName.get(task.course_id)??'Course'} · {labName.get(task.lab_id)??'Experiment'}{task.concept_id?' · Concept: '+(conceptName.get(task.concept_id)??'Linked concept'):''} · {task.points} marks{task.due_at?' · Due '+new Date(task.due_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'}):''}</p>
   </article>)}</div>}
   <h2>Recent review history</h2>
   {!reviewHistory?.length?<p className="muted">Completed practical reviews will appear here.</p>:<div className="portal-grid">{reviewHistory.map((review:any)=>{

@@ -15,8 +15,8 @@ with check (
   and submitted_at <= now() + interval '30 seconds'
   and case
     when jsonb_typeof(answers) = 'object' then
-      jsonb_object_length(answers) between 1 and 30
-      and jsonb_object_length(answers) = (
+      (select count(*) from jsonb_object_keys(answers)) between 1 and 30
+      and (select count(*) from jsonb_object_keys(answers)) = (
         select count(*) from public.written_exam_questions q
         where q.exam_id = written_exam_submissions.exam_id
       )

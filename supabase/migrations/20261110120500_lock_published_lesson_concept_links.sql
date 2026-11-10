@@ -26,7 +26,7 @@ BEGIN
   FROM public.lessons l
   WHERE l.id = v_lesson_id;
 
-  IF COALESCE(v_published, TRUE) IS TRUE THEN
+  IF v_published IS TRUE OR (v_published IS NULL AND TG_OP <> 'DELETE') THEN
     RAISE EXCEPTION 'Concept links for published lessons are locked' USING ERRCODE = '42501';
   END IF;
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;

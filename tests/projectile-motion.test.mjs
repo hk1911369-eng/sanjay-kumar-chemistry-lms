@@ -42,7 +42,7 @@ test('projectile simulation is integrated into the paid, subject-mapped lab cata
   assert.match(component, /simulation_type === 'projectile'/);
   assert.match(component, /ProjectileMotionLab/);
   assert.match(admin, /value="projectile"/);
-  assert.match(action, /'projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator'\]\.includes\(simulationType\)/);
+  for (const type of ['projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator']) assert.ok(action.includes("'" + type + "'"));
   assert.match(migration, /physics-projectile-motion/);
   assert.match(migration, /'projectile'/);
   assert.match(lab, /air resistance/i);

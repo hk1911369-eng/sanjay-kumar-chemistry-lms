@@ -209,8 +209,9 @@ export async function publishCourseChapter(formData: FormData) {
   const validConceptIds = new Set((concepts ?? []).filter(concept => concept.is_published && subjectIds.includes(concept.subject_id)).map(concept => concept.id));
   const mappedLessonIds = new Set((links ?? []).filter(link => validConceptIds.has(link.concept_id)).map(link => link.lesson_id));
   if (lessons.some(lesson => !mappedLessonIds.has(lesson.id))) redirect('/admin/learning?error=chapter_mapping');
-  const { error } = await db.from('chapters').update({ published: true }).eq('id', chapterId);
-  if (error) redirect('/admin/learning?error=chapter_publish');
+  const { data: publishedChapter, error } = await db.from('chapters').update({ published: true })
+    .eq('id', chapterId).eq('published', false).select('id').maybeSingle();
+  if (error || !publishedChapter) redirect('/admin/learning?error=chapter_publish');
   revalidatePath('/admin/learning');
   revalidatePath('/learn/' + chapter.course_id);
   redirect('/admin/learning?chapter_published=1');
@@ -238,8 +239,9 @@ export async function publishCourseLesson(formData: FormData) {
   if (!(concepts ?? []).some(concept => concept.is_published && subjectIds.includes(concept.subject_id))) {
     redirect('/admin/learning?error=lesson_mapping');
   }
-  const { error } = await db.from('lessons').update({ is_published: true }).eq('id', lessonId);
-  if (error) redirect('/admin/learning?error=lesson_publish');
+  const { data: publishedLesson, error } = await db.from('lessons').update({ is_published: true })
+    .eq('id', lessonId).eq('is_published', false).select('id').maybeSingle();
+  if (error || !publishedLesson) redirect('/admin/learning?error=lesson_publish');
   revalidatePath('/admin/learning');
   revalidatePath('/learn/' + lesson.course_id);
   redirect('/admin/learning?lesson_published=1');

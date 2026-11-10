@@ -23,7 +23,7 @@ test('lesson authoring validates course ownership, chapter ownership, and secure
   const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
   assert.match(actions, /\.is\('archived_at', null\)/);
   assert.match(actions, /\.eq\('course_id', courseId\)\.maybeSingle\(\)/);
-  assert.match(actions, /!\/^https:\\\/\\//i\.test\(videoUrl\)/);
+  assert.ok(actions.includes("!/^https:\\/\\//i.test(videoUrl)"));
   assert.match(actions, /content\.length > 30000/);
 });
 

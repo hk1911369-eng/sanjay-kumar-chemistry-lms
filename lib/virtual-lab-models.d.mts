@@ -283,3 +283,28 @@ export type SpringOscillatorResult = SpringOscillatorInput & {
   model: string;
 };
 export function calculateSpringOscillator(input: SpringOscillatorInput): SpringOscillatorResult;
+
+
+export type ThinLensInput = {
+  lensType: 'converging' | 'diverging';
+  focalLengthM: number;
+  objectDistanceM: number;
+  objectHeightM: number;
+};
+export type ThinLensResult = {
+  lensType: 'converging' | 'diverging';
+  focalLengthM: number;
+  signedFocalLengthM: number;
+  lensPowerDiopters: number;
+  objectDistanceM: number;
+  objectHeightM: number;
+  imageDistanceM: number | null;
+  magnification: number | null;
+  imageHeightM: number | null;
+  imageType: 'real' | 'virtual' | 'at-infinity';
+  orientation: 'inverted' | 'upright' | 'not-defined';
+  sizeClassification: 'enlarged' | 'diminished' | 'same-size' | 'not-defined';
+  atFocalPlane: boolean;
+  model: string;
+};
+export function calculateThinLens(input: ThinLensInput): ThinLensResult;

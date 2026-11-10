@@ -519,3 +519,10 @@ The Academic Centre retrieves assignment submissions for the current course set,
 **Security interpretation:** no cross-student disclosure or student grade-write bypass was established. The query is subject to row-level policies, and the grading-field protections remain in place. This is an assessment-transparency and user-facing status gap that may cause learners to mistake an already-submitted assignment for an unsubmitted one or miss feedback. **Remediation:** add a student-scoped submission lookup and render explicit not-submitted, submitted/pending, and graded states with timestamp, marks and feedback; only expose resubmission while the submission is ungraded and policy permits it. Test the full lifecycle and verify that one student's submission never appears for another.
 
 **Verification limits:** branch Academic Centre/action and live assignment submission policies/column grants inspected. JMT Test has no assignment submission rows; no live student-session test or database write was performed.
+
+
+## Assessment staff queues are capped at 100 submissions without pagination
+
+The Academic Centre queries assignment submissions with a hard limit of 100 rows and no explicit ordering, and written-exam submissions with a newest-first limit of 100. Staff marking views render only those returned rows and have no pagination or indication that more records exist. Database RLS continues to scope teacher/staff reads to assigned courses, so this is not an authorization leak; it is a completeness and operational risk. In larger cohorts, submissions outside the returned page may be missed during marking even though they remain in the database.
+
+**Remediation:** implement stable cursor/offset pagination, assessment/course filters, and visible total/remaining counts; verify every submission remains reachable beyond the first 100. **Verification limits:** branch query/rendering and live scoped-read policies inspected. JMT Test has no assignment or written-exam submissions; no data was changed.

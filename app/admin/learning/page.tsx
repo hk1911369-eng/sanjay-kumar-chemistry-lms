@@ -73,11 +73,12 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   }
   const publishedConceptCount = concepts.filter(concept => concept.is_published).length;
   const unmappedPublishedConceptCount = concepts.filter(concept => concept.is_published && !mappedConceptIds.has(concept.id)).length;
-  const unmappedLessonCount = lessons.filter(lesson => !mappedLessonIds.has(lesson.id)).length;
+  const publishedLessonCount = lessons.filter(lesson => lesson.is_published).length;
+  const unmappedPublishedLessonCount = lessons.filter(lesson => lesson.is_published && !mappedLessonIds.has(lesson.id)).length;
   const readinessBlockers = [
-    ...(lessons.length === 0 ? ['Add lessons to active courses before mapping curriculum coverage.'] : []),
+    ...(publishedLessonCount === 0 ? ['Add and publish reviewed lessons before enabling learner-facing curriculum recommendations.'] : []),
     ...(publishedConceptCount === 0 ? ['Publish reviewed concepts so learner-facing features have trusted curriculum nodes.'] : []),
-    ...(lessons.length > 0 && unmappedLessonCount > 0 ? [`${unmappedLessonCount} lesson(s) still need concept mapping.`] : []),
+    ...(publishedLessonCount > 0 && unmappedPublishedLessonCount > 0 ? [`${unmappedPublishedLessonCount} published lesson(s) still need concept mapping.`] : []),
     ...(publishedConceptCount > 0 && unmappedPublishedConceptCount > 0 ? [`${unmappedPublishedConceptCount} published concept(s) are not connected to any lesson.`] : []),
   ];
   const courseCoverage = courses.map(course => {
@@ -101,6 +102,9 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
       publishedConceptCount: coursePublishedConcepts.length, mappedPublishedConceptCount: mappedPublishedConcepts, ready,
     };
   });
+  const courseCoverageBlockers = courseCoverage.filter(course => !course.ready)
+    .map(course => `${course.title}: publish lessons and concepts, then connect every published lesson and concept within this course.`);
+  const allReadinessBlockers = [...readinessBlockers, ...courseCoverageBlockers];
 
   return <PortalLayout role="admin" active="learning-graph" title="Subjects & concept graph" returnTo="/admin/learning">
     <section className="portal-content learning-graph-page">
@@ -124,14 +128,14 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <h2 id="learning-graph-readiness-title">Learning graph readiness</h2>
         <p className="muted">This is a curriculum-coverage check, not a student-performance score. Adaptive recommendations should only rely on reviewed, published concepts connected to real lessons.</p>
         <div className="learning-graph-readiness-metrics">
-          <span><b>{lessons.length}</b> active-course lessons</span>
+          <span><b>{publishedLessonCount}/{lessons.length}</b> published lessons</span>
           <span><b>{publishedConceptCount}/{concepts.length}</b> concepts published</span>
           <span><b>{mappedPairs.size}</b> lesson–concept links</span>
-          <span><b>{unmappedLessonCount}</b> lessons without a concept link</span>
+          <span><b>{unmappedPublishedLessonCount}</b> published lessons without a concept link</span>
         </div>
-        {readinessBlockers.length > 0 ? <div className="learning-graph-readiness-blockers">
+        {allReadinessBlockers.length > 0 ? <div className="learning-graph-readiness-blockers">
           <b>Work remaining before curriculum-driven adaptation</b>
-          <ul>{readinessBlockers.map(item => <li key={item}>{item}</li>)}</ul>
+          <ul>{allReadinessBlockers.map(item => <li key={item}>{item}</li>)}</ul>
         </div> : <p className="form-success">Every active-course lesson and published concept has at least one curriculum connection. Continue reviewing prerequisite quality before enabling predictive features.</p>}
         <div className="learning-graph-readiness-subjects">
           {subjects.map(subject => {

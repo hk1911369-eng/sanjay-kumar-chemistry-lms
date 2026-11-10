@@ -6,7 +6,7 @@ import {saveAcademyProfile} from '@/app/actions/academy-settings';
 
 export default async function AcademySettings({searchParams}:{searchParams:Promise<{saved?:string;error?:string}>}){
  const params=await searchParams;const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
- const {data:actor}=await db.from('profiles').select('role').eq('id',user.id).single();if(actor?.role!=='admin')redirect('/portal');
+ const {data:actor}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();if (actor?.is_active !== true || actor.role !== 'admin') redirect('/portal');
  const {data:settings}=await db.from('academy_settings').select('academy_name,tagline,contact_phone,whatsapp_phone,contact_email,physical_address,google_maps_url,facebook_url,support_hours').eq('id',1).maybeSingle();
  return <PortalLayout role="admin" active="academy-settings" title="Academy profile" returnTo="/admin/settings"><section className="portal-content">
  <div className="studio-heading"><div><span className="auth-kicker">JMT ACADEMY · PUBLIC PROFILE</span><h1>Academy details and location</h1><p className="muted">Set the official contact details shown to students and families. These details also help students understand where offline classes take place.</p></div><Link className="quiet-button" href="/admin">Back to admin</Link></div>

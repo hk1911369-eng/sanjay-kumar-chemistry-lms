@@ -9,6 +9,7 @@ import {
   calculateWaveInterference,
   calculateChemicalEquilibrium,
   calculateCellDivision,
+  calculateThinLens,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -400,4 +401,50 @@ test('crossing over and independent assortment are explicit, bounded teaching sw
   assert.throws(() => calculateCellDivision({
     divisionType: 'mitosis', diploidChromosomeNumber: 4, stageIndex: 9,
   }), RangeError);
+});
+
+
+test('thin-lens model calculates converging-lens image position and magnification', () => {
+  const result = calculateThinLens({
+    lensType: 'converging',
+    focalLengthM: 0.1,
+    objectDistanceM: 0.3,
+    objectHeightM: 0.15,
+  });
+  assert.ok(Math.abs(result.imageDistanceM - 0.15) < 1e-12);
+  assert.ok(Math.abs(result.magnification + 0.5) < 1e-12);
+  assert.equal(result.imageType, 'real');
+  assert.equal(result.orientation, 'inverted');
+  assert.equal(result.sizeClassification, 'diminished');
+  assert.equal(result.lensPowerDiopters, 10);
+});
+
+test('thin-lens model handles diverging lenses and the converging focal plane', () => {
+  const diverging = calculateThinLens({
+    lensType: 'diverging',
+    focalLengthM: 0.1,
+    objectDistanceM: 0.3,
+    objectHeightM: 0.15,
+  });
+  assert.ok(Math.abs(diverging.imageDistanceM + 0.075) < 1e-12);
+  assert.ok(Math.abs(diverging.magnification - 0.25) < 1e-12);
+  assert.equal(diverging.imageType, 'virtual');
+  assert.equal(diverging.orientation, 'upright');
+
+  const focalPlane = calculateThinLens({
+    lensType: 'converging',
+    focalLengthM: 0.1,
+    objectDistanceM: 0.1,
+    objectHeightM: 0.15,
+  });
+  assert.equal(focalPlane.atFocalPlane, true);
+  assert.equal(focalPlane.imageDistanceM, null);
+  assert.equal(focalPlane.imageType, 'at-infinity');
+});
+
+test('thin-lens model rejects unsupported lens types and out-of-range inputs', () => {
+  const valid = { lensType: 'converging', focalLengthM: 0.1, objectDistanceM: 0.3, objectHeightM: 0.15 };
+  assert.throws(() => calculateThinLens({ ...valid, lensType: 'flat' }), RangeError);
+  assert.throws(() => calculateThinLens({ ...valid, focalLengthM: 0 }), RangeError);
+  assert.throws(() => calculateThinLens({ ...valid, objectDistanceM: Number.NaN }), RangeError);
 });

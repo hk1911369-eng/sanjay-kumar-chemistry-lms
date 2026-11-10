@@ -393,3 +393,16 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Test-coverage gap:** the inspected quiz-evidence test checks for the trigger and mastery/revision writes but not numerical weighting; the Exam War Room and lesson-progress tests check selected source/migration patterns rather than interactions among quiz, practical, lesson and revision evidence. No behavior-level mixed-source regression test was identified in the inspected set.
 
 **Verification limits:** confirmed from the live JMT Test function definitions, trigger bindings and partial unique indexes, and the branch quiz migration/test sources. The JMT Test learning_events, learner_concept_mastery, revision_tasks and quiz_attempts tables each contained zero rows at inspection. No learner data was created or changed; the impact is inferred from the verified database logic.
+
+
+## Derived learning-event fan-out can trip the per-student rate limit during quiz submission (11 November 2026)
+
+**Availability finding — a single assessment action can consume most of its own event-row rate limit.** The live learning_events BEFORE INSERT trigger applies a limit of 60 rows per student per minute. The quiz evidence AFTER UPDATE trigger writes one general exam_submitted event plus one event per distinct tagged concept. The quiz builder allows up to 50 questions, each independently tagged to a concept, so a single submission can generate up to 51 rows. If the student has already generated 10 or more recent learning_events rows, the next insertion can hit the threshold. The exception is raised inside the quiz_attempts update transaction, so the attempt's score/submitted_at update and all event/mastery side effects roll back together.
+
+**Impact:** valid quiz submissions can fail due to ordinary recent learning activity, even though the student has not performed 60 separate actions. This is an availability and progress-integrity issue, not an authorization bypass.
+
+**Recommended correction:** apply limits to logical actions (quiz submission RPCs) rather than each derived event row, or perform one parent-action budget check and exempt internal fan-out rows. Add an integration test for a maximum-size, many-concept quiz with prior events near the threshold, asserting atomic success/failure semantics and preserving abuse protection.
+
+**Test-coverage gap:** the inspected tests assert the quiz evidence trigger and event rate-limit source separately, but do not exercise their combined trigger chain, event fan-out, or transaction rollback under the threshold.
+
+**Verification limits:** live JMT Test function/trigger definitions and branch quiz builder confirm the mechanics and limits. No live quiz or learning-event data existed to reproduce an affected learner case; no data was modified.

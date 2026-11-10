@@ -165,6 +165,8 @@ USING (
         OR (
           (SELECT public.current_role()) = 'student'::public.app_role
           AND q.published IS TRUE
+          AND (q.starts_at IS NULL OR q.starts_at <= now())
+          AND (q.ends_at IS NULL OR q.ends_at >= now())
           AND EXISTS (
             SELECT 1 FROM public.enrollments e JOIN public.courses c ON c.id = e.course_id
             WHERE e.course_id = q.course_id AND e.student_id = (SELECT auth.uid())
@@ -219,6 +221,8 @@ USING (
         OR (
           (SELECT public.current_role()) = 'student'::public.app_role
           AND x.published IS TRUE
+          AND (x.starts_at IS NULL OR now() >= x.starts_at)
+          AND (x.ends_at IS NULL OR now() <= x.ends_at)
           AND EXISTS (
             SELECT 1 FROM public.enrollments e JOIN public.courses c ON c.id = e.course_id
             WHERE e.course_id = x.course_id AND e.student_id = (SELECT auth.uid())

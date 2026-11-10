@@ -144,8 +144,8 @@ export async function reviewManualPayment(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
 
   const id = String(formData.get('submission_id') ?? '').trim();
   const decision = String(formData.get('decision') ?? '').trim();
@@ -169,8 +169,8 @@ export async function updatePaymentSettings(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
 
   const provider = String(formData.get('provider') ?? '').trim() as Provider;
   const receivingNumber = normalizeBangladeshMobile(String(formData.get('receiving_number') ?? '').trim());
@@ -212,8 +212,8 @@ async function getPaymentReconciliationContext() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'unauthorized' as const };
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return { error: 'forbidden' as const };
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') return { error: 'forbidden' as const };
   return { supabase, user };
 }
 

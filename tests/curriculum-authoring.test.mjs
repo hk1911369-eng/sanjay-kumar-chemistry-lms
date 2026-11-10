@@ -104,4 +104,7 @@ test('published lessons cannot have their curriculum concept mappings changed in
   const mapping = actions.slice(actions.indexOf('export async function mapLessonToConcept'));
   assert.match(mapping, /select\('id,course_id,is_published'\)/);
   assert.match(mapping, /if \(lesson\.is_published\) redirect\('\/admin\/learning\?error=lesson_locked'\)/);
+  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /const draftLessons = lessons\.filter\(lesson => !lesson\.is_published\)/);
+  assert.match(page, /Published lessons are locked/);
 });

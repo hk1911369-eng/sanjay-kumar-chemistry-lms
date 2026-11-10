@@ -596,3 +596,14 @@ The live content-integrity trigger covers `written_exams`, `written_exam_questio
 **Recommended correction:** create all assessment content unpublished, then publish in a single DB-controlled operation that verifies question count, per-question key completeness/type and total marks under appropriate locking. Better, make assessment creation a single transactional RPC. The database submission guard should independently reject attempts unless the exam is published and complete, including a key row for every question. Do not rely on the admin UI's multi-request sequencing.
 
 **Verification limits:** branch `createWrittenExam()` and `publishWrittenExam()`, live student SELECT/INSERT policies, admin-bypass content trigger, submission table unique constraint and answer-key relation inspected. No written exams/submissions were available for runtime race testing; no data was changed.
+
+
+## Assessment header totals are not reconciled to question marks (11 November 2026)
+
+The quiz and written-exam creation actions calculate `total_marks` from question marks at creation time. However, the live database constraints only require each question mark to be positive and each header total to be non-negative (quiz) or positive (written exam). There is no aggregate constraint/trigger tying a quiz or written-exam `total_marks` to `SUM(question.marks)`. The publish actions validate question counts and answer-key presence/completeness, but do not recompute or compare the sum of question marks with the stored header total. Administrator RLS policies permit updates to assessment headers and question rows; the content-integrity trigger explicitly bypasses admins. A permitted administrator-side change can therefore leave the published assessment's displayed/grade ceiling total inconsistent with the marks actually assigned to its questions.
+
+**Impact:** score normalization and grading consistency risk. If the header total is below the sum of question marks, a valid question-by-question score may exceed the grading ceiling; if above, students may be graded against marks that cannot be earned. This is a database integrity gap, not a student privilege escalation.
+
+**Recommended correction:** enforce total reconciliation in a transactional publish function and prevent post-publication changes except through versioned correction/regrade workflow. If draft question marks remain editable, recalculate the header total in the same transaction. Add tests for lower/higher header totals, concurrent edits, and published content changes.
+
+**Verification limits:** live CHECK/FK/unique constraints, RLS policies, admin content-trigger bypass, branch create/publish actions inspected. JMT Test currently has zero quiz headers/questions and zero written-exam headers/questions, so no inconsistent row was observed. No database changes were made.

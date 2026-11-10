@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('teachers can only create draft assessments and published assessment content is locked', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261110120001_lock_published_assessment_content.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261110115355_lock_published_assessment_content.sql', import.meta.url), 'utf8');
   const action = await readFile(new URL('../app/actions/academic.ts', import.meta.url), 'utf8');
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.enforce_assessment_content_draft_integrity/);
   for (const table of ['assignments', 'quizzes', 'written_exams']) {

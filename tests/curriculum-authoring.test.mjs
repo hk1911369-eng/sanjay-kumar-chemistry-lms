@@ -108,3 +108,21 @@ test('published lessons cannot have their curriculum concept mappings changed in
   assert.match(page, /const draftLessons = lessons\.filter\(lesson => !lesson\.is_published\)/);
   assert.match(page, /Published lessons are locked/);
 });
+
+
+test('teacher authoring cannot bypass draft-only curriculum publication gates', async () => {
+  const actions = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/teacher/page.tsx', import.meta.url), 'utf8');
+  const saveLesson = actions.slice(actions.indexOf('export async function saveLesson'), actions.indexOf('export async function markLessonComplete'));
+  const saveChapter = actions.slice(actions.indexOf('export async function saveChapter'), actions.indexOf('export async function getLessonResourceUrl'));
+  assert.match(saveLesson, /is_published: false/);
+  assert.match(saveLesson, /\.eq\('is_published', false\)\.select\('id'\)\.maybeSingle\(\)/);
+  assert.match(saveLesson, /if \(!lesson \|\| lesson\.is_published\)/);
+  assert.match(saveLesson, /\.eq\('id', chapterId\)\.eq\('course_id', courseId\)/);
+  assert.doesNotMatch(saveLesson, /formData\.get\('published'\)/);
+  assert.match(saveChapter, /published: false/);
+  assert.doesNotMatch(saveChapter, /formData\.get\('published'\)/);
+  assert.doesNotMatch(page, /name="published"/);
+  assert.match(page, /Published lesson is locked against in-place editing/);
+  assert.match(page, /New lessons are saved as drafts/);
+});

@@ -154,3 +154,41 @@ export type ChemicalEquilibriumResult = {
   model: string;
 };
 export function calculateChemicalEquilibrium(input: ChemicalEquilibriumInput): ChemicalEquilibriumResult;
+
+
+export type CellDivisionInput = {
+  divisionType: 'mitosis' | 'meiosis';
+  diploidChromosomeNumber: number;
+  stageIndex: number;
+  crossingOver?: boolean;
+  independentAssortment?: boolean;
+};
+export type CellDivisionStage = {
+  name: string;
+  cells: number;
+  chromosomesPerCell: number;
+  chromatidsPerChromosome: number;
+  dnaContent: string;
+  event: string;
+};
+export type CellDivisionResult = {
+  divisionType: 'mitosis' | 'meiosis';
+  diploidChromosomeNumber: number;
+  haploidChromosomeNumber: number;
+  stageIndex: number;
+  stageCount: number;
+  stageName: string;
+  cells: number;
+  chromosomesPerCell: number;
+  chromatidsPerChromosome: number;
+  dnaContent: string;
+  event: string;
+  ploidy: string;
+  independentAssortment: boolean;
+  crossingOver: boolean;
+  independentAssortmentCombinations: number | null;
+  geneticOutcome: string;
+  stages: CellDivisionStage[];
+  model: string;
+};
+export function calculateCellDivision(input: CellDivisionInput): CellDivisionResult;

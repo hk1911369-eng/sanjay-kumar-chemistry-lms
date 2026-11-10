@@ -16,10 +16,13 @@ test('profile role and student identity cannot be self-edited', async () => {
   const migration = await read('supabase/migrations/20261108184125_restrict_profile_update_columns.sql');
   const roleMigration = await read('supabase/migrations/0005_auth_roles_and_course_guardrails.sql');
   const identityMigration = await read('supabase/migrations/20261108202657_fail_closed_student_identity_field_guard.sql');
+  const studentCodeMigration = await read('supabase/migrations/20261110264000_pin_student_code_trigger_search_path.sql');
   assert.match(migration, /REVOKE UPDATE ON TABLE public\.profiles FROM authenticated/i);
   assert.match(migration, /GRANT UPDATE\s*\([\s\S]*full_name[\s\S]*\)\s*ON TABLE public\.profiles TO authenticated/i);
   assert.match(roleMigration, /prevent_self_role_change/);
   assert.match(identityMigration, /protect_student_identity_fields/);
+  assert.match(studentCodeMigration, /SET\s+search_path\s+TO\s+'pg_catalog',\s*'public',\s*'pg_temp'/i);
+  assert.match(studentCodeMigration, /REVOKE\s+ALL\s+ON\s+FUNCTION\s+public\.assign_student_code\(\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated/i);
 });
 
 test('admin CSV endpoints reject inactive accounts as well as non-admins', async () => {

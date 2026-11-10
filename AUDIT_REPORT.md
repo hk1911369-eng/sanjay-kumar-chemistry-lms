@@ -693,3 +693,10 @@ The Academic Centre loads the student's quiz attempts without an explicit order 
 **Impact:** historical results lose identifying assessment context and the unbounded history query becomes a scalability/usability risk. The underlying attempt score is not shown to be altered or deleted by this behavior. **Recommended correction:** persist a minimal immutable assessment-title snapshot (and course/title context) on submission, or provide a narrowly scoped historical metadata lookup that does not reopen access to current assessment content; paginate attempts in stable submitted_at/id order and show clear empty/loading/error states. Test results for old quizzes, archived courses and expired enrolments, while confirming answer keys/questions remain inaccessible.
 
 **Verification limits:** branch `app/academic/page.tsx` quiz/attempt queries and result rendering, plus live quiz/attempt RLS policies inspected. JMT Test has no quiz attempts, so historical-title fallback and query growth were not reproduced with populated records; no data was changed.
+
+
+## Learning dashboard counts completed goals as current goals (11 November 2026)
+
+The student dashboard query deliberately retrieves both `active` and `completed` study goals, but the headline KPI displays `goals.length` with the label “Current goals”. Completed goals therefore inflate the current-goal count and the metric is not a count of currently active goals. The query is also capped at eight rows, so the headline is a count of only the returned subset rather than a total across all goals.
+
+**Impact:** misleading learner-facing progress summary; no access-control or underlying goal-data integrity issue. **Remediation:** calculate active and completed counts separately, label them accurately, and use a count query or pagination if the KPI is intended to represent all goals. **Verification limits:** branch student dashboard query and KPI rendering inspected. No learner goal rows were available for runtime comparison; no data was changed.

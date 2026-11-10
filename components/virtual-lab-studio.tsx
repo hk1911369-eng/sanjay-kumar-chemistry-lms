@@ -6,9 +6,10 @@ import { DoublePendulumLab } from '@/components/double-pendulum-lab';
 import { ProjectileMotionLab } from '@/components/projectile-motion-lab';
 import { VirtualMicroscopeLab } from '@/components/virtual-microscope-lab';
 import { ChemicalKineticsLab } from '@/components/chemical-kinetics-lab';
+import { WaveInterferenceLab } from '@/components/wave-interference-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
-type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope';
+type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope' | 'wave-interference';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
@@ -111,7 +112,8 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
       {selected.simulation_type === 'pendulum' && <DoublePendulumLab compact/>}
       {selected.simulation_type === 'projectile' && <ProjectileMotionLab/>}
       {selected.simulation_type === 'microscope' && <VirtualMicroscopeLab onInteraction={() => setHasInteracted(true)}/>}
-      {selected.simulation_type === 'kinetics' && <ChemicalKineticsLab onInteraction={() => setHasInteracted(true)}/>} 
+      {selected.simulation_type === 'kinetics' && <ChemicalKineticsLab onInteraction={() => setHasInteracted(true)}/>}
+      {selected.simulation_type === 'wave-interference' && <WaveInterferenceLab onInteraction={() => setHasInteracted(true)}/>} 
 
       {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>

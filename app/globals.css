@@ -881,3 +881,38 @@ input,select,textarea,button{max-width:100%}
 @media(max-width:380px){
   .chemical-equilibrium-results,.chemical-equilibrium-composition{grid-template-columns:1fr}
 }
+
+
+/* Mitosis and meiosis stage-by-stage learning lab. */
+.cell-division-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.cell-division-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.cell-division-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
+.cell-division-heading p{margin:.35rem 0;line-height:1.55}
+.cell-division-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
+.cell-division-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.cell-division-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.cell-division-controls select{width:100%;min-height:40px}
+.cell-division-controls .cell-division-toggle{display:flex;align-items:center;gap:.6rem}
+.cell-division-controls input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.cell-division-stage{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.cell-division-stage h4{margin:.3rem 0;font-size:1.05rem}
+.cell-division-stage p{margin:0;line-height:1.55}
+.cell-division-stage input[type=range]{width:100%;min-height:38px;accent-color:var(--accent)}
+.cell-division-stage-actions{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.cell-division-visual svg{display:block;width:100%;height:auto}
+.cell-division-legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--muted)}
+.cell-division-legend span{display:inline-flex;align-items:center;gap:.4rem}
+.cell-division-legend i{display:inline-block;width:11px;height:11px;border-radius:50%}
+.cell-division-legend i.is-maternal{background:#38bdf8}
+.cell-division-legend i.is-paternal{background:#fb923c}
+.cell-division-legend i.is-crossover{background:#fbbf24}
+.cell-division-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.cell-division-outcome{display:grid;gap:.35rem}
+.cell-division-outcome p{margin:.25rem 0;line-height:1.55}
+.cell-division-lab input:focus-visible,.cell-division-lab select:focus-visible,.cell-division-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:620px){
+  .cell-division-controls{grid-template-columns:1fr;padding:.85rem}
+  .cell-division-heading{display:grid}
+  .cell-division-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){.cell-division-results{grid-template-columns:1fr}}

@@ -52,7 +52,7 @@ export function ElectrochemicalCellLab({ onInteraction }: Props) {
       <label className="electrochemical-cell-temperature">
         Temperature
         <b>{temperature} K ({(temperature - 273.15).toFixed(1)} °C)</b>
-        <input type="range" min="273" max="373" step="1" value={temperature} onChange={e => update(setTemperature, Number(e.target.value))}/>
+        <input type="range" min="274" max="373" step="1" value={temperature} onChange={e => update(setTemperature, Number(e.target.value))}/>
         <small>Temperature changes the Nernst correction. Standard electrode potentials are held fixed in this simplified model.</small>
       </label>
     </div>

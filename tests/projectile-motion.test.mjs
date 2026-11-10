@@ -41,7 +41,7 @@ test('projectile simulation is integrated into the paid, subject-mapped lab cata
   const lab = await readFile(new URL('../components/projectile-motion-lab.tsx', import.meta.url), 'utf8');
   assert.match(component, /simulation_type === 'projectile'/);
   assert.match(component, /ProjectileMotionLab/);
-  assert.match(admin, /\\['projectile',/);
+  assert.match(admin, /\['projectile',/);
   for (const type of ['projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator']) assert.ok(action.includes("'" + type + "'"));
   assert.match(migration, /physics-projectile-motion/);
   assert.match(migration, /'projectile'/);

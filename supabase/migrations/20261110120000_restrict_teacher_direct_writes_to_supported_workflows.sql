@@ -22,8 +22,10 @@ DROP POLICY IF EXISTS "assigned staff manage assignments" ON public.assignments;
 CREATE POLICY "staff create own course assignments"
   ON public.assignments FOR INSERT TO authenticated
   WITH CHECK (
-    (SELECT public.current_role())::text = 'admin'
-    OR (
+    created_by = (SELECT auth.uid())
+    AND (
+      (SELECT public.current_role())::text = 'admin'
+      OR (
       (SELECT public.current_role())::text IN ('teacher', 'staff')
       AND created_by = (SELECT auth.uid())
       AND EXISTS (
@@ -45,8 +47,10 @@ DROP POLICY IF EXISTS "assigned staff manage live classes" ON public.live_classe
 CREATE POLICY "staff create live classes"
   ON public.live_classes FOR INSERT TO authenticated
   WITH CHECK (
-    (SELECT public.current_role())::text = 'admin'
-    OR (
+    created_by = (SELECT auth.uid())
+    AND (
+      (SELECT public.current_role())::text = 'admin'
+      OR (
       (SELECT public.current_role())::text IN ('teacher', 'staff')
       AND created_by = (SELECT auth.uid())
       AND EXISTS (
@@ -114,8 +118,10 @@ DROP POLICY IF EXISTS "assigned staff manage quizzes" ON public.quizzes;
 CREATE POLICY "staff create quizzes"
   ON public.quizzes FOR INSERT TO authenticated
   WITH CHECK (
-    (SELECT public.current_role())::text = 'admin'
-    OR (
+    created_by = (SELECT auth.uid())
+    AND (
+      (SELECT public.current_role())::text = 'admin'
+      OR (
       (SELECT public.current_role())::text IN ('teacher', 'staff')
       AND created_by = (SELECT auth.uid())
       AND EXISTS (
@@ -216,8 +222,10 @@ DROP POLICY IF EXISTS "assigned staff manage written exams" ON public.written_ex
 CREATE POLICY "staff create written exams"
   ON public.written_exams FOR INSERT TO authenticated
   WITH CHECK (
-    (SELECT public.current_role())::text = 'admin'
-    OR (
+    created_by = (SELECT auth.uid())
+    AND (
+      (SELECT public.current_role())::text = 'admin'
+      OR (
       (SELECT public.current_role())::text IN ('teacher', 'staff')
       AND created_by = (SELECT auth.uid())
       AND EXISTS (

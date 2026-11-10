@@ -11,7 +11,7 @@ test('administrator publication actions validate assessment completeness', async
     const next = actions.indexOf('export async function ', start + 20);
     const body = actions.slice(start, next < 0 ? actions.length : next);
     assert.match(body, /role!=='admin'/);
-    assert.match(body, /eq\\('published',false\\)/);
+    assert.match(body, /eq\('published',false\)/);
   }
   assert.match(actions, /questions\.some\(q=>!keyIds\.has\(q\.id\)\)/);
   assert.match(actions, /key\.correct_option===null/);

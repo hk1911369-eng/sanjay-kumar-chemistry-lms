@@ -7,8 +7,8 @@ export async function createStudyGoal(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
 
   const goalType = String(formData.get('goal_type') ?? '');
   const targetValue = Number(formData.get('target_value'));
@@ -46,8 +46,8 @@ export async function completeRevisionTask(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
   const taskId = String(formData.get('task_id') ?? '');
   if (!taskId) redirect('/student?revision_error=1#learning-os');
   const { error } = await supabase.rpc('complete_revision_task', { p_task_id: taskId });
@@ -132,8 +132,8 @@ export async function assignTeacher(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
   const courseId = String(formData.get('course_id') ?? '');
   const teacherId = String(formData.get('teacher_id') ?? '');
   const [{ data: course }, { data: teacher }] = await Promise.all([
@@ -149,8 +149,8 @@ export async function publishAnnouncement(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
   const title = String(formData.get('title') ?? '').trim();
   const body = String(formData.get('body') ?? '').trim();
   const publish = formData.get('published') === 'on';
@@ -163,8 +163,8 @@ export async function setCoursePublication(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
   const courseId = String(formData.get('course_id') ?? '');
   const publish = formData.get('published') === 'on';
   const { data: course } = await supabase.from('courses').select('id').eq('id', courseId).maybeSingle();
@@ -249,8 +249,8 @@ export async function pinLessonDiscussion(formData: FormData) {
   const courseId = String(formData.get('course_id') ?? '').trim();
   const pinned = String(formData.get('pinned') ?? '') === 'true';
   if (!discussionId || !courseId) redirect('/student');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') {
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') {
     if (!['teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
     const { data: assignment } = await supabase.from('course_assignments').select('id')
       .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();

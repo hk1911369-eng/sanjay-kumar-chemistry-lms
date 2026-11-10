@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 
 type Point = { x: string; y: string };
 type Regression = { slope: number; intercept: number; rSquared: number; correlation: number };
@@ -48,7 +48,7 @@ export function LabGraphAnalysis() {
     `Data points: ${points.length}`,
   ].join('\n') : '';
 
-  function insertSummary(event: React.MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Experimental graph analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
+  function insertSummary(event: MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Experimental graph analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
     if (!summary || !navigator.clipboard?.writeText) return;
     try { await navigator.clipboard.writeText(summary); setCopied(true); }
     catch { setCopied(false); }

@@ -38,6 +38,8 @@ test('course readiness is scoped to each course rather than shared across course
   assert.match(page, /courseCoverage = courses\.map/);
   assert.match(page, /courseLessonIds/);
   assert.match(page, /mappedPublishedConcepts/);
+  assert.match(page, /concept\.exam_tracks\.length === 0/);
+  assert.match(page, /courseTrack\.includes\(track\.toLowerCase\(\)\)/);
   assert.match(page, /courseCoverageBlockers/);
   assert.match(page, /A concept mapped in one course does not count as covered in another/);
 });

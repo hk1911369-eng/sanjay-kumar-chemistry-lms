@@ -448,3 +448,10 @@ The published-content trigger protects written-exam headers, questions and answe
 The administrator path in `createWrittenExam()` can insert the parent exam with `published=true`, then inserts questions and answer keys in separate requests. The content-integrity trigger bypasses administrators. Student read policies allow a published exam and its questions to be read. The student submission policy verifies answer-object cardinality and question IDs, but does not require a matching answer-key row for each question. Thus, between question insertion and answer-key insertion, a student can submit and consume the unique one-attempt slot while the exam is not fully initialized. Cleanup after a later insert failure is a separate compensating request and is not atomic.
 
 **Impact:** publication readiness and attempt fairness risk, not answer-key disclosure. **Correction:** always create unpublished; publish transactionally after DB-side validation of all questions, answer keys, types and marks; add a submission-time completeness guard. **Limits:** source and live policies/constraints inspected; no runtime race/data present; no changes made.
+
+
+## Assessment total marks can diverge from the sum of question marks
+
+The live schema constrains question marks to positive values and assessment header totals to non-negative/positive values, but does not enforce `header.total_marks = SUM(question.marks)`. Quiz and written-exam publication actions validate question/key completeness but do not reconcile this aggregate. Admin RLS permits updates to headers and questions, and the assessment-content trigger bypasses admin changes. A valid administrative edit can therefore leave the stored grading ceiling different from the marks available across the questions.
+
+**Impact:** grading/score-normalization inconsistency, not student privilege escalation. **Correction:** transactional publication-time aggregate validation, atomic draft recalculation, and versioned corrections after publication. **Limits:** live constraints, policies and trigger inspected; JMT Test contains no quiz or written-exam rows, so no mismatch observed; no changes made.

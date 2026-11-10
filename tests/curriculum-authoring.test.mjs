@@ -58,3 +58,22 @@ test('admin curriculum workspace exposes chapter and lesson review controls', as
   assert.match(page, /Validate and publish chapter/);
   assert.match(page, /Validate and publish lesson/);
 });
+
+
+test('draft lesson editing is admin-only, validates ownership and refuses published lessons', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
+  assert.match(actions, /async function updateDraftCourseLesson/);
+  assert.match(actions, /lesson\.is_published\) redirect\('\/admin\/learning\?error=lesson_locked'\)/);
+  assert.match(actions, /\.eq\('course_id', lesson\.course_id\)\.maybeSingle\(\)/);
+  assert.match(actions, /\.eq\('is_published', false\)/);
+  assert.match(page, /Edit draft lesson/);
+  assert.match(page, /Save draft changes/);
+});
+
+test('published lesson content is not editable through the draft editor', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  assert.match(actions, /lesson_locked:|lesson_locked/);
+  assert.match(actions, /lesson\.is_published/);
+  assert.match(actions, /update\(\{[\s\S]*?title, description, content, video_url: videoUrl, chapter_id: chapterId, position/);
+});

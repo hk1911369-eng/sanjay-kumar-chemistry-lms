@@ -842,3 +842,42 @@ input,select,textarea,button{max-width:100%}
   .wave-interference-heading{display:grid}
 }
 @media(max-width:380px){.wave-interference-results{grid-template-columns:1fr}}
+
+
+/* Reversible chemical equilibrium and Le Chatelier teaching lab. */
+.chemical-equilibrium-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.chemical-equilibrium-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.chemical-equilibrium-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
+.chemical-equilibrium-heading p{margin:.35rem 0;line-height:1.55}
+.chemical-equilibrium-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
+.chemical-equilibrium-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.chemical-equilibrium-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.chemical-equilibrium-controls label b{font-variant-numeric:tabular-nums}
+.chemical-equilibrium-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.chemical-equilibrium-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
+.chemical-equilibrium-controls .chemical-equilibrium-time{grid-column:1/-1}
+.chemical-equilibrium-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.chemical-equilibrium-legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--muted)}
+.chemical-equilibrium-legend span{display:inline-flex;align-items:center;gap:.4rem}
+.chemical-equilibrium-legend i{display:inline-block;width:20px;height:4px;border-radius:99px}
+.chemical-equilibrium-legend i.is-a{background:#2677bd}
+.chemical-equilibrium-legend i.is-b{background:#d97736}
+.chemical-equilibrium-line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.chemical-equilibrium-line.is-a{stroke:#2677bd}
+.chemical-equilibrium-line.is-b{stroke:#d97736}
+.chemical-equilibrium-target{stroke-width:1.5;stroke-dasharray:5 5;opacity:.65}
+.chemical-equilibrium-target.is-a{stroke:#2677bd}
+.chemical-equilibrium-target.is-b{stroke:#d97736}
+.chemical-equilibrium-composition{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.chemical-equilibrium-challenge{display:grid;gap:.35rem}
+.chemical-equilibrium-challenge p{margin:.25rem 0;line-height:1.55}
+.chemical-equilibrium-lab input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:620px){
+  .chemical-equilibrium-controls{grid-template-columns:1fr;padding:.85rem}
+  .chemical-equilibrium-controls .chemical-equilibrium-time{grid-column:auto}
+  .chemical-equilibrium-results,.chemical-equilibrium-composition{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chemical-equilibrium-heading{display:grid}
+}
+@media(max-width:380px){
+  .chemical-equilibrium-results,.chemical-equilibrium-composition{grid-template-columns:1fr}
+}

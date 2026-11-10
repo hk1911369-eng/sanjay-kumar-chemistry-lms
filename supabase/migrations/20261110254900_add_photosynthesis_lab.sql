@@ -19,6 +19,7 @@ alter table public.virtual_lab_catalog
     'quadratic',
     'pendulum',
     'projectile',
+    'spring-oscillator',
     'microscope',
     'wave-interference'
   ]::text[]));

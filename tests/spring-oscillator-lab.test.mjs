@@ -67,7 +67,7 @@ test('spring oscillator is integrated into the Physics student and admin catalog
   ]);
   assert.match(studio, /simulation_type === 'spring-oscillator'/);
   assert.match(studio, /SpringOscillatorLab/);
-  assert.match(admin, /\\['spring-oscillator', 'Physics · Damped spring/);
+  assert.match(admin, /\['spring-oscillator', 'Physics · Damped spring/);
   assert.match(action, /'spring-oscillator'/);
   assert.match(component, /calculateSpringOscillator/);
   assert.match(component, /DAMPING REGIME/);

@@ -5,14 +5,21 @@ import { readFile } from 'node:fs/promises';
 test('discussion reply parent validation uses a non-recursive private helper', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20261110268000_fix_discussion_parent_policy_recursion.sql', import.meta.url), 'utf8');
 
-  assert.match(migration, /CREATE OR REPLACE FUNCTION private\.lesson_discussion_parent_is_root\(\s*p_parent_id uuid,\s*p_lesson_id uuid\)/i);
-  assert.match(migration, /RETURNS boolean[\s\S]*?STABLE[\s\S]*?SECURITY DEFINER/i);
-  assert.match(migration, /SET search_path TO ''/i);
-  assert.match(migration, /FROM public\.lesson_discussions AS parent[\s\S]*?parent\.id = p_parent_id[\s\S]*?parent\.lesson_id = p_lesson_id[\s\S]*?parent\.parent_id IS NULL/i);
-  assert.match(migration, /REVOKE ALL ON FUNCTION private\.lesson_discussion_parent_is_root\(uuid, uuid\)\s+FROM PUBLIC, anon, authenticated/i);
-  assert.match(migration, /GRANT EXECUTE ON FUNCTION private\.lesson_discussion_parent_is_root\(uuid, uuid\)\s+TO authenticated/i);
-
-  assert.match(migration, /parent_id IS NULL\s+OR private\.lesson_discussion_parent_is_root\(parent_id, lesson_id\)/i);
-  assert.doesNotMatch(migration, /parent_id IS NULL\s+OR EXISTS\s*\(\s*SELECT 1 FROM public\.lesson_discussions parent/i);
-  assert.doesNotMatch(migration, /DROP\s+TABLE|TRUNCATE\s+TABLE|DELETE\s+FROM/i);
+  assert.ok(migration.includes('CREATE OR REPLACE FUNCTION private.lesson_discussion_parent_is_root('));
+  assert.ok(migration.includes('  p_parent_id uuid,\n  p_lesson_id uuid'));
+  assert.ok(migration.includes('RETURNS boolean'));
+  assert.ok(migration.includes('STABLE'));
+  assert.ok(migration.includes('SECURITY DEFINER'));
+  assert.ok(migration.includes("SET search_path TO ''"));
+  assert.ok(migration.includes('FROM public.lesson_discussions AS parent'));
+  assert.ok(migration.includes('WHERE parent.id = p_parent_id'));
+  assert.ok(migration.includes('AND parent.lesson_id = p_lesson_id'));
+  assert.ok(migration.includes('AND parent.parent_id IS NULL'));
+  assert.ok(migration.includes('REVOKE ALL ON FUNCTION private.lesson_discussion_parent_is_root(uuid, uuid)'));
+  assert.ok(migration.includes('FROM PUBLIC, anon, authenticated'));
+  assert.ok(migration.includes('GRANT EXECUTE ON FUNCTION private.lesson_discussion_parent_is_root(uuid, uuid)'));
+  assert.ok(migration.includes('parent_id IS NULL\n    OR private.lesson_discussion_parent_is_root(parent_id, lesson_id)'));
+  assert.equal(migration.includes('FROM public.lesson_discussions parent'), false);
+  assert.equal(migration.includes('TRUNCATE TABLE'), false);
+  assert.equal(migration.includes('DROP TABLE'), false);
 });

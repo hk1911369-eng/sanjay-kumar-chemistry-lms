@@ -812,3 +812,33 @@ input,select,textarea,button{max-width:100%}
 @media(max-width:380px){
   .chemical-kinetics-results{grid-template-columns:1fr}
 }
+
+
+/* Coherent two-source wave interference lab. */
+.wave-interference-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.wave-interference-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.wave-interference-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
+.wave-interference-heading p{margin:.35rem 0;line-height:1.55}
+.wave-interference-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
+.wave-interference-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.wave-interference-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.wave-interference-controls label b{font-variant-numeric:tabular-nums}
+.wave-interference-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.wave-interference-controls .wave-interference-time{grid-column:1/-1}
+.wave-interference-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.wave-interference-field svg,.wave-interference-screen svg{display:block;width:100%;height:auto}
+.wave-interference-field svg{border-radius:8px;overflow:hidden}
+.wave-interference-scale{display:flex;align-items:center;gap:.6rem;font-size:.75rem;color:var(--muted)}
+.wave-interference-scale i{height:9px;flex:1;border-radius:99px;background:linear-gradient(90deg,#071426,#1e5d96,#46aaff)}
+.wave-interference-screen-line{fill:none;stroke:#2677bd;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.wave-interference-challenge{display:grid;gap:.35rem}
+.wave-interference-challenge p{margin:.25rem 0;line-height:1.55}
+.wave-interference-challenge small{color:var(--muted);line-height:1.5}
+.wave-interference-lab input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:620px){
+  .wave-interference-controls{grid-template-columns:1fr;padding:.85rem}
+  .wave-interference-controls .wave-interference-time{grid-column:auto}
+  .wave-interference-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wave-interference-heading{display:grid}
+}
+@media(max-width:380px){.wave-interference-results{grid-template-columns:1fr}}

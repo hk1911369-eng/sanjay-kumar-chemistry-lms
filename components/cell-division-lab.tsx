@@ -89,7 +89,7 @@ export function CellDivisionLab({onInteraction}:Props) {
           </g>}
           <text x={cx} y="202" textAnchor="middle" fill="currentColor" fontSize="12">{result.cells===4?'Gamete '+(index+1):result.cells===2?(divisionType==='meiosis'?'Haploid cell ':'Daughter cell ')+(index+1):'Parent cell'}</text>
         </g>)}
-        <text x="300" y="20" textAnchor="middle" fill="currentColor" fontSize="11">One representative homologous pair shown · drawing not to scale</text>
+        <text x="300" y="20" textAnchor="middle" fill="currentColor" fontSize="11">Two representative chromosomes shown · drawing not to scale</text>
       </svg>
       <div className="cell-division-legend"><span><i className="is-maternal"/>Homologue 1</span><span><i className="is-paternal"/>Homologue 2</span><span><i className="is-crossover"/>Crossing-over region</span></div>
     </div>

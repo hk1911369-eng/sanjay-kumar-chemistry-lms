@@ -395,10 +395,10 @@ BEGIN
   IF v_role IS NULL OR v_role NOT IN ('teacher', 'staff') THEN
     RAISE EXCEPTION 'Active teaching staff role required' USING ERRCODE = '42501';
   END IF;
-  IF NEW.student_id IS DISTINCT FROM OLD.student_id
-    OR NEW.course_id IS DISTINCT FROM OLD.course_id
-    OR NEW.attendance_date IS DISTINCT FROM OLD.attendance_date THEN
-    RAISE EXCEPTION 'Teachers cannot move attendance between students, courses or dates' USING ERRCODE = '42501';
+  IF (to_jsonb(NEW) - ARRAY['status','note','marked_by'])
+      IS DISTINCT FROM
+     (to_jsonb(OLD) - ARRAY['status','note','marked_by']) THEN
+    RAISE EXCEPTION 'Teachers may only edit attendance status, note and attribution' USING ERRCODE = '42501';
   END IF;
   IF NEW.marked_by IS DISTINCT FROM (SELECT auth.uid()) THEN
     RAISE EXCEPTION 'Attendance must remain attributed to the acting teacher' USING ERRCODE = '42501';

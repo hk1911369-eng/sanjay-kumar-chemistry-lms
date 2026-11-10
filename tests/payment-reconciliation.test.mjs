@@ -80,7 +80,7 @@ test('bulk reconciliation is admin-only, rechecks exact matches and requires exp
   const actions = await readFile(new URL('../app/actions/payments.ts', import.meta.url), 'utf8');
   const dashboard = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   const component = await readFile(new URL('../components/payment-reconciliation.tsx', import.meta.url), 'utf8');
-  assert.ok(actions.includes("profile?.role !== 'admin'"));
+  assert.ok(actions.includes("profile?.is_active !== true || profile.role !== 'admin'"));
   assert.ok(actions.includes('reconcileWalletRows(rows, loaded.records)'));
   assert.ok(actions.includes("'approve_manual_payment_submission'"));
   assert.ok(actions.includes('file.text()'));

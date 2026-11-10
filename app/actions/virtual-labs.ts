@@ -50,7 +50,7 @@ export async function saveVirtualLabCatalogItem(formData: FormData) {
     || !/^[0-9a-f-]{36}$/i.test(subjectId)
     || title.length < 2 || title.length > 160
     || summary.length > 500 || principle.length > 2000
-    || !['physics','chemistry','kinetics','biology','maths','ict','quadratic','pendulum','projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator'].includes(simulationType)
+    || !['physics','chemistry','kinetics','biology','maths','ict','quadratic','pendulum','projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator','dihybrid'].includes(simulationType)
     || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000) {
     redirect('/admin/virtual-labs?error=invalid');
   }

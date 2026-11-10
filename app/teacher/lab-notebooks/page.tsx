@@ -7,8 +7,8 @@ import { archiveLabPracticalAssignment, createLabPracticalAssignment } from '@/a
 export default async function TeacherLabNotebooksPage({searchParams}:{searchParams:Promise<{error?:string;reviewed?:string;assignment_created?:string;assignment_archived?:string}>}) {
  const params=await searchParams, db=await createClient(), {data:{user}}=await db.auth.getUser();
  if(!user) redirect('/login');
- const {data:profile}=await db.from('profiles').select('role,full_name').eq('id',user.id).single();
- if(!['admin','teacher','staff'].includes(profile?.role??'')) redirect('/portal');
+ const {data:profile}=await db.from('profiles').select('role,full_name,is_active').eq('id',user.id).single();
+ if(profile?.is_active !== true || !['admin','teacher','staff'].includes(profile.role??'')) redirect('/portal');
  const {data:assignments}=profile?.role==='admin'?await db.from('courses').select('id,title').is('archived_at',null):await db.from('course_assignments').select('course_id,courses(id,title)').eq('teacher_id',user.id);
  const courses=(assignments??[]).map((item:any)=>profile?.role==='admin'?item:item.courses).filter(Boolean), courseIds=courses.map((c:any)=>c.id);
  const {data:courseSubjects}=courseIds.length?await db.from('course_subjects').select('course_id,subject_id').in('course_id',courseIds):{data:[] as any[]};

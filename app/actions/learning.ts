@@ -60,24 +60,51 @@ export async function saveLesson(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const courseId = String(formData.get('course_id') ?? '');
-  const lessonId = String(formData.get('lesson_id') ?? '');
+  const courseId = String(formData.get('course_id') ?? '').trim();
+  const lessonId = String(formData.get('lesson_id') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
   const content = String(formData.get('content') ?? '').trim();
   const videoUrl = String(formData.get('video_url') ?? '').trim();
-  const published = formData.get('published') === 'on';
   const chapterId = String(formData.get('chapter_id') ?? '').trim() || null;
-  if (!courseId || title.length < 2 || title.length > 180 || content.length > 100000 || (videoUrl && !/^https:\/\//i.test(videoUrl))) redirect('/teacher?lesson_error=invalid');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
-  const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
+  const uuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  if (!uuid(courseId) || (lessonId && !uuid(lessonId)) || (chapterId && !uuid(chapterId))
+    || title.length < 2 || title.length > 180 || description.length > 4000 || content.length > 30000
+    || (videoUrl && (videoUrl.length > 2048 || !/^https:\/\//i.test(videoUrl)))) {
+    redirect('/teacher?lesson_error=invalid');
+  }
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active === false || !['admin','teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
+  const { data: assignment } = await supabase.from('course_assignments').select('id')
+    .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
-  const payload = { course_id: courseId, chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() };
-  const result = lessonId
-    ? await supabase.from('lessons').update({ chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() }).eq('id', lessonId).eq('course_id', courseId)
-    : await supabase.from('lessons').insert(payload);
-  if (result.error) redirect('/teacher?lesson_error=save');
+  const { data: course } = await supabase.from('courses').select('id')
+    .eq('id', courseId).is('archived_at', null).maybeSingle();
+  if (!course) redirect('/teacher?lesson_error=invalid');
+  if (chapterId) {
+    const { data: chapter } = await supabase.from('chapters').select('id')
+      .eq('id', chapterId).eq('course_id', courseId).maybeSingle();
+    if (!chapter) redirect('/teacher?lesson_error=invalid');
+  }
+  if (lessonId) {
+    const { data: lesson } = await supabase.from('lessons').select('id,is_published')
+      .eq('id', lessonId).eq('course_id', courseId).maybeSingle();
+    if (!lesson || lesson.is_published) redirect('/teacher?lesson_error=published_locked');
+    const { data: updated, error } = await supabase.from('lessons').update({
+      chapter_id: chapterId, title, description, content, video_url: videoUrl || null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', lessonId).eq('course_id', courseId).eq('is_published', false).select('id').maybeSingle();
+    if (error || !updated) redirect('/teacher?lesson_error=save');
+  } else {
+    const { error } = await supabase.from('lessons').insert({
+      course_id: courseId, chapter_id: chapterId, title, description, content,
+      video_url: videoUrl || null, is_published: false,
+    });
+    if (error) redirect('/teacher?lesson_error=save');
+  }
+  revalidatePath('/teacher');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + courseId);
   redirect('/teacher?lesson_success=1');
 }
 

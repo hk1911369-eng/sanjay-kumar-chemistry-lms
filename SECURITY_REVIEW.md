@@ -535,3 +535,10 @@ The Academic Centre loads quiz attempts for the signed-in student but maps each 
 **Security interpretation:** the RLS restriction is protective and should not be weakened merely to recover titles; no cross-student access or score tampering was identified. This is a historical auditability and scalability issue. **Remediation:** preserve a non-sensitive assessment-title snapshot on the attempt or provide a dedicated student-owned historical metadata view that exposes no answer keys/question content; paginate in stable order. Test archived/expired enrolments and older-than-60 quiz history.
 
 **Verification limits:** branch Academic Centre query/rendering and live quiz/attempt RLS policies inspected. JMT Test has no quiz attempts; no populated history test or data change was performed.
+
+
+## Learning dashboard counts completed goals as current goals (11 November 2026)
+
+The student dashboard query deliberately retrieves both `active` and `completed` study goals, but the headline KPI displays `goals.length` with the label “Current goals”. Completed goals therefore inflate the current-goal count and the metric is not a count of currently active goals. The query is also capped at eight rows, so the headline is a count of only the returned subset rather than a total across all goals.
+
+**Impact:** misleading learner-facing progress summary; no access-control or underlying goal-data integrity issue. **Remediation:** calculate active and completed counts separately, label them accurately, and use a count query or pagination if the KPI is intended to represent all goals. **Verification limits:** branch student dashboard query and KPI rendering inspected. No learner goal rows were available for runtime comparison; no data was changed.

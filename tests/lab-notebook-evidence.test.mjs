@@ -63,8 +63,8 @@ test('evidence downloads are minted only after the metadata row passes RLS', asy
   assert.match(route, /from\('lab_notebook_evidence'\)/);
   assert.match(route, /createSignedUrl\(evidence\.storage_path, 60,/);
   assert.match(route, /download: evidence\.original_filename/);
-  assert.match(route, /Cache-Control', 'private, no-store/);
-  assert.match(route, /Referrer-Policy', 'no-referrer/);
+  assert.match(route, /Cache-Control.*private, no-store/);
+  assert.match(route, /Referrer-Policy.*no-referrer/);
 });
 
 test('student and teacher workspaces expose evidence only through the guarded download route', async () => {

@@ -27,8 +27,8 @@ test('graph analysis is integrated into all student notebook states and remains 
   assert.match(component, /role="img"/);
   assert.match(component, /Copy graph analysis/);
   assert.match(component, /Insert into observations/);
-  assert.match(component, /textarea\\[name="observations"\\]/);
-  assert.match(component, /field\\.dispatchEvent\\(new Event\\('input'/);\n  assert.match(component, /Insert into observations/);\n  assert.match(component, /textarea\\[name="observations"\\]/);\n  assert.match(component, /field\\.dispatchEvent\\(new Event\\('input'/);
+  assert.match(component, /textarea\[name="observations"\]/);
+  assert.match(component, /field\.dispatchEvent\(new Event\('input'/);
   assert.match(styles, /\.lab-graph-chart/);
   assert.match(styles, /@media\(max-width:620px\)\{\.lab-graph-labels/);
   assert.match(styles, /@media\(max-width:360px\)\{\.lab-graph-point/);

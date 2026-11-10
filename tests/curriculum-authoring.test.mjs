@@ -39,7 +39,7 @@ test('lesson authoring UI provides real teaching content fields and optional cha
 test('chapter publication requires substantive content and mapped published concepts from the course', async () => {
   const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
   assert.match(actions, /async function publishCourseChapter/);
-  assert.match(actions, /lesson\.content\s*\?\? ''\)\)\.trim\(\)\.length < 100/);
+  assert.ok(actions.includes("String(lesson.content ?? '').trim().length < 100"));
   assert.match(actions, /concept\.is_published && subjectIds\.includes\(concept\.subject_id\)/);
   assert.match(actions, /lessons\.some\(lesson => !mappedLessonIds\.has\(lesson\.id\)\)/);
 });

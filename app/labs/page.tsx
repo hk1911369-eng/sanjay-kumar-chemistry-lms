@@ -9,8 +9,8 @@ export default async function VirtualLabsPage({ searchParams }: { searchParams: 
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const { data: profile } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
 
   const periodEnd = billingMonthEnd(currentBangladeshBillingPeriod());
   const { data: enrollments, error } = await db.from('enrollments').select('course_id')

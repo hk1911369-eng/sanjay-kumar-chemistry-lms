@@ -492,3 +492,10 @@ The practice RPC enforces one attempt per student/question with a unique constra
 The staff practice page/action only create questions; there is no existing-question inventory or UI action to edit, unpublish, archive or delete. Yet authenticated assigned staff/admin have UPDATE grants and an RLS UPDATE policy that includes `is_published`, so direct Data API mutation remains possible outside the normal workflow.
 
 **Impact:** content-governance and operational correction gap. This makes safe review/retirement awkward and compounds the historical-version integrity risk. **Remediation:** provide a scoped inventory and audited edit/unpublish/retire workflow; version content once attempts exist; restrict direct table writes if only server actions should be used. **Limits:** source page/action and live grants/policy inspected; JMT Test has no practice questions or attempts, and no writes were made.
+
+
+## Practice analytics totals are totals of reportable cohorts only
+
+The database RPC suppresses question cohorts with fewer than five responses. The page sums only returned aggregates but presents the result as “Student attempts” and overall accuracy for the last 90 days, without saying that low-volume cohorts are excluded. This is not a privacy bypass; it is a reporting-integrity caveat. Label the KPIs as reportable-cohort totals/accuracy, or design a separately privacy-reviewed grand total. Also distinguish RPC failure from a confirmed empty dataset rather than presenting the no-responses empty state after a failed query.
+
+**Limits:** source page and live JMT Test RPC definition inspected; no practice questions or attempts exist in JMT Test, so no numeric output was available to validate.

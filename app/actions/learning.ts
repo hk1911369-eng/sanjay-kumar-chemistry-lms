@@ -77,7 +77,7 @@ export async function saveLesson(formData: FormData) {
   if (profile?.is_active === false || !['admin','teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
   const { data: assignment } = await supabase.from('course_assignments').select('id')
     .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
-  if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
+  if (profile?.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
   const { data: course } = await supabase.from('courses').select('id')
     .eq('id', courseId).is('archived_at', null).maybeSingle();
   if (!course) redirect('/teacher?lesson_error=invalid');
@@ -188,7 +188,7 @@ export async function saveChapter(formData: FormData) {
   }
   const { data: assignment } = await supabase.from('course_assignments').select('id')
     .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
-  if (profile.role !== 'admin' && !assignment) redirect('/teacher?chapter_error=forbidden');
+  if (profile?.role !== 'admin' && !assignment) redirect('/teacher?chapter_error=forbidden');
   const { data: course } = await supabase.from('courses').select('id')
     .eq('id', courseId).is('archived_at', null).maybeSingle();
   if (!course) redirect('/teacher?chapter_error=invalid');

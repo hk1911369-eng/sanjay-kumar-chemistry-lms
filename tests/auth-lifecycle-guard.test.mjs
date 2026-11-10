@@ -90,7 +90,7 @@ test('protected workspaces and learning routes reject inactive profiles', async 
 
   for (const path of paths) {
     const page = await read(path);
-    assert.match(page, /select\([^)]*role,is_active[^)]*\)/, path);
+    assert.match(page, /select\([^)]*role[^)]*is_active[^)]*\)/, path);
     assert.match(page, /is_active\s*!==\s*true/, path);
   }
 });

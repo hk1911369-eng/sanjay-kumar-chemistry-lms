@@ -194,3 +194,17 @@ test('ideal gas law template is wired through the student and admin catalogues',
   assert.match(migration, /'gas-laws'/);
   assert.match(migration, /virtual_lab_catalog_simulation_type_check/);
 });
+
+
+test('biology population genetics lab models Hardy–Weinberg genotype frequencies and is wired into the dihybrid studio', async () => {
+  const lab = await readFile(new URL('../components/hardy-weinberg-lab.tsx', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  assert.match(lab, /p \* p/);
+  assert.match(lab, /2 \* p \* q/);
+  assert.match(lab, /q \* q/);
+  assert.match(lab, /p \+ q = 1/);
+  assert.match(lab, /no selection, no mutation, no migration and no genetic drift/);
+  assert.match(lab, /population-level expectations/);
+  assert.match(studio, /HardyWeinbergLab/);
+  assert.match(studio, /selected\.simulation_type === 'dihybrid'/);
+});

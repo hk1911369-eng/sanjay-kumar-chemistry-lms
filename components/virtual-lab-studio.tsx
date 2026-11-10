@@ -11,6 +11,7 @@ import { ChemicalEquilibriumLab } from '@/components/chemical-equilibrium-lab';
 import { CellDivisionLab } from '@/components/cell-division-lab';
 import { ElectrochemicalCellLab } from '@/components/electrochemical-cell-lab';
 import { PhotosynthesisLab } from '@/components/photosynthesis-lab';
+import { DihybridInheritanceLab } from '@/components/dihybrid-inheritance-lab';
 import { SpringOscillatorLab } from '@/components/spring-oscillator-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
@@ -170,6 +171,8 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <p>Possible combinations: {inheritance.outcomes.map(outcome => outcome.genotype + ' ' + outcome.percentage + '%').join(' · ')}</p>
         <small className="muted">These are theoretical probabilities for this simplified single-gene model, not predictions for an individual child or family.</small>
       </div>}
+
+      {selected.simulation_type === 'biology' && <DihybridInheritanceLab onInteraction={() => setHasInteracted(true)}/>}
 
       {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">
         <label>Slope (m): <b>{slope}</b><input type="range" min="-5" max="5" step="0.5" value={slope} onChange={e => { setHasInteracted(true); setSlope(Number(e.target.value)); }}/></label>

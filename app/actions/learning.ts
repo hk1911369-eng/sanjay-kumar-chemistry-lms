@@ -177,19 +177,30 @@ export async function saveChapter(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
-  const courseId = String(formData.get('course_id') ?? '');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active === false || !['admin','teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
+  const courseId = String(formData.get('course_id') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
-  if (!courseId || title.length < 1 || title.length > 180) redirect('/teacher?chapter_error=invalid');
-  const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId)
+    || title.length < 2 || title.length > 180 || description.length > 4000) {
+    redirect('/teacher?chapter_error=invalid');
+  }
+  const { data: assignment } = await supabase.from('course_assignments').select('id')
+    .eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?chapter_error=forbidden');
-  const { error } = await supabase.from('chapters').insert({ course_id: courseId, title, description, published: formData.get('published') === 'on' });
-  redirect(error ? '/teacher?chapter_error=save' : '/teacher?chapter_success=1');
+  const { data: course } = await supabase.from('courses').select('id')
+    .eq('id', courseId).is('archived_at', null).maybeSingle();
+  if (!course) redirect('/teacher?chapter_error=invalid');
+  const { error } = await supabase.from('chapters').insert({
+    course_id: courseId, title, description, published: false,
+  });
+  if (error) redirect('/teacher?chapter_error=save');
+  revalidatePath('/teacher');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + courseId);
+  redirect('/teacher?chapter_success=1');
 }
-
-
 
 export async function getLessonResourceUrl(resourceId: string, mode: 'preview' | 'download') {
   const supabase = await createClient();

@@ -27,7 +27,8 @@ const messages: Record<string,string> = {
   lesson_chapter: 'The selected chapter does not belong to that course.',
   chapter_publish: 'Could not publish this chapter.', chapter_content: 'Every chapter lesson needs at least 100 characters of teaching content.',
   chapter_mapping: 'Every chapter lesson must be mapped to a published concept in this course before publishing.',
-  lesson_edit: 'Could not save the draft lesson. Check its fields and try again.', lesson_locked: 'Published lessons are locked. Create a reviewed revision rather than editing learner-visible content.',\n  lesson_publish: 'Could not publish this lesson.', lesson_content: 'Add substantive teaching content (at least 100 characters) before publishing.',
+  lesson_edit: 'Could not save the draft lesson. Check its fields and try again.', lesson_locked: 'Published lessons are locked. Create a reviewed revision rather than editing learner-visible content.',
+  lesson_publish: 'Could not publish this lesson.', lesson_content: 'Add substantive teaching content (at least 100 characters) before publishing.',
   chapter_unpublished: 'Publish the assigned chapter before publishing its lesson.', lesson_mapping: 'Connect this lesson to a published concept in this course before publishing.',
 };
 const savedMessages: Record<string,string> = {

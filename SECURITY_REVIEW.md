@@ -510,3 +510,12 @@ The deployed JMT Test trigger inventory contains learning-evidence capture for q
 **Remediation:** define eligible assessment types, add explicit reviewed concept mappings where defensible, and create source-linked immutable learning evidence in the same transaction as grading. Preserve grade revisions and make event generation idempotent. Do not infer concept attribution from a course-level grade alone.
 
 **Limits:** live JMT Test triggers/functions and branch grading actions/schema inspected. No written-exam or assignment submissions exist in the test project; no writes or runtime grading tests were performed.
+
+
+## Student assignment results and feedback are not surfaced in the learner portal
+
+The Academic Centre retrieves assignment submissions for the current course set, but only renders those rows in the staff-only marking queue. The student-facing assignment cards do not join the authenticated student's existing submission to the assignment and always show the submission form; they do not show whether work was received, when it was submitted, whether it is awaiting marking, or any saved marks/teacher feedback. The assignment action can update an existing ungraded submission and rejects an update once it is graded, but the learner has no corresponding result/feedback view in this page.
+
+**Security interpretation:** no cross-student disclosure or student grade-write bypass was established. The query is subject to row-level policies, and the grading-field protections remain in place. This is an assessment-transparency and user-facing status gap that may cause learners to mistake an already-submitted assignment for an unsubmitted one or miss feedback. **Remediation:** add a student-scoped submission lookup and render explicit not-submitted, submitted/pending, and graded states with timestamp, marks and feedback; only expose resubmission while the submission is ungraded and policy permits it. Test the full lifecycle and verify that one student's submission never appears for another.
+
+**Verification limits:** branch Academic Centre/action and live assignment submission policies/column grants inspected. JMT Test has no assignment submission rows; no live student-session test or database write was performed.

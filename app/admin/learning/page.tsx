@@ -4,12 +4,12 @@ import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import {
   saveAcademicSubject, saveLearningConcept, saveConceptPrerequisite, mapLessonToConcept,
-  createCourseChapter, createCourseLesson,
+  createCourseChapter, createCourseLesson, publishCourseChapter, publishCourseLesson,
 } from '@/app/actions/learning-os';
 
 type SearchParams = Promise<{
   saved?: string; error?: string; subject_saved?: string; concept_saved?: string;
-  prerequisite_saved?: string; lesson_mapped?: string; chapter_saved?: string; lesson_saved?: string;
+  prerequisite_saved?: string; lesson_mapped?: string; chapter_saved?: string; lesson_saved?: string; chapter_published?: string; lesson_published?: string;
 }>;
 
 const messages: Record<string,string> = {
@@ -25,11 +25,17 @@ const messages: Record<string,string> = {
   chapter: 'Could not create that chapter. Check its course and fields.',
   lesson: 'Could not create that lesson. Check its course and fields.',
   lesson_chapter: 'The selected chapter does not belong to that course.',
+  chapter_publish: 'Could not publish this chapter.', chapter_content: 'Every chapter lesson needs at least 100 characters of teaching content.',
+  chapter_mapping: 'Every chapter lesson must be mapped to a published concept in this course before publishing.',
+  lesson_publish: 'Could not publish this lesson.', lesson_content: 'Add substantive teaching content (at least 100 characters) before publishing.',
+  chapter_unpublished: 'Publish the assigned chapter before publishing its lesson.', lesson_mapping: 'Connect this lesson to a published concept in this course before publishing.',
 };
 const savedMessages: Record<string,string> = {
   subject: 'Subject saved.', concept: 'Concept added to the knowledge graph.',
   prerequisite: 'Prerequisite relationship saved.', lesson_map: 'Lesson connected to the concept.',
   chapter: 'Draft chapter created.', lesson: 'Draft lesson created. Connect it to reviewed concepts before publishing.',
+  chapter_published: 'Chapter published after its content and concept mappings passed review checks.',
+  lesson_published: 'Lesson published after its content and curriculum mapping passed review checks.',
 };
 
 export default async function LearningGraphPage({ searchParams }: { searchParams: SearchParams }) {
@@ -126,8 +132,8 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <Link className="quiet-button" href="/admin/courses">Course studio</Link>
       </div>
       {params.error && <p className="form-error">{messages[params.error] ?? 'The request could not be completed.'}</p>}
-      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped || params.chapter_saved || params.lesson_saved) &&
-        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : params.lesson_mapped ? 'lesson_map' : params.chapter_saved ? 'chapter' : 'lesson')] ?? 'Saved.'}</p>}
+      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped || params.chapter_saved || params.lesson_saved || params.chapter_published || params.lesson_published) &&
+        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : params.lesson_mapped ? 'lesson_map' : params.chapter_saved ? 'chapter' : params.lesson_saved ? 'lesson' : params.chapter_published ? 'chapter_published' : 'lesson_published')] ?? 'Saved.'}</p>}
 
       <div className="learning-graph-stats">
         <article className="portal-card"><strong>{subjects.length}</strong><span>Subjects</span></article>
@@ -229,6 +235,26 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
           </form>}
         </article>
       </div>
+      <article className="portal-card">
+        <h2>Review and publish curriculum</h2>
+        <p className="muted">Publication is gated: chapters require substantive content and every lesson mapped to a published concept from the course's subjects. Lessons require substantive content, a published chapter when assigned, and a valid published concept mapping.</p>
+        <div className="learning-graph-subjects">
+          {chapters.map(chapter => <section key={chapter.id}>
+            <div><b>{courseNames.get(chapter.course_id)} · {chapter.title}</b><small>{chapter.published ? 'Published chapter' : 'Draft chapter'}</small></div>
+            {!chapter.published && <form action={publishCourseChapter}><input type="hidden" name="chapter_id" value={chapter.id}/><button className="auth-submit">Validate and publish chapter</button></form>}
+            <ul>{lessons.filter(lesson => lesson.chapter_id === chapter.id).map(lesson => <li key={lesson.id}>
+              <span>{lesson.title}</span><small>{lesson.is_published ? 'Published lesson' : 'Draft lesson'}</small>
+              {!lesson.is_published && <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>}
+            </li>)}</ul>
+          </section>)}
+          {lessons.filter(lesson => !lesson.chapter_id).map(lesson => <section key={lesson.id}>
+            <div><b>{courseNames.get(lesson.course_id)} · {lesson.title}</b><small>{lesson.is_published ? 'Published lesson · no chapter' : 'Draft lesson · no chapter'}</small></div>
+            {!lesson.is_published && <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>}
+          </section>)}
+          {chapters.length === 0 && lessons.length === 0 && <p className="muted">Create a chapter or lesson to begin the review workflow.</p>}
+        </div>
+      </article>
+
       <article className="portal-card">
         <h2>Connect prerequisite concepts</h2>
         <p className="muted">Choose the concept students want to learn, then choose what they should understand first. The database rejects cross-subject links and circular dependencies.</p>

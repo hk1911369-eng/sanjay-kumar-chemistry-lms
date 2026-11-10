@@ -154,6 +154,38 @@ export async function createCourseLesson(formData: FormData) {
 }
 
 
+export async function updateDraftCourseLesson(formData: FormData) {
+  const { db } = await adminContext();
+  const lessonId = String(formData.get('lesson_id') ?? '').trim();
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const content = String(formData.get('content') ?? '').trim();
+  const videoUrl = String(formData.get('video_url') ?? '').trim() || null;
+  const chapterId = String(formData.get('chapter_id') ?? '').trim() || null;
+  const position = Number(formData.get('position') ?? 0);
+  if (!/^[0-9a-f-]{36}$/i.test(lessonId) || title.length < 2 || title.length > 180
+    || description.length > 4000 || content.length > 30000
+    || (videoUrl !== null && (videoUrl.length > 2048 || !/^https:\/\//i.test(videoUrl)))
+    || !Number.isInteger(position) || position < 0 || position > 100000) {
+    redirect('/admin/learning?error=lesson_edit');
+  }
+  const { data: lesson } = await db.from('lessons').select('id,course_id,is_published').eq('id', lessonId).maybeSingle();
+  if (!lesson || lesson.is_published) redirect('/admin/learning?error=lesson_locked');
+  if (chapterId) {
+    const { data: chapter } = await db.from('chapters').select('id').eq('id', chapterId)
+      .eq('course_id', lesson.course_id).maybeSingle();
+    if (!chapter) redirect('/admin/learning?error=lesson_chapter');
+  }
+  const { error } = await db.from('lessons').update({
+    title, description, content, video_url: videoUrl, chapter_id: chapterId, position,
+  }).eq('id', lessonId).eq('is_published', false);
+  if (error) redirect('/admin/learning?error=lesson_edit');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + lesson.course_id);
+  redirect('/admin/learning?lesson_updated=1');
+}
+
+
 export async function publishCourseChapter(formData: FormData) {
   const { db } = await adminContext();
   const chapterId = String(formData.get('chapter_id') ?? '').trim();

@@ -176,3 +176,21 @@ test('virtual lab catalogue creator foreign key is indexed', async () => {
   assert.match(migration, /create index if not exists virtual_lab_catalog_created_by_idx/);
   assert.match(migration, /on public\.virtual_lab_catalog \(created_by\)/);
 });
+
+
+test('ideal gas law template is wired through the student and admin catalogues', async () => {
+  const component = await readFile(new URL('../components/gas-laws-lab.tsx', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261110260000_add_ideal_gas_law_virtual_lab.sql', import.meta.url), 'utf8');
+  assert.match(component, /PV = nRT/);
+  assert.match(component, /kPa·L·mol/);
+  assert.match(component, /ideal gas/);
+  assert.match(studio, /GasLawsLab/);
+  assert.match(studio, /'gas-laws'/);
+  assert.match(action, /'gas-laws'/);
+  assert.match(admin, /value="gas-laws"/);
+  assert.match(migration, /'gas-laws'/);
+  assert.match(migration, /virtual_lab_catalog_simulation_type_check/);
+});

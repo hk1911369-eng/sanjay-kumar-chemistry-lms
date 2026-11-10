@@ -12,6 +12,7 @@ test('teachers can only create draft assessments and published assessment conten
   for (const table of ['quiz_questions', 'quiz_answer_keys', 'written_exam_questions', 'written_exam_answer_keys']) {
     assert.match(migration, new RegExp('ON public\\.' + table));
   }
+  assert.match(migration, /v_role IS NULL OR v_role NOT IN \('teacher', 'staff'\)/);
   assert.match(migration, /OLD\.published IS TRUE OR NEW\.published IS TRUE/);
   assert.match(migration, /Only administrators may publish assessments/);
   assert.match(migration, /Questions and answer keys for published assessments are locked/);

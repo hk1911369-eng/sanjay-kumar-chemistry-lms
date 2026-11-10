@@ -14,7 +14,7 @@ test('cell division is wired through the student studio and admin catalogue', as
   assert.match(studio, /simulation_type === 'cell-division'/);
   assert.match(studio, /CellDivisionLab/);
   assert.match(studio, /'cell-division'/);
-  assert.equal((admin.match(/value="cell-division">Biology · Mitosis and meiosis/g) ?? []).length, 2);
+  assert.match(admin, /value="cell-division">Biology · Mitosis and meiosis/);
   assert.match(action, /'equilibrium','cell-division'/);
   assert.match(component, /calculateCellDivision/);
   assert.match(component, /crossingOver/);

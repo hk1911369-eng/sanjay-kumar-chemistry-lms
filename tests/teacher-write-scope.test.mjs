@@ -44,8 +44,8 @@ test('teacher direct writes are limited to supported academic workflows', async 
 
   assert.match(migration, /staff insert assigned course attendance[\s\S]*?FOR INSERT/);
   assert.match(migration, /staff update assigned course attendance[\s\S]*?FOR UPDATE/);
-  assert.match(migration, /NEW\.student_id IS DISTINCT FROM OLD\.student_id/);
-  assert.match(migration, /NEW\.course_id IS DISTINCT FROM OLD\.course_id/);
-  assert.match(migration, /NEW\.attendance_date IS DISTINCT FROM OLD\.attendance_date/);
+  assert.match(migration, /to_jsonb\(NEW\) - ARRAY\['status','note','marked_by'\]/);
+  assert.match(migration, /to_jsonb\(OLD\) - ARRAY\['status','note','marked_by'\]/);
+  assert.match(migration, /Teachers may only edit attendance status, note and attribution/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.prevent_teacher_attendance_identity_change\(\) FROM PUBLIC, anon, authenticated/);
 });

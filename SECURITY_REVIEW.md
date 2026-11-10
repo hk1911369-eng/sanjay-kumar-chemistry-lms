@@ -347,3 +347,16 @@ Written-exam creation has the analogous parent-first publication window; a stude
 **Test-coverage gap:** `tests/assessment-publication-workflow.test.mjs` checks the separate publish actions for completeness, and `tests/assessment-publication-lock.test.mjs` checks post-publication content locks. Neither asserts that immediate publication is disabled during the multi-request create flow, that creation is atomic, or that `submit_quiz_attempt()` rejects zero/incomplete question sets. Existing quiz attempt tests do not exercise this race.
 
 **Live-state and verification limits:** JMT Test has the publication-lock triggers and policies described above. No authenticated concurrency test was performed and no current exploit/affected student attempt was observed. This is a source-and-policy-derived race condition, not evidence of actual user impact.
+
+
+## Quiz option payload validation gap (11 November 2026)
+
+**Finding — quiz builders and the database validate the options container but not its elements.** In `createQuiz()`, the server action requires `options` to be an array with 2–6 entries, but does not require each entry to be a non-empty string. The live `quiz_questions_options_check` constraint likewise checks only that `options` is a JSON array with 2–6 elements. The question-bank builder validates four non-empty strings in its own action, but this does not protect the direct JSON quiz builder or database writes through other permitted paths.
+
+The student quiz UI renders each option as a React child. A JSON option containing an object (for example, `{"label":"A"}`) can be stored and later passed as an object child, which React does not render as a valid child and can cause the quiz page to throw. Numeric, boolean, null, empty-string, or whitespace-only elements can also create malformed or blank choices. The answer-submission RPC validates that the selected numeric index is within the array length, but cannot repair malformed display data.
+
+**Recommended correction:** validate every option as a trimmed, non-empty string with a sensible per-option length cap in the server action and a database CHECK/trigger that enforces the same shape for all write paths. Consider a uniqueness check after normalization to prevent indistinguishable duplicate choices. Add tests for objects, nested arrays, nulls, numbers, blank strings, oversized strings, and valid options; include a database-level test, not only action-source matching.
+
+**Test-coverage gap:** the existing quiz submission integrity test checks numeric answer indices against `jsonb_array_length(options)`; the publication tests check question/key completeness. Neither checks each stored option's JSON type or text validity. The written-exam builder separately validates MCQ option strings, so this finding is specific to the quiz-question creation/database path.
+
+**Verification limits:** this was confirmed from the branch action source, live JMT Test constraint definition, and student rendering source. No malformed question was inserted and no student-facing runtime failure was induced. The live JMT Test question rows were not available to demonstrate an affected record.

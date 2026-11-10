@@ -36,7 +36,8 @@ const savedMessages: Record<string,string> = {
   prerequisite: 'Prerequisite relationship saved.', lesson_map: 'Lesson connected to the concept.',
   chapter: 'Draft chapter created.', lesson: 'Draft lesson created. Connect it to reviewed concepts before publishing.',
   chapter_published: 'Chapter published after its content and concept mappings passed review checks.',
-  lesson_published: 'Lesson published after its content and curriculum mapping passed review checks.',\n  lesson_updated: 'Draft lesson updated. Review its concept mappings again before publication.',
+  lesson_published: 'Lesson published after its content and curriculum mapping passed review checks.',
+  lesson_updated: 'Draft lesson updated. Review its concept mappings again before publication.',
 };
 
 export default async function LearningGraphPage({ searchParams }: { searchParams: SearchParams }) {

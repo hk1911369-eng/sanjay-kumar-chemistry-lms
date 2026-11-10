@@ -12,8 +12,8 @@ import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 export default async function StudentLabNotebookPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string;evidence?:string}>}) {
  const params=await searchParams, db=await createClient(), {data:{user}}=await db.auth.getUser();
  if(!user) redirect('/login');
- const {data:profile}=await db.from('profiles').select('role,full_name').eq('id',user.id).single();
- if(profile?.role!=='student') redirect('/portal');
+ const {data:profile}=await db.from('profiles').select('role,full_name,is_active').eq('id',user.id).single();
+ if(profile?.is_active !== true || profile.role!=='student') redirect('/portal');
  const periodEnd=billingMonthEnd(currentBangladeshBillingPeriod());
  const {data:enrollments}=await db.from('enrollments').select('course_id').eq('student_id',user.id).eq('status','active').eq('admission_fee_paid',true).gte('paid_through',periodEnd);
  const courseIds=[...new Set((enrollments??[]).map(x=>x.course_id))];

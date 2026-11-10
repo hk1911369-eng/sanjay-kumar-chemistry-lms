@@ -193,3 +193,15 @@ A separate ordering check found that 49 source files have numeric filename prefi
 - The current `virtual_lab_catalog_simulation_type_check` constraint does **not** include `gas-laws`, and no `gas-laws` simulation type is present in the catalogue. The current branch migration `20261110260000_add_ideal_gas_law_virtual_lab.sql` explicitly adds `gas-laws` to that constraint. Its intended schema effect is therefore not present in the inspected JMT Test database. This is a concrete example of the branch and test database being out of sync; it is not a reason to push the migration blindly.
 
 This reconciliation was read-only. No migrations were applied, repaired, or removed.
+
+
+### Follow-up migration-effect trace — virtual-lab catalog (read-only, 11 November 2026)
+
+A targeted comparison was made between the branch SQL, the ordered JMT Test migration ledger, and the live public.virtual_lab_catalog contents.
+
+- JMT Test contains 17 catalogue rows across 17 simulation types. The live virtual_lab_catalog_simulation_type_check allows those 17 types; it does not allow gas-laws.
+- The double-pendulum catalogue row is present (lab_key = physics-double-pendulum, simulation_type = pendulum). The ledger contains a historical entry named add_double_pendulum_virtual_lab_template at version 20261109161755, while the current branch contains 20261110150000_add_double_pendulum_simulation.sql. The exact current source version 20261110150000 is absent from the JMT Test ledger. Thus the feature effect is present, but the current file's version/name does not match the historical ledger entry; this is not proof that the SQL contents are equivalent.
+- The current branch file 20261110150000_add_double_pendulum_simulation.sql drops the existing simulation-type check and recreates it with only seven values (physics, chemistry, biology, maths, ict, quadratic, pendulum). The live catalogue already contains rows with types outside that list, including projectile, microscope, wave-interference, equilibrium, cell-division, electrochemical-cell, photosynthesis, spring-oscillator, and dihybrid. If this exact source migration is treated as pending and executed against the current JMT Test state, adding its narrower check would fail validation against existing rows. Do not replay or mark it applied automatically; reconcile the version history and SQL provenance first.
+- The branch's 20261110260000_add_ideal_gas_law_virtual_lab.sql expands the check to include gas-laws, but it does not insert an ideal-gas catalogue row. Its SQL only changes the allowed type constraint; any actual lab template/content row would need a separate, verified source migration or application workflow.
+
+This demonstrates why matching names or observing a feature row is insufficient to establish migration equivalence. The JMT Test database was queried read-only. No migration was applied, repaired, or marked as applied.

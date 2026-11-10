@@ -260,3 +260,12 @@ No Storage objects were uploaded, downloaded, deleted, or modified.
 **Configuration hardening:** the CSP finding remains as recorded above: inline scripts are allowed and frame/connect sources accept broad HTTPS/WSS schemes. Use a tested nonce-based policy and explicit required origins. The Server Actions body-size limit is 10 MiB; review it against the largest supported upload and reverse-proxy limits. This pass found no new demonstrated exploit.
 
 **Limitations:** no runtime HTTP requests, forged Origin/Host tests, proxy spoofing, CSRF attempts, browser-cookie inspection, role/JWT impersonation, secret-value inspection, dependency installation/audit, or third-party webhook verification was performed. GitHub code-search indexing returned no usable matches and is not treated as proof of absence. Production was not accessed.
+
+
+## Dependency advisory cross-check (11 November 2026)
+
+The committed `package-lock.json` resolves the root Next.js dependency to **15.5.29** (the `package.json` range remains `^15.2.4`). The Next.js maintainers' published advisories identify **15.5.29** as patched for the applicable November 3, 2026 15.x issues, including GHSA-7qx7-33qx-rqx2 (SVG rejection bypass), GHSA-f3mh-rxg3-f5g2 (Edge response cookie-header exposure), and GHSA-pc58-hwjq-p385 (self-hosted response framing issue). The official October 14 security update identifies 15.5.28 as the patched 15.x line for the critical image-optimization RCE and Server Actions DoS; the locked 15.5.29 is later than that floor.
+
+Sources checked: Next.js maintainers' [security advisories](https://github.com/vercel/next.js/security/advisories), [SVG advisory](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2), [Edge cookie advisory](https://github.com/vercel/next.js/security/advisories/GHSA-f3mh-rxg3-f5g2), [response-framing advisory](https://github.com/vercel/next.js/security/advisories/GHSA-pc58-hwjq-p385), and [October 14 security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026).
+
+**Assessment:** no Next.js version finding for the committed lockfile at this review date. Keep `npm ci`/lockfile use in CI and deployment, monitor advisories, and refresh the lockfile deliberately. This is not a full dependency vulnerability scan; no package installation, `npm audit`, build, or runtime test was run.

@@ -12,8 +12,8 @@ export default async function AcademicHub({searchParams}:{searchParams:Promise<{
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
  if(!user) redirect('/login');
- const {data:profile}=await supabase.from('profiles').select('role,full_name').eq('id',user.id).single();
- if(!profile||!['student','admin','teacher','staff'].includes(profile.role)) redirect('/portal');
+ const {data:profile}=await supabase.from('profiles').select('role,full_name,is_active').eq('id',user.id).single();
+ if(!profile||profile.is_active !== true||!['student','admin','teacher','staff'].includes(profile.role)) redirect('/portal');
  const staff=profile.role!=='student';
  const {data:assignments}=staff?(profile.role==='admin'?await supabase.from('courses').select('id,title').eq('is_published',true):await supabase.from('course_assignments').select('course:courses(id,title)').eq('teacher_id',user.id)):await supabase.from('enrollments').select('course:courses(id,title)').eq('student_id',user.id).eq('status','active');
  const courses=(assignments??[]).map((x:any)=>staff?(profile.role==='admin'?x:x.course):x.course).filter(Boolean);

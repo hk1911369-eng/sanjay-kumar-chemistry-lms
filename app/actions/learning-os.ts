@@ -176,10 +176,10 @@ export async function updateDraftCourseLesson(formData: FormData) {
       .eq('course_id', lesson.course_id).maybeSingle();
     if (!chapter) redirect('/admin/learning?error=lesson_chapter');
   }
-  const { error } = await db.from('lessons').update({
+  const { data: updatedLesson, error } = await db.from('lessons').update({
     title, description, content, video_url: videoUrl, chapter_id: chapterId, position,
-  }).eq('id', lessonId).eq('is_published', false);
-  if (error) redirect('/admin/learning?error=lesson_edit');
+  }).eq('id', lessonId).eq('is_published', false).select('id').maybeSingle();
+  if (error || !updatedLesson) redirect('/admin/learning?error=lesson_edit');
   revalidatePath('/admin/learning');
   revalidatePath('/learn/' + lesson.course_id);
   redirect('/admin/learning?lesson_updated=1');

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 test('evidence downloads require authentication and a row visible through notebook evidence RLS', async () => {
   const route = await readFile(new URL('../app/api/lab-notebook-evidence/[evidenceId]/route.ts', import.meta.url), 'utf8');
@@ -29,4 +29,11 @@ test('student and teacher evidence links resolve to the authenticated download r
   ]);
   assert.match(student, /\/api\/lab-notebook-evidence\/'\+file\.id/);
   assert.match(teacher, /\/api\/lab-notebook-evidence\/'\+file\.id/);
+});
+
+
+test('evidence download has exactly one dynamic route segment name', async () => {
+  const entries = await readdir(new URL('../app/api/lab-notebook-evidence/', import.meta.url), { withFileTypes: true });
+  const dynamicRoutes = entries.filter(entry => entry.isDirectory() && entry.name.startsWith('[')).map(entry => entry.name);
+  assert.deepEqual(dynamicRoutes, ['[evidenceId]']);
 });

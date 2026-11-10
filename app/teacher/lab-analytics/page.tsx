@@ -26,8 +26,8 @@ export default async function TeacherLabAnalyticsPage() {
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await db.from('profiles').select('role,full_name').eq('id', user.id).single();
-  if (!['admin', 'teacher', 'staff'].includes(profile?.role ?? '')) redirect('/portal');
+  const { data: profile } = await db.from('profiles').select('role,full_name,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || !['admin', 'teacher', 'staff'].includes(profile.role ?? '')) redirect('/portal');
 
   const { data: assignments } = profile?.role === 'admin'
     ? await db.from('courses').select('id,title').is('archived_at', null)

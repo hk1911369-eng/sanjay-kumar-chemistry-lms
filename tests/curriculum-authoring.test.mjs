@@ -97,3 +97,11 @@ test('lesson concept mapping validates UUID identifiers and a decimal relevance 
   assert.match(mapping, /relevance <= 0 \|\| relevance > 1/);
   assert.match(mapping, /\.eq\('subject_id', concept\.subject_id\)/);
 });
+
+
+test('published lessons cannot have their curriculum concept mappings changed in place', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const mapping = actions.slice(actions.indexOf('export async function mapLessonToConcept'));
+  assert.match(mapping, /select\('id,course_id,is_published'\)/);
+  assert.match(mapping, /if \(lesson\.is_published\) redirect\('\/admin\/learning\?error=lesson_locked'\)/);
+});

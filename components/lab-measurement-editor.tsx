@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-type Measurement = { name: string; value: string; unit: string };
+type Measurement = { name: string; value: string; unit: string; uncertainty: string };
 
 function normaliseRows(value: unknown): Measurement[] {
   if (!Array.isArray(value)) return [];
@@ -12,6 +12,7 @@ function normaliseRows(value: unknown): Measurement[] {
       name: String(row.name ?? ''),
       value: String(row.value ?? ''),
       unit: String(row.unit ?? ''),
+      uncertainty: String(row.uncertainty ?? ''),
     };
   });
 }
@@ -19,7 +20,7 @@ function normaliseRows(value: unknown): Measurement[] {
 export function LabMeasurementEditor({ initialMeasurements = [] }: { initialMeasurements?: unknown }) {
   const [rows, setRows] = useState<Measurement[]>(() => normaliseRows(initialMeasurements));
   const serialised = useMemo(
-    () => JSON.stringify(rows.filter((row) => row.name.trim() || row.value.trim() || row.unit.trim())),
+    () => JSON.stringify(rows.filter((row) => row.name.trim() || row.value.trim() || row.unit.trim() || row.uncertainty.trim())),
     [rows],
   );
 
@@ -46,11 +47,15 @@ export function LabMeasurementEditor({ initialMeasurements = [] }: { initialMeas
             <span>Unit</span>
             <input value={row.unit} maxLength={40} onChange={(event) => updateRow(index, 'unit', event.target.value)} placeholder="e.g. cm" />
           </label>
+          <label>
+            <span>Uncertainty (optional)</span>
+            <input value={row.uncertainty} maxLength={60} onChange={(event) => updateRow(index, 'uncertainty', event.target.value)} placeholder="e.g. ± 0.1" />
+          </label>
           <button type="button" className="quiet-button lab-measurement-remove" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))} aria-label={`Remove measurement row ${index + 1}`}>Remove</button>
         </div>
       ))}
       <div className="lab-measurement-actions">
-        <button type="button" className="quiet-button" disabled={rows.length >= 100} onClick={() => setRows((current) => [...current, { name: '', value: '', unit: '' }])}>Add measurement</button>
+        <button type="button" className="quiet-button" disabled={rows.length >= 100} onClick={() => setRows((current) => [...current, { name: '', value: '', unit: '', uncertainty: '' }])}>Add measurement</button>
         <span className="muted">{rows.length} / 100 rows</span>
       </div>
     </fieldset>

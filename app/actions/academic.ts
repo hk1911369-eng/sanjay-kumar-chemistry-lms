@@ -214,6 +214,49 @@ export async function createWrittenExam(formData:FormData) {
  redirect('/academic?saved=written_exam');
 }
 
+export async function publishAssignment(formData:FormData) {
+ const {supabase,role}=await actor();
+ if(role!=='admin') redirect('/portal');
+ const id=String(formData.get('assignment_id')||'');
+ if(!/^[0-9a-f-]{36}$/i.test(id)) redirect('/academic?error=assignment_publish');
+ const {data:assignment}=await supabase.from('assignments').select('id,published,title,instructions,max_marks').eq('id',id).maybeSingle();
+ if(!assignment||assignment.published||!assignment.title?.trim()||!Number.isFinite(Number(assignment.max_marks))||Number(assignment.max_marks)<=0) redirect('/academic?error=assignment_publish');
+ const {error}=await supabase.from('assignments').update({published:true}).eq('id',id).eq('published',false);
+ redirect(error?'/academic?error=assignment_publish':'/academic?saved=assignment_published');
+}
+
+export async function publishQuiz(formData:FormData) {
+ const {supabase,role}=await actor();
+ if(role!=='admin') redirect('/portal');
+ const id=String(formData.get('quiz_id')||'');
+ if(!/^[0-9a-f-]{36}$/i.test(id)) redirect('/academic?error=quiz_publish');
+ const {data:quiz}=await supabase.from('quizzes').select('id,published').eq('id',id).maybeSingle();
+ if(!quiz||quiz.published) redirect('/academic?error=quiz_publish');
+ const {data:questions}=await supabase.from('quiz_questions').select('id').eq('quiz_id',id);
+ if(!questions?.length||questions.length>50) redirect('/academic?error=quiz_publish');
+ const {data:keys}=await supabase.from('quiz_answer_keys').select('question_id').in('question_id',questions.map(q=>q.id));
+ const keyIds=new Set((keys??[]).map(k=>k.question_id));
+ if(questions.some(q=>!keyIds.has(q.id))) redirect('/academic?error=quiz_publish');
+ const {error}=await supabase.from('quizzes').update({published:true}).eq('id',id).eq('published',false);
+ redirect(error?'/academic?error=quiz_publish':'/academic?saved=quiz_published');
+}
+
+export async function publishWrittenExam(formData:FormData) {
+ const {supabase,role}=await actor();
+ if(role!=='admin') redirect('/portal');
+ const id=String(formData.get('exam_id')||'');
+ if(!/^[0-9a-f-]{36}$/i.test(id)) redirect('/academic?error=written_publish');
+ const {data:exam}=await supabase.from('written_exams').select('id,published').eq('id',id).maybeSingle();
+ if(!exam||exam.published) redirect('/academic?error=written_publish');
+ const {data:questions}=await supabase.from('written_exam_questions').select('id,question_type').eq('exam_id',id);
+ if(!questions?.length||questions.length>30) redirect('/academic?error=written_publish');
+ const {data:keys}=await supabase.from('written_exam_answer_keys').select('question_id,correct_option,model_answer').in('question_id',questions.map(q=>q.id));
+ const byId=new Map((keys??[]).map(k=>[k.question_id,k]));
+ if(questions.some(q=>{const key=byId.get(q.id);return !key||(q.question_type==='mcq'?key.correct_option===null:!key.model_answer?.trim());})) redirect('/academic?error=written_publish');
+ const {error}=await supabase.from('written_exams').update({published:true}).eq('id',id).eq('published',false);
+ redirect(error?'/academic?error=written_publish':'/academic?saved=written_published');
+}
+
 export async function submitWrittenExam(formData:FormData) {
  const {supabase,user,role}=await actor();
  if(role!=='student') redirect('/portal');

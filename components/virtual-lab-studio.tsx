@@ -14,6 +14,7 @@ import { PhotosynthesisLab } from '@/components/photosynthesis-lab';
 import { DihybridInheritanceLab } from '@/components/dihybrid-inheritance-lab';
 import { HardyWeinbergLab } from '@/components/hardy-weinberg-lab';
 import { GasLawsLab } from '@/components/gas-laws-lab';
+import { RayOpticsLab } from '@/components/ray-optics-lab';
 import { SpringOscillatorLab } from '@/components/spring-oscillator-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
@@ -133,6 +134,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <label>Resistance: <b>{resistance} Ω</b><input type="range" min="1" max="100" value={resistance} onChange={e => { setHasInteracted(true); setResistance(Number(e.target.value)); }}/></label>
         <div className="virtual-lab-results"><div><strong>{circuit.currentAmps.toFixed(3)} A</strong><span>Current</span></div><div><strong>{circuit.powerWatts.toFixed(2)} W</strong><span>Power</span></div></div>
       </div>}
+      {selected.simulation_type === 'physics' && <RayOpticsLab onInteraction={() => setHasInteracted(true)}/>}
 
       {selected.simulation_type === 'chemistry' && <div className="virtual-lab-experiment">
         <label>Acid concentration: <b>{acid.toFixed(2)} mol/L</b><input type="range" min="0.02" max="0.5" step="0.01" value={acid} onChange={e => { setHasInteracted(true); setAcid(Number(e.target.value)); }}/></label>

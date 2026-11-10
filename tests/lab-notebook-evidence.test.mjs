@@ -58,7 +58,7 @@ test('evidence upload action verifies the notebook, file size and binary signatu
 });
 
 test('evidence downloads are minted only after the metadata row passes RLS', async () => {
-  const route = await readFile(new URL('../app/api/lab-notebook-evidence/[id]/route.ts', import.meta.url), 'utf8');
+  const route = await readFile(new URL('../app/api/lab-notebook-evidence/[evidenceId]/route.ts', import.meta.url), 'utf8');
   assert.match(route, /auth\.getUser/);
   assert.match(route, /from\('lab_notebook_evidence'\)/);
   assert.match(route, /createSignedUrl\(evidence\.storage_path, 60, \{ download: true \}\)/);

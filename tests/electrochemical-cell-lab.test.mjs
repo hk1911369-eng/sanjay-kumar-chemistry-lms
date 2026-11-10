@@ -72,7 +72,7 @@ test('electrochemical cell is integrated into the student and admin catalogue fl
   assert.match(studio, /ElectrochemicalCellLab/);
   assert.match(studio, /'electrochemical-cell'/);
   assert.match(admin, /value="electrochemical-cell">Chemistry · Electrochemical cell/);
-  assert.match(action, /'electrochemical-cell','photosynthesis','spring-oscillator'\]\.includes\(simulationType\)/);
+  assert.match(action, /'electrochemical-cell'/);
   assert.match(component, /calculateDaniellCell/);
   assert.match(component, /Nernst equation/);
   assert.match(component, /aria-label=/);

@@ -469,3 +469,12 @@ The live `submit_quiz_attempt` RPC validates submitted question IDs and option i
 `startQuiz()` creates a single attempt row with a server timestamp. If an attempt already exists, it reuses it; it does not reset an unsubmitted row. The submission RPC rejects an unsubmitted attempt after `started_at + duration_minutes + 1 minute`. The academic page does not fetch `started_at`, show a countdown, auto-submit, or provide a recovery/reset path. The still-unsubmitted row remains the unique `(quiz_id, student_id)` attempt, so after expiry the student cannot submit or start again; repeated submissions return the expiry error. Network loss or abandonment can therefore permanently consume the only attempt without a result.
 
 **Impact:** availability/fairness, not unauthorized access. **Correction:** add explicit expiry state and a documented recovery policy (for example, atomic auto-submit, audited staff reset, or bounded resume), plus server-derived timer and idempotent retry tests. **Limits:** source action/page and live RPC/unique constraint inspected; no JMT Test attempt rows and no runtime session simulation; no data changed.
+
+
+## Published student-practice content is mutable after learner attempts
+
+Assigned teachers/staff and admins can update published `student_practice_questions` rows, including options and `correct_option`. The RLS policy checks course assignment/role but not publication state or prior attempts. The only live question trigger validates content/scope; it does not enforce immutability or versioning.
+
+The analytics RPC aggregates historical selected-option indexes and correctness flags, while the teacher analytics page joins those aggregates to the current question row and current answer key/options. A post-attempt edit can therefore make historical accuracy and distractor signals disagree with the version learners answered. No immutable version reference is stored with attempts for analytics reconstruction.
+
+**Impact:** assessment-history and analytics integrity, not learner privilege escalation. **Remediation:** freeze published question content after first attempt, or version question content and bind each attempt/aggregate to its immutable version; retain original key/options and use audited regrading for corrections. **Limits:** confirmed from branch action/page, live policy and trigger inventory; JMT Test has no practice questions or attempts, and no writes/runtime learner tests were performed.

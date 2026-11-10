@@ -39,7 +39,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
     db.from('academic_subjects').select('id,name,slug,description').order('name'),
     db.from('learning_concepts').select('id,subject_id,parent_id,title,slug,description,grade_band,exam_tracks,estimated_minutes,is_published').order('title'),
     db.from('concept_prerequisites').select('concept_id,prerequisite_concept_id'),
-    db.from('courses').select('id,title').is('archived_at', null).order('title'),
+    db.from('courses').select('id,title,is_published,programme_group').is('archived_at', null).order('title'),
   ]);
   const subjects = subjectResult.data ?? [];
   const concepts = conceptResult.data ?? [];
@@ -49,10 +49,16 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   const conceptNames = new Map(concepts.map(concept => [concept.id, concept.title]));
   const courseNames = new Map(courses.map(course => [course.id, course.title]));
   const courseIds = courses.map(course => course.id);
-  const lessonResult = courseIds.length
-    ? await db.from('lessons').select('id,title,course_id').in('course_id', courseIds).order('title').limit(500)
-    : { data: [] as {id:string;title:string;course_id:string}[] };
+  const [lessonResult, courseSubjectResult] = await Promise.all([
+    courseIds.length
+      ? db.from('lessons').select('id,title,course_id,is_published').in('course_id', courseIds).order('title').limit(1000)
+      : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;is_published:boolean}[] }),
+    courseIds.length
+      ? db.from('course_subjects').select('course_id,subject_id').in('course_id', courseIds)
+      : Promise.resolve({ data: [] as {course_id:string;subject_id:string}[] }),
+  ]);
   const lessons = lessonResult.data ?? [];
+  const courseSubjects = courseSubjectResult.data ?? [];
   const lessonConceptResult = lessons.length
     ? await db.from('lesson_concepts').select('lesson_id,concept_id').in('lesson_id', lessons.map(lesson => lesson.id))
     : { data: [] as {lesson_id:string;concept_id:string}[] };
@@ -74,6 +80,27 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
     ...(lessons.length > 0 && unmappedLessonCount > 0 ? [`${unmappedLessonCount} lesson(s) still need concept mapping.`] : []),
     ...(publishedConceptCount > 0 && unmappedPublishedConceptCount > 0 ? [`${unmappedPublishedConceptCount} published concept(s) are not connected to any lesson.`] : []),
   ];
+  const courseCoverage = courses.map(course => {
+    const subjectIds = new Set(courseSubjects.filter(link => link.course_id === course.id).map(link => link.subject_id));
+    const courseConcepts = concepts.filter(concept => subjectIds.has(concept.subject_id));
+    const coursePublishedConcepts = courseConcepts.filter(concept => concept.is_published);
+    const courseLessons = lessons.filter(lesson => lesson.course_id === course.id);
+    const courseLessonIds = new Set(courseLessons.map(lesson => lesson.id));
+    const courseLinks = (lessonConceptResult.data ?? []).filter(link => courseLessonIds.has(link.lesson_id));
+    const mappedCourseConceptIds = new Set(courseLinks.map(link => link.concept_id));
+    const mappedCourseLessonIds = new Set(courseLinks.map(link => link.lesson_id));
+    const mappedPublishedConcepts = coursePublishedConcepts.filter(concept => mappedCourseConceptIds.has(concept.id)).length;
+    const publishedLessons = courseLessons.filter(lesson => lesson.is_published);
+    const unmappedPublishedLessons = publishedLessons.filter(lesson => !mappedCourseLessonIds.has(lesson.id)).length;
+    const ready = publishedLessons.length > 0 && coursePublishedConcepts.length > 0
+      && mappedPublishedConcepts === coursePublishedConcepts.length && unmappedPublishedLessons === 0;
+    return {
+      id: course.id, title: course.title, programmeGroup: course.programme_group,
+      isPublished: course.is_published, lessonCount: courseLessons.length,
+      publishedLessonCount: publishedLessons.length, mappedLessonCount: publishedLessons.length - unmappedPublishedLessons,
+      publishedConceptCount: coursePublishedConcepts.length, mappedPublishedConceptCount: mappedPublishedConcepts, ready,
+    };
+  });
 
   return <PortalLayout role="admin" active="learning-graph" title="Subjects & concept graph" returnTo="/admin/learning">
     <section className="portal-content learning-graph-page">
@@ -116,6 +143,15 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
               <span>{subjectPublished}/{subjectConcepts} published · {subjectMapped} concepts connected to lessons</span>
             </div>;
           })}
+        </div>
+        <h3>Course-by-course curriculum coverage</h3>
+        <p className="muted">A concept mapped in one course does not count as covered in another. Each course is checked against its own subject links and lesson connections.</p>
+        <div className="learning-graph-readiness-subjects">
+          {courseCoverage.map(course => <div key={course.id}>
+            <b>{course.title}</b>
+            <span>{course.programmeGroup || 'Programme not set'} · {course.isPublished ? 'Published course' : 'Draft course'} · {course.publishedLessonCount}/{course.lessonCount} lessons published · {course.mappedLessonCount} published lessons mapped · {course.mappedPublishedConceptCount}/{course.publishedConceptCount} published concepts connected</span>
+            <span>{course.ready ? 'Curriculum coverage complete' : 'Curriculum coverage incomplete'}</span>
+          </div>)}
         </div>
       </article>
 

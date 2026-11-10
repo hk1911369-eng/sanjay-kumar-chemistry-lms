@@ -60,3 +60,27 @@ test('server actions reject inactive actors before privileged workflows', async 
     }
   }
 });
+
+test('protected workspaces and learning routes reject inactive profiles', async () => {
+  const paths = [
+    'app/admin/page.tsx',
+    'app/admin/applications/page.tsx',
+    'app/admin/courses/page.tsx',
+    'app/admin/finance/page.tsx',
+    'app/admin/learning/page.tsx',
+    'app/admin/settings/page.tsx',
+    'app/admin/virtual-labs/page.tsx',
+    'app/teacher/page.tsx',
+    'app/students/manage/page.tsx',
+    'app/academic/page.tsx',
+    'app/student/page.tsx',
+    'app/labs/page.tsx',
+    'app/learn/[courseId]/page.tsx',
+  ];
+
+  for (const path of paths) {
+    const page = await read(path);
+    assert.match(page, /select\([^)]*role,is_active[^)]*\)/, path);
+    assert.match(page, /is_active\s*!==\s*true/, path);
+  }
+});

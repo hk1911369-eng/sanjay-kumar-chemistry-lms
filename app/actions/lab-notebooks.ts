@@ -21,8 +21,8 @@ export async function saveLabNotebook(formData: FormData) {
   const db = await createClient();
   const {data:{user}} = await db.auth.getUser();
   if (!user) redirect('/login');
-  const {data:profile} = await db.from('profiles').select('role').eq('id',user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const {data:profile} = await db.from('profiles').select('role,is_active').eq('id',user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
   const entryId=String(formData.get('entry_id')??''), assignmentId=String(formData.get('assignment_id')??''), choice=String(formData.get('lab_choice')??''), parts=choice?choice.split(':'):[], courseId=parts.length===2?parts[0]:String(formData.get('course_id')??''), labId=parts.length===2?parts[1]:String(formData.get('lab_id')??'');
   const title=String(formData.get('title')??'').trim(), hypothesis=String(formData.get('hypothesis')??'').trim();
   const procedureNotes=String(formData.get('procedure_notes')??'').trim(), observations=String(formData.get('observations')??'').trim();
@@ -50,8 +50,8 @@ export async function saveLabNotebook(formData: FormData) {
 }
 export async function reviewLabNotebook(formData: FormData) {
   const db=await createClient(); const {data:{user}}=await db.auth.getUser(); if(!user) redirect('/login');
-  const {data:profile}=await db.from('profiles').select('role').eq('id',user.id).single();
-  if(!['admin','teacher','staff'].includes(profile?.role??'')) redirect('/portal');
+  const {data:profile}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();
+  if (profile?.is_active !== true || !['admin','teacher','staff'].includes(profile.role ?? '')) redirect('/portal');
   const id=String(formData.get('entry_id')??''), decision=String(formData.get('decision')??''), feedback=String(formData.get('teacher_feedback')??'').trim();
   const criteria=[
     {key:'hypothesis',field:'rubric_hypothesis',max:15},

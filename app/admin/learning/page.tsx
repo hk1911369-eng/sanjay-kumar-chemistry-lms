@@ -74,6 +74,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
       : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;sort_order:number;published:boolean}[] }),
   ]);
   const lessons = lessonResult.data ?? [];
+  const draftLessons = lessons.filter(lesson => !lesson.is_published);
   const courseSubjects = courseSubjectResult.data ?? [];
   const chapters = chapterResult.data ?? [];
   const lessonConceptResult = lessons.length
@@ -298,9 +299,9 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
       <article className="portal-card">
         <h2>Map a lesson to a concept</h2>
         <p className="muted">This connection lets the Learning OS understand which concepts each lesson teaches. Only same-subject course mappings are accepted.</p>
-        {!lessons.length || !concepts.length ? <p className="muted">Create a course, add its subject, create concepts and add lessons to enable mapping.</p> :
+        {!draftLessons.length || !concepts.length ? <p className="muted">Create a draft lesson and concepts to enable mapping. Published lessons are locked; use a reviewed revision workflow to change learner-visible curriculum.</p> :
           <form action={mapLessonToConcept} className="learning-graph-form">
-            <label>Lesson<select name="lesson_id" required>{lessons.map(lesson=><option key={lesson.id} value={lesson.id}>{courseNames.get(lesson.course_id)} · {lesson.title}</option>)}</select></label>
+            <label>Lesson<select name="lesson_id" required>{draftLessons.map(lesson=><option key={lesson.id} value={lesson.id}>{courseNames.get(lesson.course_id)} · {lesson.title}</option>)}</select></label>
             <label>Concept<select name="concept_id" required>{concepts.map(concept=><option key={concept.id} value={concept.id}>{subjectNames.get(concept.subject_id)} · {concept.title}</option>)}</select></label>
             <label>Relevance weight<input name="relevance_weight" type="number" min="0.01" max="1" step="0.01" defaultValue="1"/></label>
             <button className="auth-submit">Connect lesson</button>

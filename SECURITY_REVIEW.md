@@ -58,3 +58,19 @@ The lab evidence migration `20261110233000_add_private_lab_notebook_evidence.sql
 - Confirm migration ordering and actual applied migration history in a disposable test project before deployment. Do not reset or modify production as part of this audit.
 
 **Current conclusion:** The branch contains materially more security controls than the historical v9 notes describe, including rate-limiting code and private lab evidence storage. However, green source/CI checks do not prove runtime PostgreSQL authorization. This project must not be represented as fully security-tested or production-ready until the database role matrix, final function/ACL inventory, configuration checks, and remaining release tests are completed.
+
+
+## Live JMT Test catalog check — 11 November 2026
+
+Read-only Supabase catalog inspection was performed against the project named **JMT Test** (not production). No schema or data changes were made.
+
+- All ordinary tables in the `public` schema were observed with RLS enabled.
+- `app_rate_limit_events` and `auth_rate_limit_events` have RLS enabled and no policies; their table grants are limited to `postgres` and `service_role`, with no `anon` or `authenticated` table grants. This is a deliberate service-only posture if the application continues to access them only through privileged server-side paths.
+- Anonymous table SELECT grants are limited to `academy_settings`, `courses`, and `notices`.
+- Catalog scan found 59 public SECURITY DEFINER functions; all have explicit function-level search_path settings. One function, `get_public_course_teachers(uuid)`, is executable by anon. Its definition returns active teaching staff IDs and full names only for published, non-archived courses, and the branch migration explicitly grants public execution for public course pages. This is an intentional public disclosure surface, not a blanket authorization for profile access.
+- 23 SECURITY DEFINER functions are executable by authenticated users; these require per-function authorization checks and should not be blanket-revoked merely to silence the generic advisor.
+- Supabase Auth leaked-password protection is disabled on JMT Test and remains a configuration hardening item.
+
+The JMT Test migration ledger has 244 rows versus 218 SQL files in the current branch. The latest ledger row and latest source file share the migration name `require_active_role_for_course_subject_reads` but have different version identifiers (`20261110181004` versus `20261110274000`). Repeated and non-matching migration names also exist. This needs a deliberate source-to-ledger reconciliation before any further migration push; do not attempt automatic repair from counts alone.
+
+These catalog findings do not establish runtime RLS behavior. A role/JWT test matrix and Storage upload/download tests remain outstanding. Full details are in `AUDIT_REPORT.md`.

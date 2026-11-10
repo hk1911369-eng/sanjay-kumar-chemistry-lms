@@ -70,7 +70,7 @@ BEGIN
     WHERE wq.id = v_question_id;
   END IF;
 
-  IF COALESCE(v_published, TRUE) IS TRUE THEN
+  IF v_published IS TRUE OR (v_published IS NULL AND TG_OP <> 'DELETE') THEN
     RAISE EXCEPTION 'Questions and answer keys for published assessments are locked' USING ERRCODE = '42501';
   END IF;
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;

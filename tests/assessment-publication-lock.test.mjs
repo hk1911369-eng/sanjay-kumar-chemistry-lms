@@ -15,6 +15,7 @@ test('teachers can only create draft assessments and published assessment conten
   assert.match(migration, /OLD\\.published IS TRUE OR NEW\\.published IS TRUE/);
   assert.match(migration, /Only administrators may publish assessments/);
   assert.match(migration, /Questions and answer keys for published assessments are locked/);
+  assert.match(migration, /v_published IS NULL AND TG_OP <> 'DELETE'/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\\.enforce_assessment_content_draft_integrity\\(\\) FROM PUBLIC, anon, authenticated/);
   assert.equal((action.match(/published:role==='admin'&&formData\\.get\\('published'\\)==='on'/g) ?? []).length, 4);
 });

@@ -86,3 +86,14 @@ test('published lesson content is not editable through the draft editor', async 
   assert.match(actions, /lesson\.is_published/);
   assert.match(actions, /update\(\{[\s\S]*?title, description, content, video_url: videoUrl, chapter_id: chapterId, position/);
 });
+
+
+test('lesson concept mapping validates UUID identifiers and a decimal relevance range', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const mapping = actions.slice(actions.indexOf('export async function mapLessonToConcept'));
+  assert.match(mapping, /const isUuid = \(value: string\) =>/);
+  assert.match(mapping, /!isUuid\(lessonId\) \|\| !isUuid\(conceptId\)/);
+  assert.match(mapping, /0\?\\\.\\d\+/);
+  assert.match(mapping, /relevance <= 0 \|\| relevance > 1/);
+  assert.match(mapping, /\.eq\('subject_id', concept\.subject_id\)/);
+});

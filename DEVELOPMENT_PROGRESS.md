@@ -17,7 +17,7 @@ JMT Academy is a multi-subject Learning Operating System. Chemistry is a subject
 - Added indexes for the new Learning OS foreign-key relationships.
 - Added a complete subject-agnostic roadmap covering adaptive learning, AI tutoring, prediction, social learning, virtual labs, parent access, offline-first delivery and SaaS tenancy.
 
-## Verification
+## Verification — historical snapshot; recheck before release
 
 - Supabase migrations for the foundation, event integrity, subject-scoped staff visibility and foreign-key indexes have been applied.
 - All Learning OS tables have RLS enabled and anonymous table access revoked.
@@ -33,3 +33,14 @@ JMT Academy is a multi-subject Learning Operating System. Chemistry is a subject
 - HSC/admission predictions must wait for sufficient historical outcomes and calibration; no unsupported admission probabilities or guaranteed results will be shown.
 - Tenant isolation must be implemented across every table, storage path, background job and query before exposing white-label institute workspaces.
 - Supabase Auth leaked-password protection remains a dashboard-only setting; it has not been enabled through the available project controls.
+
+
+## Verification status clarification — 11 November 2026
+
+The verification bullets above record an earlier development checkpoint. They must not be read as proof of the current live database state or as a complete verification of the current 218-migration branch.
+
+- Current branch CI has completed successfully for commit `a1085ca334ff7a5d7423383ee50ede79af5e2fd4` (guardrail tests, ESLint, TypeScript, production build, production dependency audit). A subsequent documentation-only commit has since advanced the PR head; that newer head has no completed workflow result verified yet.
+- The current repository does not contain a visible Supabase local configuration, pgTAP suite, or PostgreSQL integration-test workflow. The CI checks source and application build behavior, not live RLS policies under distinct database roles.
+- Statements above about migrations being applied, all Learning OS tables having RLS, and production having no courses describe the state reported at the earlier checkpoint. Reconfirm against the actual Supabase project's migration history and schema before relying on them.
+- Do not infer that the full current migration set has been applied to either test or production from the source tree. The private lab evidence migration specifically comments that it was applied to the isolated JMT Test project and not production at that time.
+- Production deployment remains gated on database-history reconciliation, runtime role/Storage tests, and the remaining release checks documented in `AUDIT_REPORT.md`.

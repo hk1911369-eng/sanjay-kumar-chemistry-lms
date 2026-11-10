@@ -18,9 +18,9 @@ export default async function PracticeAnalyticsPage() {
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
+  const { data: profile } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
   const role = profile?.role;
-  if (!['admin', 'teacher', 'staff'].includes(role ?? '')) redirect('/portal');
+  if (profile?.is_active !== true || !['admin', 'teacher', 'staff'].includes(role ?? '')) redirect('/portal');
 
   let courseIds: string[] = [];
   if (role === 'admin') {

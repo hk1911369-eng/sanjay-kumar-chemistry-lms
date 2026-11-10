@@ -496,3 +496,14 @@ This makes accurate marking unnecessarily difficult and increases the chance of 
 **Recommended correction:** load question text, type, options and marks for the exams represented in the staff queue, and load answer-key/model-answer data only for authorized assigned staff/admin. Render each student's response alongside its question and marking guide. Keep student-facing queries isolated from answer-key data and retain RLS as the enforcement boundary. Add a page-level test confirming that staff see the question/marking guide while students cannot read answer keys.
 
 **Verification limits:** confirmed from the branch page and builder source. No written-exam rows existed in the inspected JMT Test environment, so this is a code-path/UI finding rather than an observed marking incident.
+
+
+## Learning OS mastery summary is biased by a 12-row limit (11 November 2026)
+
+**Functional/reporting finding — the dashboard labels a partial sample as overall mastery.** In `app/student/page.tsx`, the `learner_concept_mastery` query orders records by `mastery_score` ascending and applies `.limit(12)`. In `components/learning-os-dashboard.tsx`, `averageMastery` is then calculated as the arithmetic mean of the returned `mastery` array, and the dashboard labels it “Average mastery”. Therefore, when a student has more than 12 concept records, the displayed figure is the average of only the 12 lowest-scoring returned concepts, not the student's overall average. “Topics tracked” likewise reports only the number returned (maximum 12), not the total number of tracked concepts.
+
+**Impact:** the summary can systematically understate overall mastery and misrepresent the number of topics with evidence. The low-score subset is useful for weakness triage, but should not be presented as a whole-student aggregate.
+
+**Recommended correction:** calculate total tracked concepts and overall mastery through a database aggregate/RPC (choose and document whether the average is concept-weighted or evidence-weighted). Keep the 12 lowest-scoring rows for the topic cards and weak-topic recommendations, and label that subset explicitly, e.g. “Lowest mastery topics”. Add tests with more than 12 concepts and a distribution where the lowest-12 mean differs materially from the all-concept mean.
+
+**Verification limits:** confirmed from the branch student page query and dashboard calculation. The inspected JMT Test learning mastery table had zero rows, so no populated student dashboard was available to observe the numerical distortion.

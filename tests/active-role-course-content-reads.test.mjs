@@ -40,6 +40,21 @@ test('student course-content reads require active student role, paid enrollment 
   }
 });
 
+test('students cannot read scheduled quiz or written-exam questions before start or after close', async () => {
+  const sql = await readMigration();
+  const quizStart = sql.indexOf('ON public.quiz_questions FOR SELECT TO authenticated');
+  const quizEnd = sql.indexOf('\n);', quizStart);
+  const quiz = sql.slice(quizStart, quizEnd);
+  assert.ok(quiz.includes('q.starts_at IS NULL OR q.starts_at <= now()'));
+  assert.ok(quiz.includes('q.ends_at IS NULL OR q.ends_at >= now()'));
+
+  const examStart = sql.indexOf('ON public.written_exam_questions FOR SELECT TO authenticated');
+  const examEnd = sql.indexOf('\n);', examStart);
+  const exam = sql.slice(examStart, examEnd);
+  assert.ok(exam.includes('x.starts_at IS NULL OR now() >= x.starts_at'));
+  assert.ok(exam.includes('x.ends_at IS NULL OR now() <= x.ends_at'));
+});
+
 test('admin and assigned teaching staff branches remain available and scoped', async () => {
   const sql = await readMigration();
   for (const [table] of policies) {

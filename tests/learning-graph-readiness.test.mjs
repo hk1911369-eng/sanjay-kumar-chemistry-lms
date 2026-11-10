@@ -17,7 +17,7 @@ test('admin learning graph reports published, mapped, and unmapped curriculum co
 
 test('curriculum readiness blocks adaptation claims when lesson or concept foundations are empty', async () => {
   const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
-  assert.match(page, /lessons\.length === 0/);
+  assert.match(page, /publishedLessonCount === 0/);
   assert.match(page, /publishedConceptCount === 0/);
   assert.ok(page.includes('published lesson(s) still need concept mapping'));
   assert.match(page, /published concept\(s\) are not connected to any lesson/);

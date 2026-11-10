@@ -79,7 +79,7 @@ test('spring oscillator is integrated into the Physics student and admin catalog
 test('spring oscillator template is permitted and published for Physics', async () => {
   const [constraint, catalogue] = await Promise.all([
     readFile(new URL('../supabase/migrations/20261110255100_allow_spring_oscillator_template.sql', import.meta.url), 'utf8'),
-    readFile(new URL('../supabase/migrations/20261110255200_add_physics_spring_oscillator_lab.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110255201_add_physics_spring_oscillator_lab.sql', import.meta.url), 'utf8'),
   ]);
   assert.match(constraint, /'spring-oscillator'/);
   assert.match(catalogue, /physics-spring-oscillator/);

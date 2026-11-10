@@ -80,7 +80,7 @@ test('higher mathematics has an interactive quadratic simulation template', asyn
   assert.match(component, /simulation_type === 'quadratic'/);
   assert.match(component, /discriminant/);
   assert.match(component, /vertexX/);
-  assert.match(admin, /value="quadratic"/);
+  assert.match(admin, /\\['quadratic',/);
   assert.match(migration, /higher-maths-quadratic/);
   assert.match(migration, /higher-maths-quadratic/);
   assert.match(migration, /10000000-0000-4000-8000-000000000008/);
@@ -127,7 +127,7 @@ test('double pendulum is a separately mapped physics simulation with educator-co
   assert.match(lab, /Reset experiment/);
   assert.match(lab, /ResizeObserver/);
   for (const type of ['pendulum','projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator','dihybrid']) assert.ok(action.includes("'" + type + "'"));
-  assert.match(admin, /value="pendulum"/);
+  assert.match(admin, /\\['pendulum',/);
 });
 
 test('chemistry titration exposes a live pH-volume curve and identifies its modelled indicator', async () => {
@@ -166,7 +166,7 @@ test('biology virtual microscope exposes specimen, optics and explicit schematic
   assert.match(lab, /fieldDiameter = 180000 \/ magnification/);
   assert.match(lab, /not a photomicrograph/);
   assert.match(lab, /numerical aperture/);
-  assert.match(admin, /value="microscope"/);
+  assert.match(admin, /\\['microscope',/);
   for (const type of ['microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator','dihybrid']) assert.ok(action.includes("'" + type + "'"));
 });
 
@@ -190,7 +190,7 @@ test('ideal gas law template is wired through the student and admin catalogues',
   assert.match(studio, /GasLawsLab/);
   assert.match(studio, /'gas-laws'/);
   assert.match(action, /'gas-laws'/);
-  assert.match(admin, /value="gas-laws"/);
+  assert.match(admin, /\\['gas-laws',/);
   assert.match(migration, /'gas-laws'/);
   assert.match(migration, /virtual_lab_catalog_simulation_type_check/);
 });

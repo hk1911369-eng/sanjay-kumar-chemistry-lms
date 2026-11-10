@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { PortalLayout } from '@/components/portal-layout';
-import { createLiveClass,createAssignment,submitAssignment,gradeAssignment,createQuiz,startQuiz,submitQuiz,createBankQuestion,createQuizFromBank } from '@/app/actions/academic';
+import { createLiveClass,createAssignment,submitAssignment,gradeAssignment,createQuiz,startQuiz,submitQuiz,createBankQuestion,createQuizFromBank,publishAssignment,publishQuiz,publishWrittenExam } from '@/app/actions/academic';
 import { markNotificationRead } from '@/app/actions/notifications';
 import { submitWrittenExam,gradeWrittenExam } from '@/app/actions/academic';
 import { WrittenExamBuilder } from '@/components/written-exam-builder';

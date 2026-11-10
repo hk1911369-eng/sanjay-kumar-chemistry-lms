@@ -28,8 +28,8 @@ export function RayOpticsLab({ onInteraction }: Props) {
   const outgoingDistance = (outgoingX - 320) / xScale;
   const parallelOutgoingY = 160 - (objectHeight - objectHeight / result.signedFocalLengthM * outgoingDistance) * yScale;
   const centralOutgoingY = 160 - (-objectHeight / objectDistance * outgoingDistance) * yScale;
-  const focusA = 320 - result.signedFocalLengthM * xScale;
-  const focusB = 320 + result.signedFocalLengthM * xScale;
+  const focusA = 320 - focalLength * xScale;
+  const focusB = 320 + focalLength * xScale;
   const lensPath = lensType === 'converging'
     ? 'M320 48 C292 95 292 225 320 272 C348 225 348 95 320 48 Z'
     : 'M300 48 C315 95 315 225 300 272 L340 272 C325 225 325 95 340 48 Z';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 
 type Result = {
   count: number;
@@ -64,7 +64,7 @@ export function LabAnalysisCalculator() {
     ...(target !== undefined ? [`Theoretical value = ${format(target)} ${unit}`.trim(), `Percentage error = ${format(result.percentError)}%`] : []),
   ].join('\n') : '';
 
-  function insertSummary(event: React.MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Repeated-reading analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
+  function insertSummary(event: MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Repeated-reading analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
     if (!summary || !navigator.clipboard?.writeText) return;
     try {
       await navigator.clipboard.writeText(summary);

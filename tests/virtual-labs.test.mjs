@@ -219,3 +219,15 @@ test('admin catalogue edit dropdown includes every supported simulation type', a
   }
   assert.equal((admin.match(/SIMULATION_OPTIONS\.map\(\(\[value, label\]\)/g) ?? []).length, 2);
 });
+
+
+test('physics catalogue includes the interactive ray optics experiment', async () => {
+  const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const rayOptics = await readFile(new URL('../components/ray-optics-lab.tsx', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  assert.match(studio, /import \{ RayOpticsLab \}/);
+  assert.match(studio, /selected\.simulation_type === 'physics' && <RayOpticsLab/);
+  assert.match(rayOptics, /calculateThinLens/);
+  assert.match(rayOptics, /Principal ray construction/);
+  assert.match(admin, /Physics · Circuits and ray optics/);
+});

@@ -1034,3 +1034,47 @@ input,select,textarea,button{max-width:100%}
   .spring-oscillator-chart{padding:.55rem}
 }
 @media(max-width:380px){.spring-oscillator-results{grid-template-columns:1fr}}
+
+
+/* Thin-lens geometrical optics laboratory. */
+.ray-optics-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.ray-optics-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.ray-optics-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
+.ray-optics-heading p{margin:.35rem 0;line-height:1.55}
+.ray-optics-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
+.ray-optics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.ray-optics-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
+.ray-optics-controls label b{font-variant-numeric:tabular-nums}
+.ray-optics-controls select{width:100%;min-height:40px}
+.ray-optics-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.ray-optics-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
+.ray-optics-diagram{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.ray-optics-diagram-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
+.ray-optics-diagram-heading span{font-size:.75rem;color:var(--muted)}
+.ray-optics-diagram svg{display:block;width:100%;height:auto;margin:.5rem auto 0;overflow:hidden}
+.ray-optics-legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--muted)}
+.ray-optics-legend span{display:inline-flex;align-items:center;gap:.4rem}
+.ray-optics-legend i{display:inline-block;width:18px;height:3px;border-radius:99px}
+.ray-optics-legend i.is-object{background:#16a34a}
+.ray-optics-legend i.is-parallel{background:#2563eb}
+.ray-optics-legend i.is-central{background:#7c3aed}
+.ray-optics-legend i.is-image{background:#dc2626}
+.ray-optics-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.75rem}
+.ray-optics-results>div{display:grid;gap:.25rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.ray-optics-results strong{font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ray-optics-results span{font-size:.78rem;color:var(--muted)}
+.ray-optics-interpretation{display:grid;grid-template-columns:minmax(130px,.35fr) 1fr;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.ray-optics-interpretation h4{margin:.25rem 0;font-size:1.05rem}
+.ray-optics-interpretation p{margin:0;line-height:1.55}
+.ray-optics-equation{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
+.ray-optics-equation p{margin:.15rem 0;line-height:1.55}
+.ray-optics-actions{display:flex;justify-content:flex-end}
+.ray-optics-lab input:focus-visible,.ray-optics-lab select:focus-visible,.ray-optics-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:620px){
+  .ray-optics-controls{grid-template-columns:1fr;padding:.85rem}
+  .ray-optics-heading{display:grid}
+  .ray-optics-diagram{padding:.55rem}
+  .ray-optics-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ray-optics-interpretation{grid-template-columns:1fr;gap:.4rem}
+}
+@media(max-width:380px){.ray-optics-results{grid-template-columns:1fr}}

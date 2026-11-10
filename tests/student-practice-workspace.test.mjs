@@ -6,7 +6,7 @@ const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
 test('practice studio is restricted to active, paid student courses and mapped subjects', async () => {
   const page = await read('app/practice/page.tsx');
-  assert.match(page, /profile\?\.role !== 'student'/);
+  assert.match(page, /profile\?\.is_active !== true \|\| profile\.role !== 'student'/);
   assert.match(page, /\.eq\('status', 'active'\)/);
   assert.match(page, /\.eq\('admission_fee_paid', true\)/);
   assert.match(page, /\.gte\('paid_through', periodEnd\)/);

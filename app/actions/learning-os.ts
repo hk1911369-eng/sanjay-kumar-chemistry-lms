@@ -260,10 +260,11 @@ export async function mapLessonToConcept(formData: FormData) {
   }
 
   const [{ data: lesson }, { data: concept }] = await Promise.all([
-    db.from('lessons').select('id,course_id').eq('id', lessonId).maybeSingle(),
+    db.from('lessons').select('id,course_id,is_published').eq('id', lessonId).maybeSingle(),
     db.from('learning_concepts').select('id,subject_id').eq('id', conceptId).maybeSingle(),
   ]);
   if (!lesson || !concept) redirect('/admin/learning?error=lesson_map');
+  if (lesson.is_published) redirect('/admin/learning?error=lesson_locked');
   const { data: courseSubject } = await db.from('course_subjects').select('course_id')
     .eq('course_id', lesson.course_id).eq('subject_id', concept.subject_id).maybeSingle();
   if (!courseSubject) redirect('/admin/learning?error=subject_mismatch');

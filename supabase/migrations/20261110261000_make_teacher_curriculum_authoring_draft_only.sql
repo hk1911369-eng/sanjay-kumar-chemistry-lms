@@ -159,3 +159,5 @@ DROP TRIGGER IF EXISTS enforce_teacher_chapter_draft_integrity ON public.chapter
 CREATE TRIGGER enforce_teacher_chapter_draft_integrity
   BEFORE INSERT OR UPDATE ON public.chapters
   FOR EACH ROW EXECUTE FUNCTION public.enforce_teacher_curriculum_draft_integrity();
+
+REVOKE ALL ON FUNCTION public.enforce_teacher_curriculum_draft_integrity() FROM PUBLIC, anon, authenticated;

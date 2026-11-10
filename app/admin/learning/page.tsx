@@ -148,7 +148,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         {allReadinessBlockers.length > 0 ? <div className="learning-graph-readiness-blockers">
           <b>Work remaining before curriculum-driven adaptation</b>
           <ul>{allReadinessBlockers.map(item => <li key={item}>{item}</li>)}</ul>
-        </div> : <p className="form-success">Every active-course lesson and published concept has at least one curriculum connection. Continue reviewing prerequisite quality before enabling predictive features.</p>}
+        </div> : <p className="form-success">Every course-scoped published lesson and applicable published concept has a curriculum connection. Continue reviewing prerequisite quality before enabling predictive features.</p>}
         <div className="learning-graph-readiness-subjects">
           {subjects.map(subject => {
             const subjectConcepts = conceptCountBySubject.get(subject.id) ?? 0;

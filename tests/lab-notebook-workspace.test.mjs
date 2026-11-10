@@ -42,7 +42,7 @@ test('structured measurement editor serialises validated notebook readings witho
   assert.equal((student.match(/<LabMeasurementEditor/g) ?? []).length, 3);
   assert.match(editor, /name="measurements"/);
   assert.match(editor, /JSON\.stringify\(rows\.filter/);
-  assert.match(editor, /current\.length >= 100/);
+  assert.match(editor, /rows\.length >= 100/);
   assert.match(editor, /maxLength=\{100\}/);
   assert.match(editor, /maxLength=\{40\}/);
   assert.match(editor, /type="button"/);

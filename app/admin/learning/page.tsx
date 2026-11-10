@@ -4,12 +4,12 @@ import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import {
   saveAcademicSubject, saveLearningConcept, saveConceptPrerequisite, mapLessonToConcept,
-  createCourseChapter, createCourseLesson, publishCourseChapter, publishCourseLesson,
+  createCourseChapter, createCourseLesson, updateDraftCourseLesson, publishCourseChapter, publishCourseLesson,
 } from '@/app/actions/learning-os';
 
 type SearchParams = Promise<{
   saved?: string; error?: string; subject_saved?: string; concept_saved?: string;
-  prerequisite_saved?: string; lesson_mapped?: string; chapter_saved?: string; lesson_saved?: string; chapter_published?: string; lesson_published?: string;
+  prerequisite_saved?: string; lesson_mapped?: string; chapter_saved?: string; lesson_saved?: string; chapter_published?: string; lesson_published?: string; lesson_updated?: string;
 }>;
 
 const messages: Record<string,string> = {
@@ -27,7 +27,7 @@ const messages: Record<string,string> = {
   lesson_chapter: 'The selected chapter does not belong to that course.',
   chapter_publish: 'Could not publish this chapter.', chapter_content: 'Every chapter lesson needs at least 100 characters of teaching content.',
   chapter_mapping: 'Every chapter lesson must be mapped to a published concept in this course before publishing.',
-  lesson_publish: 'Could not publish this lesson.', lesson_content: 'Add substantive teaching content (at least 100 characters) before publishing.',
+  lesson_edit: 'Could not save the draft lesson. Check its fields and try again.', lesson_locked: 'Published lessons are locked. Create a reviewed revision rather than editing learner-visible content.',\n  lesson_publish: 'Could not publish this lesson.', lesson_content: 'Add substantive teaching content (at least 100 characters) before publishing.',
   chapter_unpublished: 'Publish the assigned chapter before publishing its lesson.', lesson_mapping: 'Connect this lesson to a published concept in this course before publishing.',
 };
 const savedMessages: Record<string,string> = {
@@ -35,7 +35,7 @@ const savedMessages: Record<string,string> = {
   prerequisite: 'Prerequisite relationship saved.', lesson_map: 'Lesson connected to the concept.',
   chapter: 'Draft chapter created.', lesson: 'Draft lesson created. Connect it to reviewed concepts before publishing.',
   chapter_published: 'Chapter published after its content and concept mappings passed review checks.',
-  lesson_published: 'Lesson published after its content and curriculum mapping passed review checks.',
+  lesson_published: 'Lesson published after its content and curriculum mapping passed review checks.',\n  lesson_updated: 'Draft lesson updated. Review its concept mappings again before publication.',
 };
 
 export default async function LearningGraphPage({ searchParams }: { searchParams: SearchParams }) {
@@ -62,7 +62,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   const courseIds = courses.map(course => course.id);
   const [lessonResult, courseSubjectResult, chapterResult] = await Promise.all([
     courseIds.length
-      ? db.from('lessons').select('id,title,course_id,chapter_id,is_published').in('course_id', courseIds).order('title').limit(1000)
+      ? db.from('lessons').select('id,title,description,content,video_url,position,course_id,chapter_id,is_published').in('course_id', courseIds).order('title').limit(1000)
       : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;chapter_id:string|null;is_published:boolean}[] }),
     courseIds.length
       ? db.from('course_subjects').select('course_id,subject_id').in('course_id', courseIds)
@@ -132,8 +132,8 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <Link className="quiet-button" href="/admin/courses">Course studio</Link>
       </div>
       {params.error && <p className="form-error">{messages[params.error] ?? 'The request could not be completed.'}</p>}
-      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped || params.chapter_saved || params.lesson_saved || params.chapter_published || params.lesson_published) &&
-        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : params.lesson_mapped ? 'lesson_map' : params.chapter_saved ? 'chapter' : params.lesson_saved ? 'lesson' : params.chapter_published ? 'chapter_published' : 'lesson_published')] ?? 'Saved.'}</p>}
+      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped || params.chapter_saved || params.lesson_saved || params.chapter_published || params.lesson_published || params.lesson_updated) &&
+        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : params.lesson_mapped ? 'lesson_map' : params.chapter_saved ? 'chapter' : params.lesson_saved ? 'lesson' : params.chapter_published ? 'chapter_published' : params.lesson_published ? 'lesson_published' : 'lesson_updated')] ?? 'Saved.'}</p>}
 
       <div className="learning-graph-stats">
         <article className="portal-card"><strong>{subjects.length}</strong><span>Subjects</span></article>
@@ -244,12 +244,36 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
             {!chapter.published && <form action={publishCourseChapter}><input type="hidden" name="chapter_id" value={chapter.id}/><button className="auth-submit">Validate and publish chapter</button></form>}
             <ul>{lessons.filter(lesson => lesson.chapter_id === chapter.id).map(lesson => <li key={lesson.id}>
               <span>{lesson.title}</span><small>{lesson.is_published ? 'Published lesson' : 'Draft lesson'}</small>
-              {!lesson.is_published && <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>}
+              {!lesson.is_published && <>
+                <details><summary>Edit draft lesson</summary><form action={updateDraftCourseLesson} className="auth-form">
+                  <input type="hidden" name="lesson_id" value={lesson.id}/>
+                  <label>Lesson title<input name="title" required minLength={2} maxLength={180} defaultValue={lesson.title}/></label>
+                  <label>Short description<textarea name="description" maxLength={4000} rows={2} defaultValue={lesson.description ?? ''}/></label>
+                  <label>Teaching content<textarea name="content" maxLength={30000} rows={8} defaultValue={lesson.content ?? ''}/></label>
+                  <label>Video URL (HTTPS only)<input name="video_url" type="url" defaultValue={lesson.video_url ?? ''}/></label>
+                  <label>Chapter<select name="chapter_id" defaultValue={lesson.chapter_id ?? ''}><option value="">No chapter</option>{chapters.filter(item => item.course_id === lesson.course_id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+                  <label>Lesson order<input name="position" type="number" min="0" max="100000" defaultValue={lesson.position}/></label>
+                  <button className="quiet-button">Save draft changes</button>
+                </form></details>
+                <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>
+              </>}
             </li>)}</ul>
           </section>)}
           {lessons.filter(lesson => !lesson.chapter_id).map(lesson => <section key={lesson.id}>
             <div><b>{courseNames.get(lesson.course_id)} · {lesson.title}</b><small>{lesson.is_published ? 'Published lesson · no chapter' : 'Draft lesson · no chapter'}</small></div>
-            {!lesson.is_published && <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>}
+            {!lesson.is_published && <>
+              <details><summary>Edit draft lesson</summary><form action={updateDraftCourseLesson} className="auth-form">
+                <input type="hidden" name="lesson_id" value={lesson.id}/>
+                <label>Lesson title<input name="title" required minLength={2} maxLength={180} defaultValue={lesson.title}/></label>
+                <label>Short description<textarea name="description" maxLength={4000} rows={2} defaultValue={lesson.description ?? ''}/></label>
+                <label>Teaching content<textarea name="content" maxLength={30000} rows={8} defaultValue={lesson.content ?? ''}/></label>
+                <label>Video URL (HTTPS only)<input name="video_url" type="url" defaultValue={lesson.video_url ?? ''}/></label>
+                <label>Chapter<select name="chapter_id" defaultValue=""><option value="">No chapter</option>{chapters.filter(item => item.course_id === lesson.course_id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+                <label>Lesson order<input name="position" type="number" min="0" max="100000" defaultValue={lesson.position}/></label>
+                <button className="quiet-button">Save draft changes</button>
+              </form></details>
+              <form action={publishCourseLesson}><input type="hidden" name="lesson_id" value={lesson.id}/><button className="quiet-button">Validate and publish lesson</button></form>
+            </>}
           </section>)}
           {chapters.length === 0 && lessons.length === 0 && <p className="muted">Create a chapter or lesson to begin the review workflow.</p>}
         </div>

@@ -64,7 +64,7 @@ export function LabAnalysisCalculator() {
     ...(target !== undefined ? [`Theoretical value = ${format(target)} ${unit}`.trim(), `Percentage error = ${format(result.percentError)}%`] : []),
   ].join('\n') : '';
 
-  async function copySummary() {
+  function insertSummary(event: React.MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Repeated-reading analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
     if (!summary || !navigator.clipboard?.writeText) return;
     try {
       await navigator.clipboard.writeText(summary);
@@ -127,8 +127,8 @@ export function LabAnalysisCalculator() {
             <span>Analysis summary (copy into your notebook observations or conclusion)</span>
             <textarea readOnly rows={7} value={summary} />
           </label>
-          <button type="button" className="quiet-button" onClick={copySummary} disabled={!summary}>Copy analysis summary</button>
-          {copied && <span className="form-success" role="status">Analysis summary copied.</span>}
+          <div className="lab-analysis-controls"><button type="button" className="quiet-button" onClick={insertSummary} disabled={!summary}>Insert into observations</button><button type="button" className="quiet-button" onClick={copySummary} disabled={!summary}>Copy analysis summary</button></div>
+          {copied && <span className="form-success" role="status">Summary copied or inserted.</span>}
         </div>
       )}
       <p className="muted">Use readings from the same quantity and unit. Percentage error compares the experimental mean with the accepted value; it is undefined when the accepted value is zero. These calculations support interpretation and do not replace scientific judgement.</p>

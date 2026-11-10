@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 type Result = {
   count: number;
@@ -49,12 +49,9 @@ export function LabAnalysisCalculator() {
   const complete = parsed.every(Number.isFinite);
   const target = theoretical.trim() === '' ? undefined : Number(theoretical);
   const targetValid = target === undefined || Number.isFinite(target);
-  const result = useMemo(
-    () => complete && parsed.length > 0 && targetValid
-      ? calculateRepeatedReadings(parsed, target)
-      : null,
-    [readings, theoretical, complete, targetValid],
-  );
+  const result = complete && parsed.length > 0 && targetValid
+    ? calculateRepeatedReadings(parsed, target)
+    : null;
 
   const summary = result ? [
     `Repeated readings (n = ${result.count})`,
@@ -127,7 +124,7 @@ export function LabAnalysisCalculator() {
             {target !== undefined && <div><dt>Percentage error</dt><dd>{result.percentError === null ? 'Not defined when theoretical value is zero' : `${format(result.percentError)}%`}</dd></div>}
           </dl>
           <label className="lab-analysis-summary">
-            <span>Analysis summary (copy into your notebook analysis / conclusion)</span>
+            <span>Analysis summary (copy into your notebook observations or conclusion)</span>
             <textarea readOnly rows={7} value={summary} />
           </label>
           <button type="button" className="quiet-button" onClick={copySummary} disabled={!summary}>Copy analysis summary</button>

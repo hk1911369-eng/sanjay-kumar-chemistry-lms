@@ -61,7 +61,8 @@ test('evidence downloads are minted only after the metadata row passes RLS', asy
   const route = await readFile(new URL('../app/api/lab-notebook-evidence/[evidenceId]/route.ts', import.meta.url), 'utf8');
   assert.match(route, /auth\.getUser/);
   assert.match(route, /from\('lab_notebook_evidence'\)/);
-  assert.match(route, /createSignedUrl\(evidence\.storage_path, 60,/);\n  assert.match(route, /download: evidence\.original_filename/);
+  assert.match(route, /createSignedUrl\(evidence\.storage_path, 60,/);
+  assert.match(route, /download: evidence\.original_filename/);
   assert.match(route, /Cache-Control', 'private, no-store/);
   assert.match(route, /Referrer-Policy', 'no-referrer/);
 });

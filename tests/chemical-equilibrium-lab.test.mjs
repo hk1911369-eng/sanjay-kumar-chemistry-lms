@@ -13,7 +13,7 @@ test('chemical equilibrium is wired into the student and admin template flows', 
   ]);
   assert.match(studio, /simulation_type === 'equilibrium'/);
   assert.match(studio, /ChemicalEquilibriumLab/);
-  assert.match(admin, /value="equilibrium">Chemistry · Equilibrium and Le Chatelier/);
+  assert.match(admin, /\['equilibrium', 'Chemistry · Equilibrium and Le Chatelier'\]/);
   assert.match(action, /'wave-interference','equilibrium'/);
   assert.match(component, /reactionQuotient/);
   assert.match(component, /equilibriumConstant/);

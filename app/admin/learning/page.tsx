@@ -4,11 +4,12 @@ import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import {
   saveAcademicSubject, saveLearningConcept, saveConceptPrerequisite, mapLessonToConcept,
+  createCourseChapter, createCourseLesson,
 } from '@/app/actions/learning-os';
 
 type SearchParams = Promise<{
   saved?: string; error?: string; subject_saved?: string; concept_saved?: string;
-  prerequisite_saved?: string; lesson_mapped?: string;
+  prerequisite_saved?: string; lesson_mapped?: string; chapter_saved?: string; lesson_saved?: string;
 }>;
 
 const messages: Record<string,string> = {
@@ -21,10 +22,14 @@ const messages: Record<string,string> = {
   lesson_subject: 'That lesson belongs to a different subject.',
   subject_mismatch: 'That lesson belongs to a different subject.',
   cycle: 'That prerequisite would create a circular learning path.',
+  chapter: 'Could not create that chapter. Check its course and fields.',
+  lesson: 'Could not create that lesson. Check its course and fields.',
+  lesson_chapter: 'The selected chapter does not belong to that course.',
 };
 const savedMessages: Record<string,string> = {
   subject: 'Subject saved.', concept: 'Concept added to the knowledge graph.',
   prerequisite: 'Prerequisite relationship saved.', lesson_map: 'Lesson connected to the concept.',
+  chapter: 'Draft chapter created.', lesson: 'Draft lesson created. Connect it to reviewed concepts before publishing.',
 };
 
 export default async function LearningGraphPage({ searchParams }: { searchParams: SearchParams }) {
@@ -49,16 +54,20 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   const conceptNames = new Map(concepts.map(concept => [concept.id, concept.title]));
   const courseNames = new Map(courses.map(course => [course.id, course.title]));
   const courseIds = courses.map(course => course.id);
-  const [lessonResult, courseSubjectResult] = await Promise.all([
+  const [lessonResult, courseSubjectResult, chapterResult] = await Promise.all([
     courseIds.length
-      ? db.from('lessons').select('id,title,course_id,is_published').in('course_id', courseIds).order('title').limit(1000)
-      : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;is_published:boolean}[] }),
+      ? db.from('lessons').select('id,title,course_id,chapter_id,is_published').in('course_id', courseIds).order('title').limit(1000)
+      : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;chapter_id:string|null;is_published:boolean}[] }),
     courseIds.length
       ? db.from('course_subjects').select('course_id,subject_id').in('course_id', courseIds)
       : Promise.resolve({ data: [] as {course_id:string;subject_id:string}[] }),
+    courseIds.length
+      ? db.from('chapters').select('id,title,course_id,sort_order,published').in('course_id', courseIds).order('sort_order')
+      : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;sort_order:number;published:boolean}[] }),
   ]);
   const lessons = lessonResult.data ?? [];
   const courseSubjects = courseSubjectResult.data ?? [];
+  const chapters = chapterResult.data ?? [];
   const lessonConceptResult = lessons.length
     ? await db.from('lesson_concepts').select('lesson_id,concept_id').in('lesson_id', lessons.map(lesson => lesson.id))
     : { data: [] as {lesson_id:string;concept_id:string}[] };
@@ -117,8 +126,8 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         <Link className="quiet-button" href="/admin/courses">Course studio</Link>
       </div>
       {params.error && <p className="form-error">{messages[params.error] ?? 'The request could not be completed.'}</p>}
-      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped) &&
-        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : 'lesson_map')] ?? 'Saved.'}</p>}
+      {(params.saved || params.subject_saved || params.concept_saved || params.prerequisite_saved || params.lesson_mapped || params.chapter_saved || params.lesson_saved) &&
+        <p className="form-success">{savedMessages[params.saved || (params.subject_saved ? 'subject' : params.concept_saved ? 'concept' : params.prerequisite_saved ? 'prerequisite' : params.lesson_mapped ? 'lesson_map' : params.chapter_saved ? 'chapter' : 'lesson')] ?? 'Saved.'}</p>}
 
       <div className="learning-graph-stats">
         <article className="portal-card"><strong>{subjects.length}</strong><span>Subjects</span></article>
@@ -192,6 +201,34 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
         </article>
       </div>
 
+
+      <div className="learning-graph-columns">
+        <article className="portal-card">
+          <h2>Create a chapter</h2>
+          <p className="muted">Chapters organise a course into teachable units. New chapters stay private drafts until reviewed.</p>
+          {!courses.length ? <p className="muted">Create a course first.</p> : <form action={createCourseChapter} className="auth-form">
+            <label>Course<select name="course_id" required>{courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
+            <label>Chapter title<input name="title" required minLength={1} maxLength={180}/></label>
+            <label>Description<textarea name="description" maxLength={4000} rows={2}/></label>
+            <label>Order<input name="sort_order" type="number" min="0" max="100000" defaultValue="0"/></label>
+            <button className="auth-submit">Create draft chapter</button>
+          </form>}
+        </article>
+        <article className="portal-card">
+          <h2>Create a lesson</h2>
+          <p className="muted">Add the actual teaching material here. Lessons are always created unpublished; review and connect them to the correct subject concepts before publication.</p>
+          {!courses.length ? <p className="muted">Create a course first.</p> : <form action={createCourseLesson} className="auth-form">
+            <label>Course<select name="course_id" required>{courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
+            <label>Chapter (optional)<select name="chapter_id" defaultValue=""><option value="">No chapter</option>{chapters.map(chapter=><option key={chapter.id} value={chapter.id}>{courseNames.get(chapter.course_id)} · {chapter.title}</option>)}</select></label>
+            <label>Lesson title<input name="title" required minLength={2} maxLength={180}/></label>
+            <label>Short description<textarea name="description" maxLength={4000} rows={2}/></label>
+            <label>Lesson content<textarea name="content" maxLength={30000} rows={8} placeholder="Write the lesson notes, explanations, worked examples and learning objectives."/></label>
+            <label>Video URL (HTTPS only)<input name="video_url" type="url" placeholder="https://…"/></label>
+            <label>Lesson order<input name="position" type="number" min="0" max="100000" defaultValue="0"/></label>
+            <button className="auth-submit">Create draft lesson</button>
+          </form>}
+        </article>
+      </div>
       <article className="portal-card">
         <h2>Connect prerequisite concepts</h2>
         <p className="muted">Choose the concept students want to learn, then choose what they should understand first. The database rejects cross-subject links and circular dependencies.</p>

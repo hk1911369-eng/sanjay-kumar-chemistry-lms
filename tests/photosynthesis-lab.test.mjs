@@ -68,7 +68,7 @@ test('photosynthesis is integrated into the student studio and admin catalogue',
   ]);
   assert.match(studio, /simulation_type === 'photosynthesis'/);
   assert.match(studio, /PhotosynthesisLab/);
-  assert.match(admin, /\\['photosynthesis', 'Biology · Photosynthesis and limiting factors'\\]/);
+  assert.match(admin, /\['photosynthesis', 'Biology · Photosynthesis and limiting factors'\]/);
   assert.match(action, /'photosynthesis'/);
   assert.match(component, /limitingFactor/);
   assert.match(component, /grossAssimilation/);

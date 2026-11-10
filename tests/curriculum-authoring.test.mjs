@@ -93,7 +93,7 @@ test('lesson concept mapping validates UUID identifiers and a decimal relevance 
   const mapping = actions.slice(actions.indexOf('export async function mapLessonToConcept'));
   assert.match(mapping, /const isUuid = \(value: string\) =>/);
   assert.match(mapping, /!isUuid\(lessonId\) \|\| !isUuid\(conceptId\)/);
-  assert.match(mapping, /test\\(relevanceRaw\\)/);
+  assert.ok(mapping.includes('.test(relevanceRaw)'));
   assert.match(mapping, /relevance <= 0 \|\| relevance > 1/);
   assert.match(mapping, /\.eq\('subject_id', concept\.subject_id\)/);
 });

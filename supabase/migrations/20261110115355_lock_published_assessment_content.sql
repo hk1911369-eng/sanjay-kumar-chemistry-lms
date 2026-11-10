@@ -14,7 +14,7 @@ BEGIN
     IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
     RETURN NEW;
   END IF;
-  IF v_role NOT IN ('teacher', 'staff') THEN
+  IF v_role IS NULL OR v_role NOT IN ('teacher', 'staff') THEN
     RAISE EXCEPTION 'Active teaching staff role required' USING ERRCODE = '42501';
   END IF;
 

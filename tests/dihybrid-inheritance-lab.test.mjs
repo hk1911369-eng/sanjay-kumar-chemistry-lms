@@ -61,7 +61,7 @@ test('dihybrid lab is integrated into Biology student experience and explains as
   assert.match(declaration, /export function calculateDihybridCross/);
   assert.match(migration, /biology-dihybrid-inheritance/);
   assert.match(migration, /'dihybrid'/);
-  assert.match(admin, /value="dihybrid"/);
+  assert.match(admin, /\\['dihybrid',/);
   assert.ok(action.includes("'dihybrid'"));
   assert.match(migration, /10000000-0000-4000-8000-000000000003/);
 });

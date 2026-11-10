@@ -369,3 +369,12 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Recommended correction:** use a database aggregate for total concept count and a clearly defined overall mastery measure, while retaining the lowest-12 query for targeted topic cards. Label the subset as weakest/lowest-mastery topics. Add a regression test with more than 12 concepts and distinct aggregate values.
 
 **Verification limits:** source-code confirmed. The inspected JMT Test mastery table contained zero rows; no live student's displayed aggregate was observed. This is a reporting-accuracy issue, not an authorization or score-forgery finding.
+
+
+## Revision completion permits early completion of future tasks (11 November 2026)
+
+**Learning-integrity finding — no due-time check in the completion RPC.** The live `complete_revision_task(uuid)` function locks any pending task owned by the authenticated student and marks it completed without checking `scheduled_for`. The student dashboard exposes a completion action for all pending tasks, including future-dated tasks. Early completion increments the completed-task count used to choose the next spaced-repetition interval and creates the next task relative to the premature completion time.
+
+**Recommended correction:** reject completion unless `scheduled_for <= now()` inside the database function, and distinguish future scheduled tasks from actionable due tasks in the UI. Add a database/RPC regression test for future and due tasks.
+
+**Verification limits:** function definition and dashboard source confirmed; no live task was available to exercise the case. No runtime mutation or impersonated-user test was performed.

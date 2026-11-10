@@ -130,3 +130,36 @@ test('teacher authoring cannot bypass draft-only curriculum publication gates', 
   assert.match(page, /Published lesson is locked against in-place editing/);
   assert.match(page, /New lessons are saved as drafts/);
 });
+
+
+test('draft lesson editor enforces bounded fields, HTTPS video URLs and valid ordering', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const editor = actions.slice(actions.indexOf('export async function updateDraftCourseLesson'), actions.indexOf('export async function publishCourseChapter'));
+  assert.match(editor, /title\.length < 2 \|\| title\.length > 180/);
+  assert.match(editor, /description\.length > 4000/);
+  assert.match(editor, /content\.length > 30000/);
+  assert.match(editor, /videoUrl\.length > 2048 \|\| !\/\^https:/);
+  assert.match(editor, /!Number\.isInteger\(position\) \|\| position < 0 \|\| position > 100000/);
+  assert.match(editor, /chapterId\)[\s\S]*?\.eq\('course_id', lesson\.course_id\)/);
+});
+
+test('draft lesson updates cannot change course ownership and are race-safe against publication', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const editor = actions.slice(actions.indexOf('export async function updateDraftCourseLesson'), actions.indexOf('export async function publishCourseChapter'));
+  assert.match(editor, /select\('id,course_id,is_published'\)/);
+  assert.match(editor, /if \(!lesson \|\| lesson\.is_published\)/);
+  assert.match(editor, /\.update\(\{[\s\S]*?title, description, content, video_url: videoUrl, chapter_id: chapterId, position/);
+  assert.doesNotMatch(editor, /course_id\s*:/);
+  assert.match(editor, /\.eq\('id', lessonId\)\.eq\('is_published', false\)/);
+  assert.match(editor, /if \(error \|\| !updatedLesson\)/);
+  assert.match(editor, /revalidatePath\('\/learn\/' \+ lesson\.course_id\)/);
+});
+
+test('published lessons are omitted from the draft editor and cannot be edited through its form', async () => {
+  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
+  const lessonList = page.slice(page.indexOf('lessons.filter(lesson => lesson.chapter_id'), page.indexOf('</section>', page.indexOf('lessons.filter(lesson => lesson.chapter_id')));
+  assert.match(lessonList, /!lesson\.is_published/);
+  assert.match(lessonList, /action=\{updateDraftCourseLesson\}/);
+  assert.match(lessonList, /name="lesson_id"/);
+  assert.match(lessonList, /Save draft changes/);
+});

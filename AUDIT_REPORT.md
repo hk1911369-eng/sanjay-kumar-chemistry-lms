@@ -507,3 +507,14 @@ This makes accurate marking unnecessarily difficult and increases the chance of 
 **Recommended correction:** calculate total tracked concepts and overall mastery through a database aggregate/RPC (choose and document whether the average is concept-weighted or evidence-weighted). Keep the 12 lowest-scoring rows for the topic cards and weak-topic recommendations, and label that subset explicitly, e.g. “Lowest mastery topics”. Add tests with more than 12 concepts and a distribution where the lowest-12 mean differs materially from the all-concept mean.
 
 **Verification limits:** confirmed from the branch student page query and dashboard calculation. The inspected JMT Test learning mastery table had zero rows, so no populated student dashboard was available to observe the numerical distortion.
+
+
+## Future revision tasks can be completed before their scheduled time (11 November 2026)
+
+**Learning-integrity finding — the completion RPC does not enforce the scheduled date.** The live `public.complete_revision_task(uuid)` function selects a task for the authenticated student where `status = 'pending'`, locks it, and immediately changes it to `completed`. It does not require `scheduled_for <= now()`. The student dashboard renders a completion form for every pending revision task, including tasks whose scheduled time is in the future. A student can therefore complete a future task early; the RPC counts it among completed tasks and schedules the next spaced-repetition interval from the early completion.
+
+**Impact:** review cadence and completion statistics can be advanced ahead of the intended schedule. This is a learning-integrity issue, not a cross-user authorization bypass.
+
+**Recommended correction:** add a database-side `scheduled_for <= now()` check to `complete_revision_task`; present future tasks as scheduled without an active completion control. Add a test proving future tasks are rejected and due tasks can be completed. Keep the RPC check authoritative.
+
+**Verification limits:** confirmed against the live JMT Test function definition and branch dashboard source. The inspected revision-task table had no usable learner activity to demonstrate an actual early completion; no task was modified.

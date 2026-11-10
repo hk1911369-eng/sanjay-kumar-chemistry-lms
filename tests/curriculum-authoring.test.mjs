@@ -35,3 +35,26 @@ test('lesson authoring UI provides real teaching content fields and optional cha
   assert.match(page, /name="chapter_id"/);
   assert.match(page, /Lessons are always created unpublished/);
 });
+
+test('chapter publication requires substantive content and mapped published concepts from the course', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  assert.match(actions, /async function publishCourseChapter/);
+  assert.match(actions, /lesson\.content\s*\?\? ''\)\)\.trim\(\)\.length < 100/);
+  assert.match(actions, /concept\.is_published && subjectIds\.includes\(concept\.subject_id\)/);
+  assert.match(actions, /lessons\.some\(lesson => !mappedLessonIds\.has\(lesson\.id\)\)/);
+});
+
+test('lesson publication requires substantive content, published chapter and a published in-course concept', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  assert.match(actions, /async function publishCourseLesson/);
+  assert.match(actions, /lesson\.chapter_id/);
+  assert.match(actions, /if \(!chapter\?\.published\)/);
+  assert.match(actions, /concepts \?\? \[\]\)\.some\(concept => concept\.is_published && subjectIds\.includes\(concept\.subject_id\)\)/);
+});
+
+test('admin curriculum workspace exposes chapter and lesson review controls', async () => {
+  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /Review and publish curriculum/);
+  assert.match(page, /Validate and publish chapter/);
+  assert.match(page, /Validate and publish lesson/);
+});

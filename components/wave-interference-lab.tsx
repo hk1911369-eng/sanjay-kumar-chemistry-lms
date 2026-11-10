@@ -67,7 +67,7 @@ export function WaveInterferenceLab({ onInteraction }: Props) {
       <label>Observation distance, D <b>{distance.toFixed(1)} m</b>
         <input type="range" min="2" max="12" step="0.5" value={distance} onChange={e=>changed(()=>setDistance(Number(e.target.value)))}/>
       </label>
-      <label className="wave-interference-time">Wave snapshot time <b>{time.toFixed(2)} s</b>
+      <label className="wave-interference-time">Instantaneous snapshot time <b>{time.toFixed(2)} s</b>
         <input type="range" min="0" max="5" step="0.01" value={time} onChange={e=>changed(()=>setTime(Number(e.target.value)))}/>
       </label>
     </div>
@@ -80,7 +80,7 @@ export function WaveInterferenceLab({ onInteraction }: Props) {
     </div>
 
     <div className="virtual-lab-titration-graph wave-interference-field">
-      <div><b>Interference field</b><span>Time-averaged intensity · bright regions are constructive, dark regions destructive</span></div>
+      <div><b>Interference field</b><span>Time-averaged intensity · bright regions are constructive, dark regions destructive. The time slider updates the separate instantaneous displacement readout.</span></div>
       <svg viewBox="0 0 600 340" role="img" aria-label="Two-source interference intensity field with alternating constructive and destructive bands.">
         <rect x="0" y="0" width="600" height="300" rx="8" fill="#071426"/>
         {result.field.map((point,index)=>{

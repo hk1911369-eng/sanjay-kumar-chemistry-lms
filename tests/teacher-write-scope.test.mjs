@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('teacher direct writes are limited to supported academic workflows', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261110120100_restrict_teacher_direct_writes_to_supported_workflows.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261110115408_restrict_teacher_direct_writes_to_supported_workflows.sql', import.meta.url), 'utf8');
 
   for (const policy of [
     'assigned staff manage assignments',

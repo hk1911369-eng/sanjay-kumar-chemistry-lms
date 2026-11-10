@@ -1124,3 +1124,23 @@ input,select,textarea,button{max-width:100%}
   .dihybrid-grid th,.dihybrid-grid td{padding:.35rem .08rem}
   .dihybrid-grid td small{font-size:.62em}
 }
+
+
+/* Hardy–Weinberg population genetics explorer. */
+.hardy-weinberg-lab{display:grid;gap:1rem;margin:1rem 0;min-width:0}
+.hardy-weinberg-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
+.hardy-weinberg-controls label{display:grid;gap:.5rem;font-size:.86rem;font-weight:650;min-width:0}
+.hardy-weinberg-controls input{width:100%;min-width:0}
+.hardy-weinberg-equations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.hardy-weinberg-equations>div{display:grid;gap:.3rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;min-width:0}
+.hardy-weinberg-equations span,.hardy-weinberg-results article>span{font-size:.76rem;color:var(--muted)}
+.hardy-weinberg-equations strong{font-size:1rem;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.hardy-weinberg-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+.hardy-weinberg-results article{display:grid;gap:.4rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;min-width:0}
+.hardy-weinberg-results article>div:first-child{display:flex;justify-content:space-between;gap:.4rem;align-items:baseline}
+.hardy-weinberg-results article strong{font-size:1rem;font-variant-numeric:tabular-nums}
+.hardy-weinberg-results article small{font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
+.hardy-weinberg-track{height:10px;border-radius:99px;background:var(--surface-alt);overflow:hidden}
+.hardy-weinberg-track i{display:block;height:100%;border-radius:99px;background:#0d9488;max-width:100%}
+.hardy-weinberg-lab input:focus-visible,.hardy-weinberg-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+@media(max-width:620px){.hardy-weinberg-controls,.hardy-weinberg-equations{grid-template-columns:1fr}.hardy-weinberg-results{grid-template-columns:1fr}}

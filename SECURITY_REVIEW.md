@@ -426,3 +426,18 @@ The practical-review event path has a coherent round-level deduplication control
 **Recommended correction:** enforce immutability after first attempt for all roles; use versioned assessments and append-only correction/regrade audit events. Prefer soft deletion and preserve attempts/source lineage. If admin override is essential, require a separate audited procedure with reason and affected-attempt accounting.
 
 **Verification limits:** live JMT Test trigger, policies and FK rules plus branch quiz action confirmed; no populated quiz/attempt rows were available for runtime validation. No data was changed.
+
+
+## Written-exam grading is mutable and has no durable regrade history (11 November 2026)
+
+`gradeWrittenExam()` allows an admin or assigned teacher/staff member to update a submission's score, feedback, grader and grading timestamp. Live RLS and database triggers validate role/scope, score bounds, grader identity and preserve the submitted answers and ownership. But the update guard does not require `OLD.score IS NULL`, and no append-only grade-history relation was found. An authorized subsequent grade action can overwrite the prior score/feedback/grader/time in place. A repeat notification is not a substitute for an immutable audit record.
+
+**Impact:** assessment appeal/auditability gap, not unauthorized grading. **Correction:** append each grade/regrade with old/new values, actor, timestamp, reason and approval reference; require a reason after initial grading and test concurrent changes.
+
+**Verification limits:** branch action plus live UPDATE policy, column grants and grade triggers inspected. No submissions existed for runtime testing.
+
+## Written-exam content can also be overridden or deleted by administrators after publication (11 November 2026)
+
+The published-content trigger protects written-exam headers, questions and answer keys from teacher/staff changes, but short-circuits for admins. Admin policies permit update/delete of these rows. Unlike the teacher/staff exam-delete policy, the admin delete policy does not require absence of submissions. The live FK from `written_exam_submissions.exam_id` cascades on exam deletion, so an administrator can delete the exam and its submission records. Editing model answers/rubrics after grading can also undermine reproducibility of marks.
+
+**Correction:** immutable versioned exam content after publication/first attempt, soft deletion, and append-only audited correction/regrade records. **Verification limits:** live policies, trigger and FK rules confirmed; no written-exam records existed for runtime validation.

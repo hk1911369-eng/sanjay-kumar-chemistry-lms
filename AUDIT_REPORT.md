@@ -566,3 +566,22 @@ This makes accurate marking unnecessarily difficult and increases the chance of 
 **Recommended correction:** make published assessment versions immutable for all roles once any attempt exists. Use a controlled correction workflow that creates a new version or records an append-only correction/regrade event with actor, reason, old/new content and affected attempts. Prefer soft deletion/archive; retain attempts and source relationships. If emergency admin override is required, require an explicit audited operation rather than silently bypassing the lock.
 
 **Verification limits:** confirmed from live JMT Test trigger definition, RLS policies and FK delete rules, plus branch `publishQuiz()` and quiz-creation actions. No quiz or attempt data was present to test the destructive path; no data was changed. The risk is derived from schema/action permissions, not an observed deletion.
+
+
+## Written-exam regrading overwrites the prior grade without an append-only history (11 November 2026)
+
+The written-exam grading action accepts a submission ID, score and feedback, verifies that the caller is an admin or assigned teaching staff member, and updates the existing submission's `score`, `teacher_feedback`, `graded_by` and `graded_at`. The live UPDATE policy and database guards correctly constrain the grader identity, score range, feedback length and immutable submitted answers/ownership. However, neither the action nor the database guard requires the submission to be ungraded, and the schema inspected has no grade-revision/history table or append-only grade event. A later authorized grade action can therefore replace a previous score and feedback in place; the previous mark, feedback, grader and timestamp are lost. The notification trigger may send another grade notification, but that is not a durable record of the previous decision.
+
+**Impact:** this is an auditability and assessment-governance gap, not an unauthorized grading path. It weakens the ability to resolve student appeals, explain mark changes or distinguish an initial grade from a correction. A valid regrade may be operationally necessary, but it should not erase the earlier decision.
+
+**Recommended correction:** record every grade/regrade as an append-only row containing submission ID, old/new score and feedback, actor, timestamp, reason and optionally approval reference; expose the latest approved grade as the current result. Require a reason for changes after first grading and test concurrent grade updates for lost-update behavior.
+
+**Verification limits:** confirmed from branch `gradeWrittenExam()`, live written-submission UPDATE policy, column grants, and `guard_written_exam_submission_update()` / grade-validation triggers. No written-exam submissions existed for runtime regrade testing; no data was changed.
+
+## Written-exam content has the same administrator override and deletion-history exposure as quizzes (11 November 2026)
+
+The live content-integrity trigger covers `written_exams`, `written_exam_questions` and `written_exam_answer_keys`, but returns immediately for administrators. Admin RLS policies allow updating/deleting published written-exam headers, questions and answer keys. The teacher/staff delete policy prevents deleting an exam with submissions, but the administrator policy does not include that guard. The foreign key from `written_exam_submissions.exam_id` to `written_exams.id` is configured to cascade, so administrator deletion of a written exam can erase its submissions and attached question/key history. Post-publication model-answer or rubric edits can also make prior manually awarded scores impossible to reproduce from the current content.
+
+**Impact and correction:** administrator-only governance/data-integrity risk. Apply the same version immutability, soft-delete and audited correction/regrade workflow recommended for quizzes; preserve written submissions and their exact exam/question/rubric version.
+
+**Verification limits:** live trigger, policies and foreign-key delete rule inspected; no written-exam data was present for runtime validation. No data was changed.

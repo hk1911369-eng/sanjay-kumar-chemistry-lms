@@ -13,10 +13,11 @@ test('curriculum authoring is exposed only through the admin learning workspace'
 
 test('new chapters and lessons are always created as unpublished drafts', async () => {
   const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
   assert.match(actions, /published: false/);
   assert.match(actions, /is_published: false/);
-  assert.match(actions, /Create draft lesson/);
-  assert.match(actions, /Create draft chapter/);
+  assert.match(page, /Create draft lesson/);
+  assert.match(page, /Create draft chapter/);
 });
 
 test('lesson authoring validates course ownership, chapter ownership, and secure video URLs', async () => {

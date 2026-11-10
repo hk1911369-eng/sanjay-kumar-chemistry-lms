@@ -172,7 +172,7 @@ test('biology virtual microscope exposes specimen, optics and explicit schematic
 
 
 test('virtual lab catalogue creator foreign key is indexed', async () => {
-  const migration = await readFile(new URL('../supabase/migrations/20261110255300_index_virtual_lab_catalog_creator.sql', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20261110255301_index_virtual_lab_catalog_creator.sql', import.meta.url), 'utf8');
   assert.match(migration, /create index if not exists virtual_lab_catalog_created_by_idx/);
   assert.match(migration, /on public\.virtual_lab_catalog \(created_by\)/);
 });

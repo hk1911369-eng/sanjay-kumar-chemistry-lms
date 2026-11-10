@@ -79,7 +79,7 @@ This addendum supersedes the Version 8 / 9.1 status statements where they confli
 - GitHub Actions quality checks use placeholder Supabase URL/key values. They run source-level guardrail tests, lint, typecheck, build, and a production dependency audit; they do not connect to PostgreSQL or execute policies under distinct database roles.
 - Source tests that assert migration text are useful regression checks but do not prove runtime RLS, grants, trigger execution, Storage authorization, or SECURITY DEFINER behavior.
 - The lab evidence migration's comment is evidence of its stated application to an isolated test project only. It is not proof that all 218 migrations are applied, that the test database matches the current branch, or that production schema is synchronized.
-- The latest CI run observed during this audit was still in progress. Do not report the latest branch head as green until its run completes successfully.
+- The latest checked CI run for branch head `a1085ca334ff7a5d7423383ee50ede79af5e2fd4` completed successfully: guardrail tests, ESLint, TypeScript, production build, and production dependency audit all passed. This is source/CI evidence only; it does not execute PostgreSQL authorization policies.
 
 ### Remaining work before release
 
@@ -90,3 +90,26 @@ This addendum supersedes the Version 8 / 9.1 status statements where they confli
 5. Complete browser/mobile, email delivery, payment end-to-end, XSS/CSRF, and independent penetration testing.
 
 **Current assessment:** The branch has materially more implemented security functionality than the Version 8 / v9 historical audit describes. Source-level hardening is substantial, but CI is not a live database security test. The application must not be represented as fully security-tested or production-ready until the runtime authorization matrix and remaining release checks pass.
+
+
+### Runtime test readiness inventory
+
+The repository currently has a `supabase/` directory containing SQL migrations and a database update script, but no visible `supabase/config.toml`, local PostgreSQL test service, pgTAP suite, or dedicated database integration-test workflow. The existing `tests/*.test.mjs` suite runs with Node's test runner and inspects source/migration text. Therefore, a runtime role matrix cannot currently be run reproducibly from this repository's checked-in test setup.
+
+Recommended isolated-test matrix (must never target production):
+
+| Identity / state | Expected access to verify |
+|---|---|
+| Anonymous (no JWT) | Public published catalogue only; no private records, RPCs, or private Storage objects |
+| Authenticated but no active profile | Denied personal records, course content, discussions, and protected storage |
+| Student A, active and paid | Own records and enrolled course only; permitted inserts through scoped workflows |
+| Student B, active and paid | Must not read or mutate Student A records or evidence |
+| Student, unpaid / expired / archived course | No paid course content, practice questions, or simulation completion |
+| Teacher assigned to Course A | Course A data only; draft-authoring and grading scope only where intended |
+| Teacher unassigned to Course A | No Course A private data, writes, analytics, or grading |
+| Staff assigned / unassigned | Same assignment boundary unless a specific staff-wide permission is explicitly intended |
+| Admin | Explicit admin operations only; audit log attribution and immutable history preserved |
+
+For each identity, test table SELECT/INSERT/UPDATE/DELETE, direct RPC execution (including denied RPCs), and Storage upload/download/delete. Include NULL/missing role, inactive profile, wrong owner, wrong course, expired payment, archived course, malformed object path, invalid MIME/extension, oversized file, duplicate submission, and concurrent upload/approval cases. Capture SQLSTATE and resulting row/object state, not just HTTP status.
+
+**Implementation gate:** First provision a disposable Supabase project or local Supabase stack, record its migration history, apply the branch migrations there, and add a reproducible CI job with separate test identities. Only then can these expected outcomes be reported as tested rather than proposed.

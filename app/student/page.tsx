@@ -27,8 +27,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role,student_code,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact').eq('id', user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role,is_active,student_code,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
   const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
   const avatarUrl = avatarData?.signedUrl ?? null;
 

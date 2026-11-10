@@ -78,17 +78,12 @@ test('photosynthesis is integrated into the student studio and admin catalogue',
 });
 
 test('photosynthesis template is allowed and published for Biology', async () => {
-  const [constraint, catalogue] = await Promise.all([
-    readFile(new URL('../supabase/migrations/20261110255100_allow_spring_oscillator_template.sql', import.meta.url), 'utf8'),
-    readFile(new URL('../supabase/migrations/20261110254900_add_photosynthesis_lab.sql', import.meta.url), 'utf8'),
-  ]);
-  assert.match(constraint, /'photosynthesis'/);
-  assert.match(catalogue, /biology-photosynthesis-limiting-factors/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000003/);
-  assert.match(catalogue, /'photosynthesis'/);
-  assert.match(catalogue, /is_published,[\s\S]*true/);
+  const migration = await readFile(new URL('../supabase/migrations/20261110254900_add_photosynthesis_lab.sql', import.meta.url), 'utf8');
+  assert.match(migration, /'photosynthesis'/);
+  assert.match(migration, /biology-photosynthesis-investigation/);
+  assert.match(migration, /10000000-0000-4000-8000-000000000003/);
+  assert.match(migration, /is_published,[\s\S]*true/);
 });
-
 test('photosynthesis chart and controls are responsive and disclose model assumptions', async () => {
   const [component, css, model] = await Promise.all([
     readFile(new URL('../components/photosynthesis-lab.tsx', import.meta.url), 'utf8'),

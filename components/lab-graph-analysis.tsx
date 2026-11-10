@@ -48,7 +48,7 @@ export function LabGraphAnalysis() {
     `Data points: ${points.length}`,
   ].join('\n') : '';
 
-  async function copySummary() {
+  function insertSummary(event: React.MouseEvent<HTMLButtonElement>) {\n    const field = event.currentTarget.closest('form')?.querySelector<HTMLTextAreaElement>('textarea[name="observations"]');\n    if (!field || !summary) return;\n    field.value = [field.value.trim(), 'Experimental graph analysis:', summary].filter(Boolean).join('\\n\\n');\n    field.dispatchEvent(new Event('input', { bubbles: true }));\n    field.dispatchEvent(new Event('change', { bubbles: true }));\n    field.focus();\n    setCopied(true);\n  }\n\n  async function copySummary() {
     if (!summary || !navigator.clipboard?.writeText) return;
     try { await navigator.clipboard.writeText(summary); setCopied(true); }
     catch { setCopied(false); }
@@ -95,8 +95,8 @@ export function LabGraphAnalysis() {
           <article><span>Correlation coefficient (r)</span><strong>{fmt(regression.correlation)}</strong></article>
         </div>
         <label className="lab-graph-summary"><span>Graph analysis summary</span><textarea readOnly rows={6} value={summary}/></label>
-        <button type="button" className="quiet-button" onClick={copySummary}>Copy graph analysis</button>
-        {copied&&<span className="form-success" role="status">Graph analysis copied.</span>}
+        <div className="lab-graph-actions"><button type="button" className="quiet-button" onClick={insertSummary}>Insert into observations</button><button type="button" className="quiet-button" onClick={copySummary}>Copy graph analysis</button></div>
+        {copied&&<span className="form-success" role="status">Graph summary copied or inserted.</span>}
       </div>}
       <p className="muted">R² describes how closely the data fit a straight line; it does not prove causation or validate the experiment. The displayed fit is a statistical aid, not a substitute for selecting an appropriate physical model.</p>
     </fieldset>

@@ -6,7 +6,7 @@ import { saveLesson, saveChapter } from '@/app/actions/learning';
 import { LessonResourceUpload } from '@/components/lesson-resource-upload';
 export default async function TeacherDashboard({searchParams}:{searchParams:Promise<{lesson_error?:string;lesson_success?:string;chapter_error?:string;chapter_success?:string}>}){
  const params=await searchParams; const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect('/login');
- const {data:profile}=await supabase.from('profiles').select('full_name,role').eq('id',user.id).single(); if(profile?.role!=='teacher'&&profile?.role!=='staff'&&profile?.role!=='admin') redirect('/portal');
+ const {data:profile}=await supabase.from('profiles').select('full_name,role,is_active').eq('id',user.id).single(); if(profile?.is_active !== true || (profile.role!=='teacher'&&profile.role!=='staff'&&profile.role!=='admin')) redirect('/portal');
  const {data:assignments}=profile.role==='admin'?await supabase.from('courses').select('id,title,description').is('archived_at',null).order('title'):await supabase.from('course_assignments').select('course:courses(id,title,description)').eq('teacher_id',user.id);
  const courses=(assignments??[]).map((x:any)=>profile.role==='admin'?x:x.course).filter(Boolean);
  const courseIds=courses.map((c:any)=>c.id);

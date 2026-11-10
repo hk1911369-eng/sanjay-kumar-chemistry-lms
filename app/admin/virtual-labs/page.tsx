@@ -31,8 +31,8 @@ export default async function VirtualLabCatalogueAdmin({ searchParams }: { searc
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
 
   const [{ data: subjects }, { data: catalogue }] = await Promise.all([
     db.from('academic_subjects').select('id,name').order('name'),

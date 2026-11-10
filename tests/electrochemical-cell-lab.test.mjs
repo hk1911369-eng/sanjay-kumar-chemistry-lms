@@ -34,6 +34,18 @@ test('Nernst potential responds correctly to zinc and copper ion concentrations'
   assert.ok(copperRich.cellPotentialV > standard.cellPotentialV);
   assert.ok(Math.abs(zincRich.reactionQuotient - 2) < 1e-12);
   assert.ok(Math.abs(copperRich.reactionQuotient - 0.5) < 1e-12);
+  const warmerZincRich = calculateDaniellCell({
+    zincIonConcentrationMolar: 2,
+    copperIonConcentrationMolar: 1,
+    temperatureKelvin: 373.15,
+  });
+  const warmerCopperRich = calculateDaniellCell({
+    zincIonConcentrationMolar: 1,
+    copperIonConcentrationMolar: 2,
+    temperatureKelvin: 373.15,
+  });
+  assert.ok(warmerZincRich.cellPotentialV < zincRich.cellPotentialV);
+  assert.ok(warmerCopperRich.cellPotentialV > copperRich.cellPotentialV);
   assert.ok(Math.abs(
     zincRich.gibbsEnergyKJMol
       + (2 * 96485.33212 * zincRich.cellPotentialV / 1000),

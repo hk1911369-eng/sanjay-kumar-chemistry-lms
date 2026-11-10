@@ -83,7 +83,10 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   ];
   const courseCoverage = courses.map(course => {
     const subjectIds = new Set(courseSubjects.filter(link => link.course_id === course.id).map(link => link.subject_id));
-    const courseConcepts = concepts.filter(concept => subjectIds.has(concept.subject_id));
+    const courseTrack = (course.programme_group ?? '').toLowerCase();
+    const courseConcepts = concepts.filter(concept => subjectIds.has(concept.subject_id)
+      && (concept.exam_tracks.length === 0
+        || concept.exam_tracks.some(track => courseTrack.includes(track.toLowerCase()))));
     const coursePublishedConcepts = courseConcepts.filter(concept => concept.is_published);
     const courseLessons = lessons.filter(lesson => lesson.course_id === course.id);
     const courseLessonIds = new Set(courseLessons.map(lesson => lesson.id));

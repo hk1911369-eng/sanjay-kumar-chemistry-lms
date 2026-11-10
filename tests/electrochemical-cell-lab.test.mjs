@@ -107,5 +107,5 @@ test('electrochemical cell diagram and controls are responsive and disclose assu
   assert.match(css, /\.electrochemical-cell-controls/);
   assert.match(css, /@media\(max-width:620px\)/);
   assert.match(css, /@media\(max-width:380px\)/);
-  assert.match(model, /activities in dilute ideal solutions/);
+  assert.match(model, /activity approximations in dilute ideal solutions/);
 });

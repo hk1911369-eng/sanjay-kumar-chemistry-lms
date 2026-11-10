@@ -378,3 +378,18 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Recommended correction:** reject completion unless `scheduled_for <= now()` inside the database function, and distinguish future scheduled tasks from actionable due tasks in the UI. Add a database/RPC regression test for future and due tasks.
 
 **Verification limits:** function definition and dashboard source confirmed; no live task was available to exercise the case. No runtime mutation or impersonated-user test was performed.
+
+
+## Cross-source mastery weighting and revision-task conflict handling (11 November 2026)
+
+**Learning-integrity finding — quiz and practical evidence are not weighted on a common unit.** The live quiz evidence trigger adds the number of tagged questions for a concept to evidence_count; the practical-review mastery trigger adds one per review event. Both calculate the running mastery score by weighting each new score by that count. Consequently, a multi-question quiz may outweigh a practical assessment several-fold, although each is one assessment event and a practical score may summarize multiple rubric criteria. No shared evidence-unit definition is encoded in the schema or the reviewed trigger logic.
+
+**Impact:** mastery aggregates across assessment modalities may reflect question count more than comparable learning evidence. This is an analytics/learning-integrity concern, not an authorization bypass.
+
+**Revision scheduling interaction:** the quiz, practical-review and lesson-completion triggers all use the partial unique index revision_tasks_one_pending_concept with ON CONFLICT DO NOTHING. The index prevents duplicate pending tasks, but a later weak quiz/practical result cannot update an already-pending task for that concept. If the existing task is scheduled farther in the future, its due date and priority remain unchanged; the newly indicated earlier/higher-priority review is silently dropped. The same conflict behavior also prevents later lesson evidence from reconciling an existing pending task.
+
+**Recommended correction:** define a common mastery evidence unit and normalize or explicitly justify the relative weights across assessment types. On pending-task conflict, update the task to the earlier due time and higher priority where appropriate, and retain evidence provenance (for example, in a related evidence table or metadata/history) instead of silently ignoring the newer trigger. Add behavior-level regression tests for mixed quiz/practical weighting, repeated events, and low-scoring evidence arriving while a later-dated pending task already exists.
+
+**Test-coverage gap:** the inspected quiz-evidence test checks for the trigger and mastery/revision writes but not numerical weighting; the Exam War Room and lesson-progress tests check selected source/migration patterns rather than interactions among quiz, practical, lesson and revision evidence. No behavior-level mixed-source regression test was identified in the inspected set.
+
+**Verification limits:** confirmed from the live JMT Test function definitions, trigger bindings and partial unique indexes, and the branch quiz migration/test sources. The JMT Test learning_events, learner_concept_mastery, revision_tasks and quiz_attempts tables each contained zero rows at inspection. No learner data was created or changed; the impact is inferred from the verified database logic.

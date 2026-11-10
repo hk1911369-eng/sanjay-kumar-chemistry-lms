@@ -52,6 +52,14 @@ test('lesson publication requires substantive content, published chapter and a p
   assert.match(actions, /concepts \?\? \[\]\)\.some\(concept => concept\.is_published && subjectIds\.includes\(concept\.subject_id\)\)/);
 });
 
+test('chapter and lesson publication verify the draft-state update before reporting success', async () => {
+  const actions = await readFile(new URL('../app/actions/learning-os.ts', import.meta.url), 'utf8');
+  assert.match(actions, /\.eq\('published', false\)\.select\('id'\)\.maybeSingle\(\)/);
+  assert.match(actions, /if \(error \|\| !publishedChapter\) redirect\('\/admin\/learning\?error=chapter_publish'\)/);
+  assert.match(actions, /\.eq\('is_published', false\)\.select\('id'\)\.maybeSingle\(\)/);
+  assert.match(actions, /if \(error \|\| !publishedLesson\) redirect\('\/admin\/learning\?error=lesson_publish'\)/);
+});
+
 test('admin curriculum workspace exposes chapter and lesson review controls', async () => {
   const page = await readFile(new URL('../app/admin/learning/page.tsx', import.meta.url), 'utf8');
   assert.match(page, /Review and publish curriculum/);

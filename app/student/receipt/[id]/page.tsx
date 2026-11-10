@@ -9,7 +9,7 @@ function money(amount:number){return '৳'+amount.toLocaleString('en-BD');}
 export default async function PaymentReceipt({params}:{params:Promise<{id:string}>}){
  const {id}=await params;
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
- const {data:actor}=await db.from('profiles').select('role,full_name,student_code').eq('id',user.id).single();
+ const {data:actor}=await db.from('profiles').select('role,full_name,student_code,is_active').eq('id',user.id).single();
  const paymentResult=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,delivery_mode,fee_monthly_bdt,fee_admission_bdt,amount_bdt,transaction_id,status,created_at,reviewed_at,reviewed_by').eq('id',id).maybeSingle();
  let payment:any=paymentResult.data;
  if(paymentResult.error){const fallback=await db.from('manual_payment_submissions').select('id,student_id,course_id,provider,payment_kind,billing_period,amount_bdt,transaction_id,status,created_at,reviewed_at,reviewed_by').eq('id',id).maybeSingle();payment=fallback.data?{...fallback.data,delivery_mode:null,fee_monthly_bdt:null,fee_admission_bdt:null}:null;}

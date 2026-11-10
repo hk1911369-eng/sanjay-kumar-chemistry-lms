@@ -406,3 +406,10 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Test-coverage gap:** the inspected tests assert the quiz evidence trigger and event rate-limit source separately, but do not exercise their combined trigger chain, event fan-out, or transaction rollback under the threshold.
 
 **Verification limits:** live JMT Test function/trigger definitions and branch quiz builder confirm the mechanics and limits. No live quiz or learning-event data existed to reproduce an affected learner case; no data was modified.
+
+
+## Practical-review event replay protection (positive control, 11 November 2026)
+
+The practical-review event path has a coherent round-level deduplication control: `lab_notebook_review_history` enforces unique `(notebook_id, review_round)`, and `learning_events` enforces a partial unique `(student_id, source_id)` for `practical_reviewed`. The AFTER INSERT trigger uses `ON CONFLICT DO NOTHING`. Replaying the same history row therefore cannot create a second mastery event; a distinct review round remains distinct evidence. This does not remove the previously documented cross-modality weighting or pending-task reconciliation issues.
+
+**Verification limits:** live JMT Test indexes and trigger definition confirmed; no populated review history was available for runtime testing.

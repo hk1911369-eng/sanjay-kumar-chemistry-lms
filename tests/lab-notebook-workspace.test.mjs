@@ -30,3 +30,22 @@ test('notebook server actions validate payloads and defer authorisation to RLS',
   assert.match(actions, /\.eq\('student_id',user\.id\)/);
   assert.match(actions, /\.eq\('status','submitted'\)/);
 });
+
+
+test('structured measurement editor serialises validated notebook readings without manual JSON', async () => {
+  const [student, editor, styles] = await Promise.all([
+    readFile(new URL('../app/student/lab-notebook/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../components/lab-measurement-editor.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/globals.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(student, /LabMeasurementEditor/);
+  assert.equal((student.match(/<LabMeasurementEditor/g) ?? []).length, 3);
+  assert.match(editor, /name="measurements"/);
+  assert.match(editor, /JSON\.stringify\(rows\.filter/);
+  assert.match(editor, /current\.length >= 100/);
+  assert.match(editor, /maxLength=\{100\}/);
+  assert.match(editor, /maxLength=\{40\}/);
+  assert.match(editor, /type="button"/);
+  assert.match(styles, /\.lab-measurement-row/);
+  assert.match(styles, /@media\(max-width:620px\).*lab-measurement-row/s);
+});

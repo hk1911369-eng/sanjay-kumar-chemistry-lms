@@ -121,6 +121,8 @@ test('teacher authoring cannot bypass draft-only curriculum publication gates', 
   assert.match(saveLesson, /\.eq\('id', chapterId\)\.eq\('course_id', courseId\)/);
   assert.doesNotMatch(saveLesson, /formData\.get\('published'\)/);
   assert.match(saveChapter, /published: false/);
+  assert.match(saveLesson, /profile\\?\\.role !== 'admin' && !assignment/);
+  assert.match(saveChapter, /profile\\?\\.role !== 'admin' && !assignment/);
   assert.doesNotMatch(saveChapter, /formData\.get\('published'\)/);
   assert.doesNotMatch(page, /name="published"/);
   assert.match(page, /Published lesson is locked against in-place editing/);

@@ -6,6 +6,7 @@ import {
   calculatePunnettSquare,
   calculateIllustrativeShortCircuit,
   calculateChemicalKinetics,
+  calculateWaveInterference,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -179,4 +180,74 @@ test('concentration doubling changes the initial rate by 2 to the reaction order
     });
     assert.equal(result.concentrationDoublingFactor, Math.pow(2, order));
   }
+});
+
+
+test('two-source interference obeys wave speed, fringe spacing and phase cancellation', () => {
+  const inPhase = calculateWaveInterference({
+    wavelengthMetres: 0.8,
+    frequencyHertz: 2,
+    sourceSeparationMetres: 1.2,
+    amplitudeMetres: 0.25,
+    phaseDifferenceDegrees: 0,
+    screenDistanceMetres: 8,
+    observationTimeSeconds: 0.125,
+    gridSize: 11,
+  });
+  const outOfPhase = calculateWaveInterference({
+    wavelengthMetres: 0.8,
+    frequencyHertz: 2,
+    sourceSeparationMetres: 1.2,
+    amplitudeMetres: 0.25,
+    phaseDifferenceDegrees: 180,
+    screenDistanceMetres: 8,
+    observationTimeSeconds: 0.125,
+    gridSize: 11,
+  });
+  assert.equal(inPhase.waveSpeedMetresPerSecond, 1.6);
+  assert.ok(Math.abs(inPhase.fringeSpacingMetres - (0.8 * 8 / 1.2)) < 1e-12);
+  assert.ok(Math.abs(inPhase.centralNormalizedIntensity - 1) < 1e-12);
+  assert.ok(outOfPhase.centralNormalizedIntensity < 1e-12);
+  assert.ok(Math.abs(inPhase.centralDisplacementMetres - 0.5) < 1e-12);
+  assert.equal(inPhase.field.length, 121);
+  assert.equal(inPhase.screenSamples.length, 101);
+  assert.ok(inPhase.field.every(point => point.normalizedIntensity >= 0 && point.normalizedIntensity <= 1));
+});
+
+test('wave interference responds to wavelength, source spacing and time', () => {
+  const base = calculateWaveInterference({
+    wavelengthMetres: 0.5,
+    frequencyHertz: 1,
+    sourceSeparationMetres: 1,
+    amplitudeMetres: 0.2,
+    phaseDifferenceDegrees: 0,
+    screenDistanceMetres: 6,
+    observationTimeSeconds: 0,
+  });
+  const changed = calculateWaveInterference({
+    wavelengthMetres: 1,
+    frequencyHertz: 2,
+    sourceSeparationMetres: 2,
+    amplitudeMetres: 0.2,
+    phaseDifferenceDegrees: 90,
+    screenDistanceMetres: 6,
+    observationTimeSeconds: 0.25,
+  });
+  assert.notEqual(base.fringeSpacingMetres, changed.fringeSpacingMetres);
+  assert.notEqual(base.centralDisplacementMetres, changed.centralDisplacementMetres);
+  assert.equal(changed.waveSpeedMetresPerSecond, 2);
+});
+
+test('wave interference rejects unphysical bounds and invalid grid resolution', () => {
+  const valid = {
+    wavelengthMetres: 0.8,
+    frequencyHertz: 2,
+    sourceSeparationMetres: 1,
+    amplitudeMetres: 0.2,
+  };
+  assert.throws(() => calculateWaveInterference({ ...valid, wavelengthMetres: 0 }), RangeError);
+  assert.throws(() => calculateWaveInterference({ ...valid, frequencyHertz: 25 }), RangeError);
+  assert.throws(() => calculateWaveInterference({ ...valid, phaseDifferenceDegrees: 181 }), RangeError);
+  assert.throws(() => calculateWaveInterference({ ...valid, screenDistanceMetres: 1 }), RangeError);
+  assert.throws(() => calculateWaveInterference({ ...valid, gridSize: 8 }), RangeError);
 });

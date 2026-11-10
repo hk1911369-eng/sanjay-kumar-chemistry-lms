@@ -6,6 +6,7 @@ import { saveLabNotebook } from '@/app/actions/lab-notebooks';
 import { uploadLabNotebookEvidence } from '@/app/actions/lab-notebook-evidence';
 import { LabMeasurementEditor } from '@/components/lab-measurement-editor';
 import { LabAnalysisCalculator } from '@/components/lab-analysis-calculator';
+import { LabGraphAnalysis } from '@/components/lab-graph-analysis';
 import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
 export default async function StudentLabNotebookPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string;evidence?:string}>}) {
@@ -52,6 +53,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
    <label>Hypothesis<textarea name="hypothesis" rows={2} maxLength={4000}/></label><label>Procedure / method<textarea name="procedure_notes" rows={3} maxLength={8000}/></label>
    <label>Observations<textarea name="observations" rows={4} maxLength={12000}/></label><LabMeasurementEditor />
    <LabAnalysisCalculator />
+   <LabGraphAnalysis />
    <label>Conclusion<textarea name="conclusion" rows={3} maxLength={6000}/></label><button className="auth-submit" name="intent" value="draft">Save draft</button>
   </form>}
   <h2>Assigned practicals</h2>
@@ -69,6 +71,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
      <label>Observations<textarea name="observations" rows={3} maxLength={12000}/></label>
      <LabMeasurementEditor />
    <LabAnalysisCalculator />
+   <LabGraphAnalysis />
      <label>Conclusion<textarea name="conclusion" rows={2} maxLength={6000}/></label>
      <button className="auth-submit" name="intent" value="draft">Start practical notebook</button>
     </form>}
@@ -82,7 +85,8 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
     <label>Record title<input name="title" required maxLength={180} defaultValue={entry.title}/></label><label>Hypothesis<textarea name="hypothesis" rows={2} defaultValue={entry.hypothesis}/></label>
     <label>Procedure<textarea name="procedure_notes" rows={2} defaultValue={entry.procedure_notes}/></label><label>Observations<textarea name="observations" rows={3} defaultValue={entry.observations}/></label>
     <LabMeasurementEditor initialMeasurements={entry.measurements??[]} />
-    <LabAnalysisCalculator /><label>Conclusion<textarea name="conclusion" rows={2} defaultValue={entry.conclusion}/></label>
+    <LabAnalysisCalculator />
+   <LabGraphAnalysis /><label>Conclusion<textarea name="conclusion" rows={2} defaultValue={entry.conclusion}/></label>
     {entry.status==='returned'&&<p className="form-error">Teacher feedback: {entry.teacher_feedback}</p>}
     {entry.status==='draft'?<><button className="auth-submit" name="intent" value="draft">Save draft</button><button className="auth-submit" name="intent" value="submit">Submit for teacher review</button></>:<button className="auth-submit" name="intent" value="submit">Resubmit for teacher review</button>}
    </form>:<><p>{entry.observations}</p>{entry.teacher_feedback&&<p><b>Teacher feedback:</b> {entry.teacher_feedback}</p>}{entry.score!==null&&<p><b>Score:</b> {entry.score}/100</p>}</>}

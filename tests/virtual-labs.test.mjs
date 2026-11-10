@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 test('virtual labs require an active paid student enrollment', async () => {
   const page = await readFile(new URL('../app/labs/page.tsx', import.meta.url), 'utf8');
-  assert.ok(page.includes("profile?.role !== 'student'"));
+  assert.ok(page.includes("profile?.is_active !== true || profile.role !== 'student'"));
   assert.ok(page.includes(".eq('status', 'active')"));
   assert.ok(page.includes(".eq('admission_fee_paid', true)"));
   assert.ok(page.includes(".gte('paid_through', periodEnd)"));
@@ -51,7 +51,7 @@ test('administrators can configure database-driven subject-to-template mappings'
   const page = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
   const action = await readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8');
   const layout = await readFile(new URL('../components/portal-layout.tsx', import.meta.url), 'utf8');
-  assert.match(page, /profile\?\.role !== 'admin'/);
+  assert.match(page, /profile\?\.is_active !== true \|\| profile\.role !== 'admin'/g);
   assert.match(page, /from\('academic_subjects'\)/);
   assert.match(page, /from\('virtual_lab_catalog'\)/);
   assert.match(page, /name="lab_key"/);

@@ -33,9 +33,9 @@ export default async function StudentManagement({searchParams}:{searchParams:Pro
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: actor } = await supabase.from('profiles').select('full_name,role').eq('id',user.id).single();
+  const { data: actor } = await supabase.from('profiles').select('full_name,role,is_active').eq('id',user.id).single();
   const role = actor?.role ?? '';
-  if (!['admin','teacher','staff'].includes(role)) redirect('/portal');
+  if (actor?.is_active !== true || !['admin','teacher','staff'].includes(role)) redirect('/portal');
 
   let profiles: StudentProfile[] = [];
   if (q) {

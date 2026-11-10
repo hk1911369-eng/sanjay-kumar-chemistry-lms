@@ -13,8 +13,8 @@ async function getActor() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (!['admin','teacher','staff'].includes(profile?.role ?? '')) redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || !['admin','teacher','staff'].includes(profile.role ?? '')) redirect('/portal');
   return { supabase, user, role: profile!.role };
 }
 
@@ -123,7 +123,7 @@ export async function updateAccountRole(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const { data: actor } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
   if (actor?.role !== 'admin') redirect('/portal');
   const studentId = String(formData.get('profile_id') ?? '');
   const nextRole = String(formData.get('role') ?? '');
@@ -136,7 +136,7 @@ export async function setStudentAccountActive(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const { data: actor } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
   if (actor?.role !== 'admin') redirect('/portal');
 
   const studentId = String(formData.get('profile_id') ?? '');

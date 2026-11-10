@@ -8,7 +8,7 @@ test('curriculum authoring is exposed only through the admin learning workspace'
   assert.match(page, /createCourseChapter/);
   assert.match(page, /createCourseLesson/);
   assert.match(actions, /async function adminContext/);
-  assert.match(actions, /profile\?\.role !== 'admin'/);
+  assert.match(actions, /profile\?\.is_active !== true \|\| profile\.role !== 'admin'/);
 });
 
 test('new chapters and lessons are always created as unpublished drafts', async () => {

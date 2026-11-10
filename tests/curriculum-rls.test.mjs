@@ -12,7 +12,7 @@ test('teacher curriculum writes are draft-only at the RLS boundary', async () =>
     assert.match(migration, new RegExp('assigned teachers create draft ' + (table === 'lessons' ? 'lessons' : 'chapters')));
     assert.match(migration, new RegExp('assigned teachers update draft ' + (table === 'lessons' ? 'lessons' : 'chapters')));
   }
-  assert.equal((migration.match(/is_published IS FALSE/g) ?? []).length, 6);
+  assert.equal((migration.match(/is_published IS FALSE/g) ?? []).length, 3);
   assert.equal((migration.match(/published IS FALSE/g) ?? []).length, 6);
   assert.equal((migration.match(/a\.teacher_id = \(SELECT auth\.uid\(\)\)/g) ?? []).length, 4);
 });

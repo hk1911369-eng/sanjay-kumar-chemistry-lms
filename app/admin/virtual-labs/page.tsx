@@ -6,7 +6,7 @@ import { saveVirtualLabCatalogItem } from '@/app/actions/virtual-labs';
 type SearchParams = Promise<{ saved?: string; error?: string }>;
 
 const SIMULATION_OPTIONS = [
-  ['physics', 'Physics · Circuit / Ohm\'s law'],
+  ['physics', 'Physics · Circuits and ray optics'],
   ['chemistry', 'Chemistry · Acid–base titration'],
   ['kinetics', 'Chemistry · Reaction kinetics'],
   ['biology', 'Biology · Inheritance'],

@@ -80,6 +80,10 @@ test('protected workspaces and learning routes reject inactive profiles', async 
     'app/academic/page.tsx',
     'app/student/page.tsx',
     'app/labs/page.tsx',
+    'app/practice/page.tsx',
+    'app/student/exam-war-room/page.tsx',
+    'app/student/lab-notebook/page.tsx',
+    'app/student/receipt/[id]/page.tsx',
     'app/learn/[courseId]/page.tsx',
   ];
 

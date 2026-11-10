@@ -413,3 +413,16 @@ The student quiz UI renders each option as a React child. A JSON option containi
 The practical-review event path has a coherent round-level deduplication control: `lab_notebook_review_history` enforces unique `(notebook_id, review_round)`, and `learning_events` enforces a partial unique `(student_id, source_id)` for `practical_reviewed`. The AFTER INSERT trigger uses `ON CONFLICT DO NOTHING`. Replaying the same history row therefore cannot create a second mastery event; a distinct review round remains distinct evidence. This does not remove the previously documented cross-modality weighting or pending-task reconciliation issues.
 
 **Verification limits:** live JMT Test indexes and trigger definition confirmed; no populated review history was available for runtime testing.
+
+
+## Administrator override bypasses published-quiz content immutability (11 November 2026)
+
+**Positive control:** live `enforce_assessment_content_draft_integrity()` blocks teacher/staff edits to published quiz questions and answer keys and blocks staff deletion of published quizzes. The application publish action checks for 1–50 questions and a key for every question before publication.
+
+**Residual admin-level integrity gap:** the trigger short-circuits for administrators before checking publication state or existing attempts. Admin policies permit updating/deleting published quizzes, questions and answer keys. No attempt-count guard or immutable version snapshot was found in the inspected logic. Post-submission edits to questions/answer keys can make stored scores, mastery and mistake-memory snapshots inconsistent with the current assessment definition. Deleting a quiz cascades to quiz_attempts and quiz questions/answer keys; derived learning events and mistake-memory rows have no corresponding FK to the deleted quiz/attempt in the inspected schema and may remain as orphaned learning history.
+
+**Impact:** administrator-only governance and historical data-integrity risk, not an end-user authorization bypass. Accidental deletion can destroy attempt records; edits can undermine the reproducibility of prior grading.
+
+**Recommended correction:** enforce immutability after first attempt for all roles; use versioned assessments and append-only correction/regrade audit events. Prefer soft deletion and preserve attempts/source lineage. If admin override is essential, require a separate audited procedure with reason and affected-attempt accounting.
+
+**Verification limits:** live JMT Test trigger, policies and FK rules plus branch quiz action confirmed; no populated quiz/attempt rows were available for runtime validation. No data was changed.

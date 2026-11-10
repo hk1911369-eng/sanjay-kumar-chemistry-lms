@@ -4,6 +4,7 @@ import { PortalLayout } from '@/components/portal-layout';
 import { createClient } from '@/lib/supabase/server';
 import { saveLabNotebook } from '@/app/actions/lab-notebooks';
 import { uploadLabNotebookEvidence } from '@/app/actions/lab-notebook-evidence';
+import { LabMeasurementEditor } from '@/components/lab-measurement-editor';
 import { currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
 
 export default async function StudentLabNotebookPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string;evidence?:string}>}) {
@@ -48,7 +49,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
    <label>Course and experiment<select name="lab_choice" required defaultValue=""><option value="" disabled>Select a mapped course experiment</option>{labOptions.map(o=><option key={o.courseId+o.labId} value={o.courseId+':'+o.labId}>{o.courseTitle} — {o.labTitle}</option>)}</select></label>
    <label>Record title<input name="title" required minLength={2} maxLength={180} placeholder="e.g. Investigating projectile range"/></label>
    <label>Hypothesis<textarea name="hypothesis" rows={2} maxLength={4000}/></label><label>Procedure / method<textarea name="procedure_notes" rows={3} maxLength={8000}/></label>
-   <label>Observations<textarea name="observations" rows={4} maxLength={12000}/></label><label>Measurements (JSON array; optional)<textarea name="measurements" rows={3} placeholder={'[{"name":"Time","value":"1.2","unit":"s"}]'}/></label>
+   <label>Observations<textarea name="observations" rows={4} maxLength={12000}/></label><LabMeasurementEditor />
    <label>Conclusion<textarea name="conclusion" rows={3} maxLength={6000}/></label><button className="auth-submit" name="intent" value="draft">Save draft</button>
   </form>}
   <h2>Assigned practicals</h2>
@@ -64,7 +65,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
      <label>Hypothesis<textarea name="hypothesis" rows={2} maxLength={4000}/></label>
      <label>Procedure / method<textarea name="procedure_notes" rows={3} maxLength={8000}/></label>
      <label>Observations<textarea name="observations" rows={3} maxLength={12000}/></label>
-     <label>Measurements (JSON array; optional)<textarea name="measurements" rows={2} placeholder={'[{"name":"Reading","value":"...","unit":"..."}]'}/></label>
+     <LabMeasurementEditor />
      <label>Conclusion<textarea name="conclusion" rows={2} maxLength={6000}/></label>
      <button className="auth-submit" name="intent" value="draft">Start practical notebook</button>
     </form>}
@@ -77,7 +78,7 @@ export default async function StudentLabNotebookPage({searchParams}:{searchParam
     <input type="hidden" name="entry_id" value={entry.id}/><input type="hidden" name="course_id" value={entry.course_id}/><input type="hidden" name="lab_id" value={entry.lab_id}/>
     <label>Record title<input name="title" required maxLength={180} defaultValue={entry.title}/></label><label>Hypothesis<textarea name="hypothesis" rows={2} defaultValue={entry.hypothesis}/></label>
     <label>Procedure<textarea name="procedure_notes" rows={2} defaultValue={entry.procedure_notes}/></label><label>Observations<textarea name="observations" rows={3} defaultValue={entry.observations}/></label>
-    <label>Measurements JSON<textarea name="measurements" rows={2} defaultValue={JSON.stringify(entry.measurements,null,2)}/></label><label>Conclusion<textarea name="conclusion" rows={2} defaultValue={entry.conclusion}/></label>
+    <LabMeasurementEditor initialMeasurements={entry.measurements??[]} /><label>Conclusion<textarea name="conclusion" rows={2} defaultValue={entry.conclusion}/></label>
     {entry.status==='returned'&&<p className="form-error">Teacher feedback: {entry.teacher_feedback}</p>}
     {entry.status==='draft'?<><button className="auth-submit" name="intent" value="draft">Save draft</button><button className="auth-submit" name="intent" value="submit">Submit for teacher review</button></>:<button className="auth-submit" name="intent" value="submit">Resubmit for teacher review</button>}
    </form>:<><p>{entry.observations}</p>{entry.teacher_feedback&&<p><b>Teacher feedback:</b> {entry.teacher_feedback}</p>}{entry.score!==null&&<p><b>Score:</b> {entry.score}/100</p>}</>}

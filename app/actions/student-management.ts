@@ -124,7 +124,7 @@ export async function updateAccountRole(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: actor } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
-  if (actor?.role !== 'admin') redirect('/portal');
+  if (actor?.is_active !== true || actor.role !== 'admin') redirect('/portal');
   const studentId = String(formData.get('profile_id') ?? '');
   const nextRole = String(formData.get('role') ?? '');
   if (!studentId || !['student','teacher','staff'].includes(nextRole)) redirect('/students/manage?error=role');
@@ -137,7 +137,7 @@ export async function setStudentAccountActive(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: actor } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).single();
-  if (actor?.role !== 'admin') redirect('/portal');
+  if (actor?.is_active !== true || actor.role !== 'admin') redirect('/portal');
 
   const studentId = String(formData.get('profile_id') ?? '');
   const activeValue = String(formData.get('is_active') ?? '');

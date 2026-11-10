@@ -66,7 +66,8 @@ test('draft lesson editing is admin-only, validates ownership and refuses publis
   assert.match(actions, /async function updateDraftCourseLesson/);
   assert.match(actions, /lesson\.is_published\) redirect\('\/admin\/learning\?error=lesson_locked'\)/);
   assert.match(actions, /\.eq\('course_id', lesson\.course_id\)\.maybeSingle\(\)/);
-  assert.match(actions, /\.eq\('is_published', false\)/);
+  assert.match(actions, /\.eq\('is_published', false\)\.select\('id'\)\.maybeSingle\(\)/);
+  assert.match(actions, /if \(error \|\| !updatedLesson\) redirect\('\/admin\/learning\?error=lesson_edit'\)/);
   assert.match(page, /Edit draft lesson/);
   assert.match(page, /Save draft changes/);
 });

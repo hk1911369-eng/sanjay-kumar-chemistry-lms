@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migrationPath = '../supabase/migrations/20261110270000_require_active_role_for_personal_record_reads.sql';
+const migrationPath = '../supabase/migrations/20261110271000_require_active_role_for_personal_record_reads.sql';
 const readMigration = () => readFile(new URL(migrationPath, import.meta.url), 'utf8');
 
 const policies = [

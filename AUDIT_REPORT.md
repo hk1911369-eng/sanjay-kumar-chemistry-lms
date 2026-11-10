@@ -186,4 +186,8 @@ The ledger has 244 unique version identifiers, but version identifiers do not li
 4. Rehearse the proposed migration plan against a disposable clone or fresh isolated project.
 5. Only after explicit review, decide whether to retain, repair, or baseline migration history. Do not delete ledger rows, rewrite migration versions, or run `migration repair` based on this report alone.
 
+**Targeted schema-effect cross-check — read-only:** a follow-up catalog query checked two migration effects against JMT Test:
+- The `public.profiles.is_active` column exists, showing that the effect represented by the ledger-only historical label `profile_active_flag` is present in the current schema despite the source/ledger naming mismatch.
+- The current `virtual_lab_catalog_simulation_type_check` constraint does **not** include `gas-laws`, and no `gas-laws` simulation type is present in the catalogue. The current branch migration `20261110260000_add_ideal_gas_law_virtual_lab.sql` explicitly adds `gas-laws` to that constraint. Its intended schema effect is therefore not present in the inspected JMT Test database. This is a concrete example of the branch and test database being out of sync; it is not a reason to push the migration blindly.
+
 This reconciliation was read-only. No migrations were applied, repaired, or removed.

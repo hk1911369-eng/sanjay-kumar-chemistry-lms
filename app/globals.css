@@ -1159,3 +1159,11 @@ input,select,textarea,button{max-width:100%}
 .lab-measurement-editor button:focus-visible,.lab-measurement-editor input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 @media(max-width:620px){.lab-measurement-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.6rem}.lab-measurement-row label:first-child{grid-column:1/-1}.lab-measurement-remove{justify-self:start}}
 @media(max-width:360px){.lab-measurement-row{grid-template-columns:minmax(0,1fr)}.lab-measurement-row label:first-child{grid-column:auto}}
+
+
+.lab-measurement-review{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:10px}
+.lab-measurement-review table{width:100%;min-width:300px;border-collapse:collapse;font-size:.88rem}
+.lab-measurement-review th,.lab-measurement-review td{padding:.65rem .75rem;text-align:left;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.lab-measurement-review thead th{background:var(--surface-alt);font-size:.76rem;color:var(--muted)}
+.lab-measurement-review tbody tr:last-child th,.lab-measurement-review tbody tr:last-child td{border-bottom:0}
+.lab-measurement-review tbody th{font-weight:650}

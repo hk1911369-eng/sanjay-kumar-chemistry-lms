@@ -14,7 +14,7 @@ test('teacher curriculum writes are draft-only at the RLS boundary', async () =>
   }
   assert.equal((migration.match(/is_published IS FALSE/g) ?? []).length, 3);
   assert.equal((migration.match(/published IS FALSE/g) ?? []).length, 6);
-  assert.equal((migration.match(/a\.teacher_id = \(SELECT auth\.uid\(\)\)/g) ?? []).length, 4);
+  assert.equal((migration.match(/a\.teacher_id = \(SELECT auth\.uid\(\)\)/g) ?? []).length, 6);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.enforce_teacher_curriculum_draft_integrity/);
   assert.match(migration, /NEW\.course_id IS DISTINCT FROM OLD\.course_id/);
   assert.match(migration, /Lesson chapter must belong to the same course/);

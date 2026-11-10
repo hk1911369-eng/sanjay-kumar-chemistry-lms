@@ -308,3 +308,31 @@ export type ThinLensResult = {
   model: string;
 };
 export function calculateThinLens(input: ThinLensInput): ThinLensResult;
+
+
+export type DihybridCell = {
+  genotype: string;
+  phenotype: 'Both dominant traits' | 'Dominant A only' | 'Dominant B only' | 'Both recessive traits';
+};
+export type DihybridOutcome = {
+  genotype: string;
+  count: number;
+  probability: number;
+  percentage: number;
+};
+export type DihybridPhenotype = {
+  phenotype: DihybridCell['phenotype'];
+  count: number;
+  probability: number;
+  percentage: number;
+};
+export type DihybridCrossResult = {
+  gametesA: string[];
+  gametesB: string[];
+  cells: DihybridCell[];
+  outcomes: DihybridOutcome[];
+  phenotypes: DihybridPhenotype[];
+  totalCombinations: number;
+  assumptions: string;
+};
+export function calculateDihybridCross(parentA: string, parentB: string): DihybridCrossResult;

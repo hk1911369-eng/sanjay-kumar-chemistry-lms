@@ -405,3 +405,19 @@ The practical-assignment write trigger also independently checks that the lab is
 **Practice-attempt identity minimization verified live:** authenticated users have SELECT column privileges only for `question_id`, `selected_option`, `is_correct`, `awarded_marks`, and `answered_at`; `student_id` and other identifying columns are not granted. The assigned-staff row policy and staff analytics RPC further constrain staff access to assigned courses, with analytics suppressing question cohorts below five attempts over the 90-day window. This is a positive control verified from live catalog metadata and function definitions, not an end-to-end Data API test.
 
 No application or database changes were made during this verification.
+
+
+## Assessment submission versus archived-course access (11 November 2026)
+
+**Finding — lifecycle consistency gap, not a demonstrated data-disclosure or privilege-escalation vulnerability.** The live student read policies for `assignments`, `quizzes`, `quiz_questions`, `written_exams`, and `written_exam_questions` require the parent course to be unarchived. However, the corresponding student submission/start gates are not consistently tied to that same parent-course state:
+
+- `assignment_submissions` INSERT policy requires a published assignment and active paid enrollment but does not join/check `courses.archived_at`.
+- `quiz_attempts` INSERT policy requires a published, in-window quiz and active paid enrollment but does not check the parent course archive state.
+- `submit_quiz_attempt()` rechecks published quiz, active paid enrollment, quiz schedule and attempt duration, but does not check `courses.archived_at`.
+- `written_exam_submissions` INSERT policy requires a published, in-window written exam and active paid enrollment but does not check the parent course archive state.
+
+The archive RPC sets the course `archived_at`, `is_published=false`, and `enrollment_open=false`, but does not unpublish child assignments/quizzes/written exams or deactivate existing enrollments. As a result, a student retaining an active paid enrollment and a known assessment ID may be able to start/submit assessment records after the parent course is archived, even though the normal student SELECT path hides the archived course and its assessment content. For quizzes, a student with already obtained question content could submit a still-open attempt through the RPC after archive. This can create grading/progress records against content that is no longer available through the normal course UI.
+
+**Recommended correction:** centralize a parent-course availability predicate and apply it to assignment submission INSERT/UPDATE, quiz-attempt INSERT and `submit_quiz_attempt()`, and written-exam submission INSERT. Decide explicitly whether already-started attempts may finish after archive; if so, use a recorded attempt-start eligibility/snapshot and bounded completion grace period rather than leaving all assessment submission paths open. Add tests for archived courses with retained active enrollments and stale assessment IDs.
+
+**Live-state check:** JMT Test currently has zero archived courses, zero active enrollments in archived courses, and zero published assignments/quizzes/written exams in archived courses. The state is therefore not currently exercised. The finding is derived from live policy/function definitions and archive RPC source; no authenticated runtime request was made. Existing assignment due-date enforcement remains a separately documented concern.

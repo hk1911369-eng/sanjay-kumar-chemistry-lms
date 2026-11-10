@@ -441,3 +441,10 @@ The practical-review event path has a coherent round-level deduplication control
 The published-content trigger protects written-exam headers, questions and answer keys from teacher/staff changes, but short-circuits for admins. Admin policies permit update/delete of these rows. Unlike the teacher/staff exam-delete policy, the admin delete policy does not require absence of submissions. The live FK from `written_exam_submissions.exam_id` cascades on exam deletion, so an administrator can delete the exam and its submission records. Editing model answers/rubrics after grading can also undermine reproducibility of marks.
 
 **Correction:** immutable versioned exam content after publication/first attempt, soft deletion, and append-only audited correction/regrade records. **Verification limits:** live policies, trigger and FK rules confirmed; no written-exam records existed for runtime validation.
+
+
+## Written exam may be visible and accept an attempt before answer-key creation finishes (11 November 2026)
+
+The administrator path in `createWrittenExam()` can insert the parent exam with `published=true`, then inserts questions and answer keys in separate requests. The content-integrity trigger bypasses administrators. Student read policies allow a published exam and its questions to be read. The student submission policy verifies answer-object cardinality and question IDs, but does not require a matching answer-key row for each question. Thus, between question insertion and answer-key insertion, a student can submit and consume the unique one-attempt slot while the exam is not fully initialized. Cleanup after a later insert failure is a separate compensating request and is not atomic.
+
+**Impact:** publication readiness and attempt fairness risk, not answer-key disclosure. **Correction:** always create unpublished; publish transactionally after DB-side validation of all questions, answer keys, types and marks; add a submission-time completeness guard. **Limits:** source and live policies/constraints inspected; no runtime race/data present; no changes made.

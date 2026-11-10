@@ -215,7 +215,7 @@ test('admin catalogue edit dropdown includes every supported simulation type', a
   const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
   const supported = [...studio.matchAll(/type SimulationType = ([^;]+);/g)][0]?.[1] ?? '';
   for (const type of supported.split('|').map(value => value.trim().replace(/^'|'$/g, ''))) {
-    assert.match(admin, new RegExp('\\[' + type.replace(/[.*+?^${}()|[\\]\\]/g, '\\\\$&') + ','));
+    assert.ok(admin.includes("['" + type + "',"), 'Admin option missing for ' + type);
   }
   assert.equal((admin.match(/SIMULATION_OPTIONS\.map\(\(\[value, label\]\)/g) ?? []).length, 2);
 });

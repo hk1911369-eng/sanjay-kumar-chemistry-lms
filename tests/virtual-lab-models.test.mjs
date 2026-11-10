@@ -7,6 +7,7 @@ import {
   calculateIllustrativeShortCircuit,
   calculateChemicalKinetics,
   calculateWaveInterference,
+  calculateChemicalEquilibrium,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -250,4 +251,74 @@ test('wave interference rejects unphysical bounds and invalid grid resolution', 
   assert.throws(() => calculateWaveInterference({ ...valid, phaseDifferenceDegrees: 181 }), RangeError);
   assert.throws(() => calculateWaveInterference({ ...valid, screenDistanceMetres: 1 }), RangeError);
   assert.throws(() => calculateWaveInterference({ ...valid, gridSize: 8 }), RangeError);
+});
+
+
+test('chemical equilibrium calculates Q versus K and conserves total concentration', () => {
+  const result = calculateChemicalEquilibrium({
+    initialAMolar: 1,
+    initialBMolar: 0.2,
+    equilibriumConstantAtReference: 2,
+    enthalpyKJMol: 0,
+    temperatureKelvin: 298.15,
+    elapsedMinutes: 120,
+  });
+  assert.equal(result.equilibriumConstant, 2);
+  assert.ok(Math.abs(result.reactionQuotient - 0.2) < 1e-12);
+  assert.equal(result.direction, 'forward');
+  assert.ok(Math.abs(result.equilibriumAMolar - 0.4) < 1e-12);
+  assert.ok(Math.abs(result.equilibriumBMolar - 0.8) < 1e-12);
+  assert.ok(Math.abs(result.currentAMolar + result.currentBMolar - 1.2) < 1e-12);
+  assert.ok(Math.abs(result.currentAMolar - result.equilibriumAMolar) < 0.01);
+});
+
+test('van’t Hoff temperature dependence follows reaction enthalpy sign', () => {
+  const base = {
+    initialAMolar: 1,
+    initialBMolar: 0.5,
+    equilibriumConstantAtReference: 2,
+    enthalpyKJMol: -30,
+  };
+  const reference = calculateChemicalEquilibrium({ ...base, temperatureKelvin: 298.15 });
+  const warmer = calculateChemicalEquilibrium({ ...base, temperatureKelvin: 318.15 });
+  const endothermic = calculateChemicalEquilibrium({
+    ...base,
+    enthalpyKJMol: 30,
+    temperatureKelvin: 318.15,
+  });
+  assert.equal(reference.equilibriumConstant, 2);
+  assert.ok(warmer.equilibriumConstant < reference.equilibriumConstant);
+  assert.ok(endothermic.equilibriumConstant > reference.equilibriumConstant);
+});
+
+test('catalyst changes the approach rate but not equilibrium composition or K', () => {
+  const base = {
+    initialAMolar: 1,
+    initialBMolar: 0.2,
+    equilibriumConstantAtReference: 2,
+    enthalpyKJMol: -20,
+    temperatureKelvin: 298.15,
+    elapsedMinutes: 5,
+  };
+  const uncatalysed = calculateChemicalEquilibrium({ ...base, catalystRateFactor: 1 });
+  const catalysed = calculateChemicalEquilibrium({ ...base, catalystRateFactor: 5 });
+  assert.equal(catalysed.equilibriumConstant, uncatalysed.equilibriumConstant);
+  assert.equal(catalysed.equilibriumAMolar, uncatalysed.equilibriumAMolar);
+  assert.ok(catalysed.currentBMolar > uncatalysed.currentBMolar);
+  assert.ok(catalysed.timeTo95PercentMinutes < uncatalysed.timeTo95PercentMinutes);
+});
+
+test('chemical equilibrium validates inputs and reports forward, reverse and equilibrium cases', () => {
+  const base = {
+    initialAMolar: 1,
+    initialBMolar: 1,
+    equilibriumConstantAtReference: 1,
+    enthalpyKJMol: 0,
+    temperatureKelvin: 298.15,
+  };
+  assert.equal(calculateChemicalEquilibrium(base).direction, 'at-equilibrium');
+  assert.equal(calculateChemicalEquilibrium({ ...base, initialBMolar: 2 }).direction, 'reverse');
+  assert.throws(() => calculateChemicalEquilibrium({ ...base, temperatureKelvin: 260 }), RangeError);
+  assert.throws(() => calculateChemicalEquilibrium({ ...base, catalystRateFactor: 12 }), RangeError);
+  assert.throws(() => calculateChemicalEquilibrium({ ...base, sampleCount: 5 }), RangeError);
 });

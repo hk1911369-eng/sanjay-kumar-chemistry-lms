@@ -526,3 +526,12 @@ The Academic Centre retrieves assignment submissions for the current course set,
 The Academic Centre queries assignment submissions with a hard limit of 100 rows and no explicit ordering, and written-exam submissions with a newest-first limit of 100. Staff marking views render only those returned rows and have no pagination or indication that more records exist. Database RLS continues to scope teacher/staff reads to assigned courses, so this is not an authorization leak; it is a completeness and operational risk. In larger cohorts, submissions outside the returned page may be missed during marking even though they remain in the database.
 
 **Remediation:** implement stable cursor/offset pagination, assessment/course filters, and visible total/remaining counts; verify every submission remains reachable beyond the first 100. **Verification limits:** branch query/rendering and live scoped-read policies inspected. JMT Test has no assignment or written-exam submissions; no data was changed.
+
+
+## Quiz result history loses assessment context outside the current quiz catalogue
+
+The Academic Centre loads quiz attempts for the signed-in student but maps each result to a title only through the current quiz list, which is capped at 60 newest quizzes. The live student quiz-read policy further limits that list to published quizzes in currently active, paid, non-archived course enrolments. The results table still renders submitted attempts that are not represented in that catalogue, using the generic title “Test”. Thus, after the quiz ages out of the 60-row list or the learner's enrolment expires/course is archived, the learner may retain a score row but lose the assessment title/context. The attempts query is also unpaginated and unordered.
+
+**Security interpretation:** the RLS restriction is protective and should not be weakened merely to recover titles; no cross-student access or score tampering was identified. This is a historical auditability and scalability issue. **Remediation:** preserve a non-sensitive assessment-title snapshot on the attempt or provide a dedicated student-owned historical metadata view that exposes no answer keys/question content; paginate in stable order. Test archived/expired enrolments and older-than-60 quiz history.
+
+**Verification limits:** branch Academic Centre query/rendering and live quiz/attempt RLS policies inspected. JMT Test has no quiz attempts; no populated history test or data change was performed.

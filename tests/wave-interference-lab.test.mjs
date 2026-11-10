@@ -15,7 +15,7 @@ test('wave interference is wired through the student studio, admin catalogue and
   assert.match(studio, /WaveInterferenceLab/);
   assert.match(studio, /'wave-interference'/);
   assert.match(admin, /value="wave-interference">Physics · Two-source wave interference/);
-  assert.match(action, /'microscope','wave-interference','equilibrium','cell-division','electrochemical-cell'\]\.includes\(simulationType\)/);
+  assert.match(action, /'microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis'\]\.includes\(simulationType\)/);
   assert.match(component, /frequencyHertz/);
   assert.match(component, /phaseDifferenceDegrees/);
   assert.match(component, /screenSamples/);

@@ -112,3 +112,45 @@ export type WaveInterferenceResult = {
   model: string;
 };
 export function calculateWaveInterference(input: WaveInterferenceInput): WaveInterferenceResult;
+
+
+export type ChemicalEquilibriumInput = {
+  initialAMolar: number;
+  initialBMolar: number;
+  equilibriumConstantAtReference: number;
+  enthalpyKJMol: number;
+  temperatureKelvin: number;
+  baseRelaxationRatePerMinute?: number;
+  catalystRateFactor?: number;
+  elapsedMinutes?: number;
+  sampleCount?: number;
+};
+export type ChemicalEquilibriumPoint = {
+  timeMinutes: number;
+  concentrationAMolar: number;
+  concentrationBMolar: number;
+};
+export type ChemicalEquilibriumResult = {
+  initialAMolar: number;
+  initialBMolar: number;
+  totalConcentration: number;
+  equilibriumConstantAtReference: number;
+  equilibriumConstant: number;
+  enthalpyKJMol: number;
+  temperatureKelvin: number;
+  reactionQuotient: number;
+  currentReactionQuotient: number;
+  direction: 'at-equilibrium' | 'forward' | 'reverse';
+  equilibriumAMolar: number;
+  equilibriumBMolar: number;
+  currentAMolar: number;
+  currentBMolar: number;
+  catalystRateFactor: number;
+  baseRelaxationRatePerMinute: number;
+  effectiveRelaxationRate: number;
+  elapsedMinutes: number;
+  timeTo95PercentMinutes: number;
+  curve: ChemicalEquilibriumPoint[];
+  model: string;
+};
+export function calculateChemicalEquilibrium(input: ChemicalEquilibriumInput): ChemicalEquilibriumResult;

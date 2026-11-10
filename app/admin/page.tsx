@@ -12,7 +12,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('full_name,role,is_active').eq('id', user.id).single();
   if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
   const [studentsResult,pendingResult,enrollmentResult,coursesResult,submissionResult,settingsResult,teachersResult,assignmentsResult,noticesResult,auditResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),

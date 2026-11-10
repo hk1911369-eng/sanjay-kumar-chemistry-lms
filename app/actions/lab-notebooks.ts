@@ -12,9 +12,9 @@ function parseMeasurements(raw: string) {
   return value.map((item: unknown) => {
     if (!item || typeof item !== 'object' || Array.isArray(item)) throw new Error('measurement');
     const row = item as Record<string, unknown>;
-    const name = String(row.name ?? '').trim(), valueText = String(row.value ?? '').trim(), unit = String(row.unit ?? '').trim();
-    if (!name || name.length > 100 || !valueText || valueText.length > 100 || unit.length > 40) throw new Error('measurement');
-    return { name, value: valueText, unit };
+    const name = String(row.name ?? '').trim(), valueText = String(row.value ?? '').trim(), unit = String(row.unit ?? '').trim(), uncertainty = String(row.uncertainty ?? '').trim();
+    if (!name || name.length > 100 || !valueText || valueText.length > 100 || unit.length > 40 || uncertainty.length > 60) throw new Error('measurement');
+    return { name, value: valueText, unit, uncertainty };
   });
 }
 export async function saveLabNotebook(formData: FormData) {

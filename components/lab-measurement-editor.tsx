@@ -37,11 +37,11 @@ export function LabMeasurementEditor({ initialMeasurements = [] }: { initialMeas
         <div className="lab-measurement-row" key={index}>
           <label>
             <span>Quantity / reading</span>
-            <input value={row.name} maxLength={100} onChange={(event) => updateRow(index, 'name', event.target.value)} placeholder="e.g. Pendulum length" />
+            <input value={row.name} required maxLength={100} onChange={(event) => updateRow(index, 'name', event.target.value)} placeholder="e.g. Pendulum length" />
           </label>
           <label>
             <span>Value</span>
-            <input value={row.value} maxLength={100} onChange={(event) => updateRow(index, 'value', event.target.value)} placeholder="e.g. 25.0" />
+            <input value={row.value} required maxLength={100} onChange={(event) => updateRow(index, 'value', event.target.value)} placeholder="e.g. 25.0" />
           </label>
           <label>
             <span>Unit</span>

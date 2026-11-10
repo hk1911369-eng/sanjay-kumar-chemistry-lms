@@ -546,3 +546,10 @@ This makes accurate marking unnecessarily difficult and increases the chance of 
 **Test-coverage gap:** the inspected learning-event integrity test checks the 60-per-minute function's source text only indirectly/not at all; the quiz evidence test checks that the trigger writes events but does not model event fan-out against the rate limiter or verify transaction rollback. No integration test for the combined trigger chain was identified.
 
 **Verification limits:** the 60-row limit and advisory-lock/count implementation were confirmed from the live JMT Test trigger/function definition; the one-plus-per-concept event fan-out and 50-question cap were confirmed from the live quiz evidence function and branch quiz builder. No quiz was submitted and no data was changed. JMT Test has zero learning_events and quiz_attempts at inspection, so no live learner impact was observed.
+
+
+## Practical-review event deduplication is correctly scoped to review rounds (11 November 2026)
+
+**Positive control confirmed:** practical-review history has a unique `(notebook_id, review_round)` index, and its AFTER INSERT trigger creates a `practical_reviewed` learning event only for a reviewed decision with a non-null score. The learning-events table has a matching partial unique index on `(student_id, source_id)` for `practical_reviewed` events, and the trigger uses `ON CONFLICT DO NOTHING`. This prevents replaying the same review-history row from incrementing mastery twice while still allowing a genuinely new review round to count as new evidence. This does not resolve the separate inconsistent cross-modality evidence weights or pending-task conflict handling documented above.
+
+**Verification limits:** confirmed from live JMT Test trigger definitions and indexes. No review-history rows existed to exercise the path; no data was changed.

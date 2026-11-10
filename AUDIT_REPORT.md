@@ -585,3 +585,14 @@ The live content-integrity trigger covers `written_exams`, `written_exam_questio
 **Impact and correction:** administrator-only governance/data-integrity risk. Apply the same version immutability, soft-delete and audited correction/regrade workflow recommended for quizzes; preserve written submissions and their exact exam/question/rubric version.
 
 **Verification limits:** live trigger, policies and foreign-key delete rule inspected; no written-exam data was present for runtime validation. No data was changed.
+
+
+## Written-exam creation can expose a published exam before answer keys are ready (11 November 2026)
+
+`createWrittenExam()` allows an administrator to set `published=true` on the initial `written_exams` INSERT, then inserts the question batch and answer-key batch in separate Supabase requests. The database content-lock trigger bypasses admins. During the interval after the question insert commits but before answer keys commit, student SELECT policies can expose the published exam/questions. The student submission INSERT policy checks that the submitted JSON object has one string per exam question and that each key maps to a question, but it does not require a corresponding `written_exam_answer_keys` row for every question. Therefore a student can submit during this partially initialized interval and consume the unique `(exam_id, student_id)` attempt slot before the answer key batch completes. If answer-key insertion subsequently fails, the action attempts to delete the exam; if that cleanup also fails, an incomplete published exam and early submission can remain. The action's cleanup is a compensating request, not one atomic transaction.
+
+**Impact:** publication readiness and one-attempt fairness/integrity risk. It does not expose answer keys to students, and no such race was reproduced in live data.
+
+**Recommended correction:** create all assessment content unpublished, then publish in a single DB-controlled operation that verifies question count, per-question key completeness/type and total marks under appropriate locking. Better, make assessment creation a single transactional RPC. The database submission guard should independently reject attempts unless the exam is published and complete, including a key row for every question. Do not rely on the admin UI's multi-request sequencing.
+
+**Verification limits:** branch `createWrittenExam()` and `publishWrittenExam()`, live student SELECT/INSERT policies, admin-bypass content trigger, submission table unique constraint and answer-key relation inspected. No written exams/submissions were available for runtime race testing; no data was changed.

@@ -5,6 +5,27 @@ import { saveVirtualLabCatalogItem } from '@/app/actions/virtual-labs';
 
 type SearchParams = Promise<{ saved?: string; error?: string }>;
 
+const SIMULATION_OPTIONS = [
+  ['physics', 'Physics · Circuit / Ohm\'s law'],
+  ['chemistry', 'Chemistry · Acid–base titration'],
+  ['kinetics', 'Chemistry · Reaction kinetics'],
+  ['biology', 'Biology · Inheritance'],
+  ['maths', 'Mathematics · Linear functions'],
+  ['ict', 'ICT · Binary converter'],
+  ['quadratic', 'Higher Mathematics · Quadratic explorer'],
+  ['pendulum', 'Physics · Double pendulum'],
+  ['projectile', 'Physics · Projectile motion'],
+  ['microscope', 'Biology · Virtual microscope'],
+  ['wave-interference', 'Physics · Two-source wave interference'],
+  ['equilibrium', 'Chemistry · Equilibrium and Le Chatelier'],
+  ['cell-division', 'Biology · Mitosis and meiosis'],
+  ['electrochemical-cell', 'Chemistry · Electrochemical cell (Nernst equation)'],
+  ['photosynthesis', 'Biology · Photosynthesis and limiting factors'],
+  ['spring-oscillator', 'Physics · Damped spring–mass oscillator'],
+  ['dihybrid', 'Biology · Dihybrid inheritance and population genetics'],
+  ['gas-laws', 'Chemistry · Ideal gas law explorer'],
+] as const;
+
 export default async function VirtualLabCatalogueAdmin({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const db = await createClient();
@@ -33,7 +54,7 @@ export default async function VirtualLabCatalogueAdmin({ searchParams }: { searc
           <label>Simulation title<input name="title" minLength={2} maxLength={160} required/></label>
           <label>Short description<input name="summary" maxLength={500}/></label>
           <label>Learning principle<textarea name="principle" maxLength={2000} rows={3}/></label>
-          <label>Interactive template<select name="simulation_type" required defaultValue="physics"><option value="physics">Physics · Circuit / Ohm&apos;s law</option><option value="chemistry">Chemistry · Acid–base titration</option><option value="kinetics">Chemistry · Reaction kinetics</option><option value="biology">Biology · Inheritance</option><option value="maths">Mathematics · Linear functions</option><option value="ict">ICT · Binary converter</option><option value="quadratic">Higher Mathematics · Quadratic explorer</option><option value="pendulum">Physics · Double pendulum</option><option value="projectile">Physics · Projectile motion</option><option value="microscope">Biology · Virtual microscope</option><option value="wave-interference">Physics · Two-source wave interference</option><option value="equilibrium">Chemistry · Equilibrium and Le Chatelier</option><option value="cell-division">Biology · Mitosis and meiosis</option><option value="electrochemical-cell">Chemistry · Electrochemical cell (Nernst equation)</option><option value="photosynthesis">Biology · Photosynthesis and limiting factors</option><option value="spring-oscillator">Physics · Damped spring–mass oscillator</option><option value="dihybrid">Biology · Dihybrid inheritance and independent assortment</option><option value="gas-laws">Chemistry · Ideal gas law explorer</option></select></label>
+          <label>Interactive template<select name="simulation_type" required defaultValue="physics">{SIMULATION_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label>Display order<input name="sort_order" type="number" min="0" max="10000" defaultValue="100"/></label>
           <label className="toggle-label"><input type="checkbox" name="is_published"/> Publish for enrolled students</label>
           <button className="auth-submit" type="submit">Save simulation mapping</button>
@@ -49,7 +70,7 @@ export default async function VirtualLabCatalogueAdmin({ searchParams }: { searc
           <label>Title<input name="title" defaultValue={lab.title} minLength={2} maxLength={160} required/></label>
           <label>Short description<input name="summary" defaultValue={lab.summary} maxLength={500}/></label>
           <label>Learning principle<textarea name="principle" defaultValue={lab.principle} maxLength={2000} rows={3}/></label>
-          <label>Interactive template<select name="simulation_type" defaultValue={lab.simulation_type}><option value="physics">Physics · Circuit / Ohm&apos;s law</option><option value="chemistry">Chemistry · Acid–base titration</option><option value="kinetics">Chemistry · Reaction kinetics</option><option value="biology">Biology · Inheritance</option><option value="maths">Mathematics · Linear functions</option><option value="ict">ICT · Binary converter</option><option value="quadratic">Higher Mathematics · Quadratic explorer</option><option value="pendulum">Physics · Double pendulum</option><option value="projectile">Physics · Projectile motion</option><option value="microscope">Biology · Virtual microscope</option></select></label>
+          <label>Interactive template<select name="simulation_type" defaultValue={lab.simulation_type}>{SIMULATION_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label>Display order<input name="sort_order" type="number" min="0" max="10000" defaultValue={lab.sort_order}/></label>
           <label className="toggle-label"><input type="checkbox" name="is_published" defaultChecked={lab.is_published}/> Published</label>
           <button className="auth-submit" type="submit">Update mapping</button>

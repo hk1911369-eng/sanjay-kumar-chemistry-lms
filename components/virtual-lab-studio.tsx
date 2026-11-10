@@ -12,10 +12,11 @@ import { CellDivisionLab } from '@/components/cell-division-lab';
 import { ElectrochemicalCellLab } from '@/components/electrochemical-cell-lab';
 import { PhotosynthesisLab } from '@/components/photosynthesis-lab';
 import { DihybridInheritanceLab } from '@/components/dihybrid-inheritance-lab';
+import { GasLawsLab } from '@/components/gas-laws-lab';
 import { SpringOscillatorLab } from '@/components/spring-oscillator-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
-type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope' | 'wave-interference' | 'equilibrium' | 'cell-division' | 'electrochemical-cell' | 'photosynthesis' | 'spring-oscillator' | 'dihybrid';
+type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope' | 'wave-interference' | 'equilibrium' | 'cell-division' | 'electrochemical-cell' | 'photosynthesis' | 'spring-oscillator' | 'dihybrid' | 'gas-laws';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
@@ -173,6 +174,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
       </div>}
 
       {selected.simulation_type === 'dihybrid' && <DihybridInheritanceLab onInteraction={() => setHasInteracted(true)}/>}
+      {selected.simulation_type === 'gas-laws' && <GasLawsLab onInteraction={() => setHasInteracted(true)}/>}
 
       {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">
         <label>Slope (m): <b>{slope}</b><input type="range" min="-5" max="5" step="0.5" value={slope} onChange={e => { setHasInteracted(true); setSlope(Number(e.target.value)); }}/></label>

@@ -65,6 +65,7 @@ test('electrochemical cell is integrated into the student and admin catalogue fl
   assert.match(component, /Nernst equation/);
   assert.match(component, /aria-label=/);
   assert.match(component, /Reset to standard conditions/);
+  assert.match(component, /type="range" min="274" max="373"/);
   assert.match(declaration, /export function calculateDaniellCell/);
 });
 

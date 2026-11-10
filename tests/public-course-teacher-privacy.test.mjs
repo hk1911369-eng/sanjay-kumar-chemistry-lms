@@ -9,5 +9,10 @@ test('public course teacher listing exposes only active assigned staff names', a
   assert.match(migration, /c\.archived_at IS NULL/);
   assert.match(migration, /p\.role::text IN \('teacher', 'staff'\)/);
   assert.match(migration, /p\.is_active IS TRUE/);
-  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.get_public_course_teachers\(uuid\) TO anon, authenticated/);\n  assert.doesNotMatch(migration, /phone|guardian_phone|date_of_birth|location|emergency_contact/i);\n\n  const page = await readFile(new URL('../app/courses/[slug]/page.tsx', import.meta.url), 'utf8');\n  assert.match(page, /rpc\('get_public_course_teachers'/);\n  assert.match(page, /t\.full_name/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.get_public_course_teachers\(uuid\) TO anon, authenticated/);
+  assert.doesNotMatch(migration, /phone|guardian_phone|date_of_birth|location|emergency_contact/i);
+
+  const page = await readFile(new URL('../app/courses/[slug]/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /rpc\('get_public_course_teachers'/);
+  assert.match(page, /t\.full_name/);
 });

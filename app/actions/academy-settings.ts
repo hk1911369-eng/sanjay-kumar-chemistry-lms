@@ -9,8 +9,8 @@ export async function saveAcademyProfile(formData: FormData) {
   const db=await createClient();
   const {data:{user}}=await db.auth.getUser();
   if(!user) redirect('/login');
-  const {data:actor}=await db.from('profiles').select('role').eq('id',user.id).single();
-  if(actor?.role!=='admin') redirect('/portal');
+  const {data:actor}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();
+  if (actor?.is_active !== true || actor.role !== 'admin') redirect('/portal');
 
   const academyName=String(formData.get('academy_name')??'').trim();
   const tagline=String(formData.get('tagline')??'').trim();

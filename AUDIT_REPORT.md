@@ -152,3 +152,32 @@ A read-only inspection was performed against the connected Supabase project name
 - Authenticated read of the academic subject catalogue with an unconditional row predicate.
 
 No anonymous/public write policy or unconditional anonymous row predicate was returned by this targeted query. This is a metadata spot check, not a complete semantic review of every policy expression.
+
+
+### Migration ledger reconciliation — detailed comparison (read-only)
+
+A second comparison was performed using the full ordered JMT Test migration ledger and the current branch's migration filenames. Matching was done by migration name (the filename without its numeric prefix and `.sql` extension), not by version number.
+
+| Measure | Result |
+|---|---:|
+| JMT Test ledger rows | 244 |
+| Current branch migration files | 218 |
+| Distinct names in JMT Test ledger | 203 |
+| Distinct names in branch | 214 |
+| Names occurring more than once in JMT Test ledger | 37 |
+| Names occurring more than once in branch | 4 |
+| Distinct ledger names absent from branch filenames | 29 |
+| Distinct branch filenames absent from ledger names | 40 |
+
+The 29 ledger-only names include legacy numbered migrations (for example `0036_...` through `0049_...`), old/squashed foundation names, and intermediate hardening migrations. The 40 branch-only names include the current base migration set, renamed/reworked migrations, and later branch migrations whose names do not appear in the ledger under the same label. Some repeated ledger names are expected to represent separate historical applications/revisions; some branch filenames also intentionally retain multiple versions of a function-hardening migration.
+
+**Interpretation:** this is a material name/version mapping discrepancy, but it is not proof that the database is missing exactly 40 SQL changes or that 29 database changes are obsolete. Filename-name matching cannot determine SQL equivalence, ordering, or whether an earlier migration's effects were later replaced. The database's latest ledger version for `require_active_role_for_course_subject_reads` is `20261110181004`, while the current source file is prefixed `20261110274000`; do not assume they are interchangeable without inspecting the exact migration history and resulting schema.
+
+**Required safe resolution before a future migration push:**
+1. Export and preserve the full ordered migration ledger from JMT Test.
+2. Compare the Git history and exact SQL contents for every source-only and ledger-only name, including duplicate names and version changes.
+3. Inspect current schema objects and function/policy definitions to establish the effective state, not merely the history labels.
+4. Rehearse the proposed migration plan against a disposable clone or fresh isolated project.
+5. Only after explicit review, decide whether to retain, repair, or baseline migration history. Do not delete ledger rows, rewrite migration versions, or run `migration repair` based on this report alone.
+
+This reconciliation was read-only. No migrations were applied, repaired, or removed.

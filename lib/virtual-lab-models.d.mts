@@ -214,3 +214,35 @@ export type DaniellCellResult = {
   model: string;
 };
 export function calculateDaniellCell(input: DaniellCellInput): DaniellCellResult;
+
+
+export type PhotosynthesisInput = {
+  lightIntensity: number;
+  carbonDioxidePpm: number;
+  temperatureCelsius: number;
+  wavelengthNm: number;
+};
+export type PhotosynthesisFactor = {
+  key: 'light' | 'carbon-dioxide' | 'temperature' | 'wavelength';
+  label: string;
+  value: number;
+};
+export type PhotosynthesisLightPoint = {
+  lightIntensity: number;
+  grossAssimilation: number;
+};
+export type PhotosynthesisResult = PhotosynthesisInput & {
+  lightResponse: number;
+  carbonDioxideResponse: number;
+  temperatureResponse: number;
+  actionSpectrumResponse: number;
+  grossAssimilation: number;
+  respirationRate: number;
+  netAssimilation: number;
+  oxygenEvolutionRate: number;
+  limitingFactor: PhotosynthesisFactor;
+  factors: PhotosynthesisFactor[];
+  lightResponseCurve: PhotosynthesisLightPoint[];
+  model: string;
+};
+export function calculatePhotosynthesis(input: PhotosynthesisInput): PhotosynthesisResult;

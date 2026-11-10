@@ -13,7 +13,7 @@ select
   true,
   34
 from public.academic_subjects s
-where s.id = '10000000-0000-4000-8000-000000000002'::uuid
+where s.id = '10000000-0000-4000-8000-000000000003'::uuid
   and s.name = 'Biology'
 on conflict (lab_key) do update set
   subject_id = excluded.subject_id,

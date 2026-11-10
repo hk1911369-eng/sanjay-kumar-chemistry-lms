@@ -65,3 +65,50 @@ export type ChemicalKineticsResult = {
   model: string;
 };
 export function calculateChemicalKinetics(input: ChemicalKineticsInput): ChemicalKineticsResult;
+
+
+export type WaveInterferenceInput = {
+  wavelengthMetres: number;
+  frequencyHertz?: number;
+  sourceSeparationMetres: number;
+  amplitudeMetres: number;
+  phaseDifferenceDegrees?: number;
+  screenDistanceMetres?: number;
+  observationTimeSeconds?: number;
+  gridSize?: number;
+};
+export type WaveInterferencePoint = {
+  x: number;
+  y: number;
+  displacementMetres: number;
+  meanIntensity: number;
+  normalizedIntensity: number;
+};
+export type WaveInterferenceScreenSample = {
+  positionMetres: number;
+  pathDifferenceMetres: number;
+  normalizedIntensity: number;
+};
+export type WaveInterferenceResult = {
+  wavelengthMetres: number;
+  frequencyHertz: number;
+  sourceSeparationMetres: number;
+  amplitudeMetres: number;
+  phaseDifferenceDegrees: number;
+  phaseOffsetRadians: number;
+  screenDistanceMetres: number;
+  observationTimeSeconds: number;
+  waveSpeedMetresPerSecond: number;
+  fringeSpacingMetres: number;
+  centralNormalizedIntensity: number;
+  centralDisplacementMetres: number;
+  maximumResultantAmplitudeMetres: number;
+  minimumResultantAmplitudeMetres: number;
+  fieldWidthMetres: number;
+  fieldHeightMetres: number;
+  gridSize: number;
+  field: WaveInterferencePoint[];
+  screenSamples: WaveInterferenceScreenSample[];
+  model: string;
+};
+export function calculateWaveInterference(input: WaveInterferenceInput): WaveInterferenceResult;

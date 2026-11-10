@@ -657,7 +657,7 @@ input,select,textarea,button{max-width:100%}
 .learning-graph-readiness>p { margin:0; }
 .learning-graph-readiness-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.65rem; }
 .learning-graph-readiness-metrics>span { display:grid; gap:.2rem; padding:.8rem; border:1px solid var(--line); border-radius:10px; color:var(--muted); font-size:.86rem; }
-.learning-graph-readiness-metrics b { color:var(--foreground); font-size:1.35rem; }
+.learning-graph-readiness-metrics b { color:var(--ink); font-size:1.35rem; }
 .learning-graph-readiness-blockers { padding:.9rem 1rem; border:1px solid var(--line); border-radius:10px; }
 .learning-graph-readiness-blockers ul { margin:.55rem 0 0; padding-left:1.2rem; display:grid; gap:.4rem; }
 .learning-graph-readiness-subjects { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:.6rem; }
@@ -711,16 +711,16 @@ input,select,textarea,button{max-width:100%}
 .double-pendulum-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
 .double-pendulum-controls label{display:grid;gap:.45rem;min-width:0;font-size:.88rem}
 .double-pendulum-controls label b{font-variant-numeric:tabular-nums}
-.double-pendulum-controls input{width:100%;min-height:32px;accent-color:var(--accent);touch-action:pan-y}
+.double-pendulum-controls input{width:100%;min-height:32px;accent-color:var(--blue);touch-action:pan-y}
 .double-pendulum-readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
 .double-pendulum-readout>div{display:grid;gap:.25rem;min-width:0;padding:.8rem;border:1px solid var(--line);border-radius:10px}
 .double-pendulum-readout strong{font-size:clamp(1rem,2.5vw,1.3rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .double-pendulum-readout span{font-size:.76rem;color:var(--muted);line-height:1.4}
 .double-pendulum-actions{display:flex;flex-wrap:wrap;gap:.65rem}
-.double-pendulum-actions button{min-height:46px;padding:.7rem 1rem;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:white;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation}
+.double-pendulum-actions button{min-height:46px;padding:.7rem 1rem;border:1px solid var(--blue);border-radius:10px;background:var(--blue);color:white;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation}
 .double-pendulum-actions button.is-secondary{background:var(--surface);color:var(--text);border-color:var(--line)}
-.double-pendulum-actions button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.double-pendulum-note{margin:0;padding:.85rem;border-left:3px solid var(--accent);background:var(--surface-soft);border-radius:8px;color:var(--muted);font-size:.82rem;line-height:1.55}
+.double-pendulum-actions button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.double-pendulum-note{margin:0;padding:.85rem;border-left:3px solid var(--blue);background:var(--surface-alt);border-radius:8px;color:var(--muted);font-size:.82rem;line-height:1.55}
 @media(max-width:560px){.double-pendulum-heading{display:grid}.double-pendulum-controls{grid-template-columns:1fr}.double-pendulum-readout{grid-template-columns:1fr}.double-pendulum-actions{display:grid;grid-template-columns:1fr}.double-pendulum-actions button{width:100%;min-height:50px}}
 @media(prefers-reduced-motion:reduce){.double-pendulum-stage canvas{scroll-behavior:auto}}
 
@@ -743,16 +743,16 @@ input,select,textarea,button{max-width:100%}
 .projectile-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
 .projectile-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .projectile-controls label b{font-variant-numeric:tabular-nums}
-.projectile-controls input{width:100%;min-height:34px;accent-color:var(--accent);touch-action:pan-y}
+.projectile-controls input{width:100%;min-height:34px;accent-color:var(--blue);touch-action:pan-y}
 .projectile-plot{min-width:0;padding:.85rem;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .projectile-plot svg{display:block;width:100%;height:auto;overflow:visible}
 .projectile-plot svg text{fill:var(--muted);font-size:11px}
 .projectile-gridline{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
 .projectile-trajectory{fill:none;stroke:#2677bd;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
-.projectile-comparison{padding:.9rem;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft);line-height:1.6}
+.projectile-comparison{padding:.9rem;border:1px solid var(--line);border-radius:10px;background:var(--surface-alt);line-height:1.6}
 .projectile-comparison p{margin:.35rem 0}
 .projectile-motion-lab .virtual-lab-secondary-action{min-height:46px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
-.projectile-motion-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.projectile-motion-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:560px){.projectile-controls{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-results{grid-template-columns:1fr}.projectile-motion-lab .virtual-lab-secondary-action{width:100%;min-height:50px}}
 
 /* Virtual microscope: specimen viewer, accessible controls and compact mobile layout. */
@@ -760,8 +760,8 @@ input,select,textarea,button{max-width:100%}
 .microscope-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem}
 .microscope-controls label{display:grid;gap:.4rem;min-width:0;font-size:.9rem}
 .microscope-controls input[type=range],.microscope-controls select{width:100%;min-height:40px}
-.microscope-controls input[type=range]{accent-color:var(--accent);touch-action:pan-y}
-.microscope-viewer{padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-soft);min-width:0}
+.microscope-controls input[type=range]{accent-color:var(--blue);touch-action:pan-y}
+.microscope-viewer{padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-alt);min-width:0}
 .microscope-viewer-heading,.microscope-viewer-footer{display:flex;justify-content:space-between;gap:.8rem;align-items:center;flex-wrap:wrap}
 .microscope-viewer-heading span,.microscope-viewer-footer{font-size:.82rem;color:var(--muted)}
 .microscope-viewer svg{display:block;width:min(100%,560px);height:auto;margin:.5rem auto}
@@ -774,7 +774,7 @@ input,select,textarea,button{max-width:100%}
 .microscope-learning-note p{margin:.35rem 0}
 .microscope-learning-note small{display:block;color:var(--muted)}
 .virtual-microscope .virtual-lab-secondary-action{min-height:48px;padding:.7rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
-.virtual-microscope button:focus-visible,.virtual-microscope input:focus-visible,.virtual-microscope select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.virtual-microscope button:focus-visible,.virtual-microscope input:focus-visible,.virtual-microscope select:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:560px){.microscope-controls{grid-template-columns:1fr}.microscope-readouts{grid-template-columns:1fr}.microscope-viewer{padding:.6rem}}
 
 
@@ -784,10 +784,10 @@ input,select,textarea,button{max-width:100%}
 .chemical-kinetics-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .chemical-kinetics-heading p{margin:.35rem 0;line-height:1.55}
 .chemical-kinetics-model-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.chemical-kinetics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.chemical-kinetics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .chemical-kinetics-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .chemical-kinetics-controls label b{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.chemical-kinetics-controls input[type=range],.chemical-kinetics-controls select{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.chemical-kinetics-controls input[type=range],.chemical-kinetics-controls select{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .chemical-kinetics-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
 .chemical-kinetics-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
 .chemical-kinetics-plot{margin:.1rem 0}
@@ -803,7 +803,7 @@ input,select,textarea,button{max-width:100%}
 .chemical-kinetics-challenge{display:grid;gap:.35rem}
 .chemical-kinetics-challenge p{margin:.25rem 0;line-height:1.55}
 .chemical-kinetics-challenge small{color:var(--muted);line-height:1.5}
-.chemical-kinetics-lab input:focus-visible,.chemical-kinetics-lab select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.chemical-kinetics-lab input:focus-visible,.chemical-kinetics-lab select:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .chemical-kinetics-controls{grid-template-columns:1fr;padding:.85rem}
   .chemical-kinetics-results{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -820,10 +820,10 @@ input,select,textarea,button{max-width:100%}
 .wave-interference-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .wave-interference-heading p{margin:.35rem 0;line-height:1.55}
 .wave-interference-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.wave-interference-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.wave-interference-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .wave-interference-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .wave-interference-controls label b{font-variant-numeric:tabular-nums}
-.wave-interference-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.wave-interference-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .wave-interference-controls .wave-interference-time{grid-column:1/-1}
 .wave-interference-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
 .wave-interference-field svg,.wave-interference-screen svg{display:block;width:100%;height:auto}
@@ -834,7 +834,7 @@ input,select,textarea,button{max-width:100%}
 .wave-interference-challenge{display:grid;gap:.35rem}
 .wave-interference-challenge p{margin:.25rem 0;line-height:1.55}
 .wave-interference-challenge small{color:var(--muted);line-height:1.5}
-.wave-interference-lab input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.wave-interference-lab input:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .wave-interference-controls{grid-template-columns:1fr;padding:.85rem}
   .wave-interference-controls .wave-interference-time{grid-column:auto}
@@ -850,10 +850,10 @@ input,select,textarea,button{max-width:100%}
 .chemical-equilibrium-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .chemical-equilibrium-heading p{margin:.35rem 0;line-height:1.55}
 .chemical-equilibrium-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.chemical-equilibrium-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.chemical-equilibrium-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .chemical-equilibrium-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .chemical-equilibrium-controls label b{font-variant-numeric:tabular-nums}
-.chemical-equilibrium-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.chemical-equilibrium-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .chemical-equilibrium-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
 .chemical-equilibrium-controls .chemical-equilibrium-time{grid-column:1/-1}
 .chemical-equilibrium-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
@@ -871,7 +871,7 @@ input,select,textarea,button{max-width:100%}
 .chemical-equilibrium-composition{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
 .chemical-equilibrium-challenge{display:grid;gap:.35rem}
 .chemical-equilibrium-challenge p{margin:.25rem 0;line-height:1.55}
-.chemical-equilibrium-lab input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.chemical-equilibrium-lab input:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .chemical-equilibrium-controls{grid-template-columns:1fr;padding:.85rem}
   .chemical-equilibrium-controls .chemical-equilibrium-time{grid-column:auto}
@@ -889,15 +889,15 @@ input,select,textarea,button{max-width:100%}
 .cell-division-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .cell-division-heading p{margin:.35rem 0;line-height:1.55}
 .cell-division-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.cell-division-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.cell-division-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .cell-division-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .cell-division-controls select{width:100%;min-height:40px}
 .cell-division-controls .cell-division-toggle{display:flex;align-items:center;gap:.6rem}
-.cell-division-controls input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
-.cell-division-stage{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.cell-division-controls input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}
+.cell-division-stage{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .cell-division-stage h4{margin:.3rem 0;font-size:1.05rem}
 .cell-division-stage p{margin:0;line-height:1.55}
-.cell-division-stage input[type=range]{width:100%;min-height:38px;accent-color:var(--accent)}
+.cell-division-stage input[type=range]{width:100%;min-height:38px;accent-color:var(--blue)}
 .cell-division-stage-actions{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
 .cell-division-visual svg{display:block;width:100%;height:auto}
 .cell-division-legend{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--muted)}
@@ -909,7 +909,7 @@ input,select,textarea,button{max-width:100%}
 .cell-division-results{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
 .cell-division-outcome{display:grid;gap:.35rem}
 .cell-division-outcome p{margin:.25rem 0;line-height:1.55}
-.cell-division-lab input:focus-visible,.cell-division-lab select:focus-visible,.cell-division-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.cell-division-lab input:focus-visible,.cell-division-lab select:focus-visible,.cell-division-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .cell-division-controls{grid-template-columns:1fr;padding:.85rem}
   .cell-division-heading{display:grid}
@@ -924,13 +924,13 @@ input,select,textarea,button{max-width:100%}
 .electrochemical-cell-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .electrochemical-cell-heading p{margin:.35rem 0;line-height:1.55}
 .electrochemical-cell-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.electrochemical-cell-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.electrochemical-cell-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .electrochemical-cell-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .electrochemical-cell-controls label b{font-variant-numeric:tabular-nums}
-.electrochemical-cell-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.electrochemical-cell-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .electrochemical-cell-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
 .electrochemical-cell-controls .electrochemical-cell-temperature{grid-column:1/-1}
-.electrochemical-cell-diagram{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.electrochemical-cell-diagram{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt);min-width:0}
 .electrochemical-cell-diagram-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
 .electrochemical-cell-diagram-heading span{font-size:.75rem;color:var(--muted)}
 .electrochemical-cell-diagram svg{display:block;width:100%;height:auto;margin:.5rem auto 0;overflow:visible}
@@ -947,7 +947,7 @@ input,select,textarea,button{max-width:100%}
 .electrochemical-cell-equation{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .electrochemical-cell-equation p{margin:.15rem 0;line-height:1.55}
 .electrochemical-cell-actions{display:flex;justify-content:flex-end}
-.electrochemical-cell-lab input:focus-visible,.electrochemical-cell-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.electrochemical-cell-lab input:focus-visible,.electrochemical-cell-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .electrochemical-cell-controls{grid-template-columns:1fr;padding:.85rem}
   .electrochemical-cell-controls .electrochemical-cell-temperature{grid-column:auto}
@@ -964,17 +964,17 @@ input,select,textarea,button{max-width:100%}
 .photosynthesis-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .photosynthesis-heading p{margin:.35rem 0;line-height:1.55}
 .photosynthesis-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.photosynthesis-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.photosynthesis-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .photosynthesis-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .photosynthesis-controls label b{font-variant-numeric:tabular-nums}
-.photosynthesis-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.photosynthesis-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .photosynthesis-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
 .photosynthesis-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.75rem}
 .photosynthesis-results>div{display:grid;gap:.25rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .photosynthesis-results strong{font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .photosynthesis-results span{font-size:.78rem;color:var(--muted)}
 .photosynthesis-units{margin:-.35rem 0 0;color:var(--muted);font-size:.75rem;line-height:1.45}
-.photosynthesis-chart{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.photosynthesis-chart{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt);min-width:0}
 .photosynthesis-chart-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
 .photosynthesis-chart-heading span{font-size:.75rem;color:var(--muted)}
 .photosynthesis-chart svg{display:block;width:100%;height:auto;margin:.5rem auto 0}
@@ -983,12 +983,12 @@ input,select,textarea,button{max-width:100%}
 .photosynthesis-limiting p{margin:.1rem 0;line-height:1.55}
 .photosynthesis-factor-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;margin-top:.4rem}
 .photosynthesis-factor-list>div{display:grid;grid-template-columns:1fr auto;gap:.35rem;font-size:.82rem}
-.photosynthesis-factor-track{grid-column:1/-1;height:8px;border-radius:99px;background:var(--surface-soft);overflow:hidden}
+.photosynthesis-factor-track{grid-column:1/-1;height:8px;border-radius:99px;background:var(--surface-alt);overflow:hidden}
 .photosynthesis-factor-track i{display:block;height:100%;border-radius:99px;background:#16a34a}
 .photosynthesis-equation{display:grid;gap:.3rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .photosynthesis-equation p{margin:.15rem 0;line-height:1.55}
 .photosynthesis-actions{display:flex;justify-content:flex-end}
-.photosynthesis-lab input:focus-visible,.photosynthesis-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.photosynthesis-lab input:focus-visible,.photosynthesis-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .photosynthesis-controls{grid-template-columns:1fr;padding:.85rem}
   .photosynthesis-heading{display:grid}
@@ -1005,12 +1005,12 @@ input,select,textarea,button{max-width:100%}
 .spring-oscillator-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .spring-oscillator-heading p{margin:.35rem 0;line-height:1.55}
 .spring-oscillator-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.spring-oscillator-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.spring-oscillator-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .spring-oscillator-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .spring-oscillator-controls label b{font-variant-numeric:tabular-nums}
-.spring-oscillator-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.spring-oscillator-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .spring-oscillator-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
-.spring-oscillator-regime{display:grid;grid-template-columns:minmax(120px,.35fr) 1fr;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.spring-oscillator-regime{display:grid;grid-template-columns:minmax(120px,.35fr) 1fr;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .spring-oscillator-regime>div{display:grid;gap:.25rem}
 .spring-oscillator-regime strong{font-size:1.15rem;letter-spacing:.04em}
 .spring-oscillator-regime p{margin:0;line-height:1.55}
@@ -1018,14 +1018,14 @@ input,select,textarea,button{max-width:100%}
 .spring-oscillator-results>div{display:grid;gap:.25rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .spring-oscillator-results strong{font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .spring-oscillator-results span{font-size:.78rem;color:var(--muted)}
-.spring-oscillator-chart{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.spring-oscillator-chart{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt);min-width:0}
 .spring-oscillator-chart-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
 .spring-oscillator-chart-heading span{font-size:.75rem;color:var(--muted)}
 .spring-oscillator-chart svg{display:block;width:100%;height:auto;margin:.5rem auto 0}
 .spring-oscillator-equation{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .spring-oscillator-equation p{margin:.15rem 0;line-height:1.55}
 .spring-oscillator-actions{display:flex;justify-content:flex-end}
-.spring-oscillator-lab input:focus-visible,.spring-oscillator-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.spring-oscillator-lab input:focus-visible,.spring-oscillator-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .spring-oscillator-controls{grid-template-columns:1fr;padding:.85rem}
   .spring-oscillator-heading{display:grid}
@@ -1042,13 +1042,13 @@ input,select,textarea,button{max-width:100%}
 .ray-optics-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .ray-optics-heading p{margin:.35rem 0;line-height:1.55}
 .ray-optics-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.ray-optics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.ray-optics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .ray-optics-controls label{display:grid;gap:.4rem;min-width:0;font-size:.88rem}
 .ray-optics-controls label b{font-variant-numeric:tabular-nums}
 .ray-optics-controls select{width:100%;min-height:40px}
-.ray-optics-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--accent);touch-action:pan-y}
+.ray-optics-controls input[type=range]{width:100%;min-height:38px;accent-color:var(--blue);touch-action:pan-y}
 .ray-optics-controls small{color:var(--muted);font-size:.75rem;line-height:1.45}
-.ray-optics-diagram{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.ray-optics-diagram{padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt);min-width:0}
 .ray-optics-diagram-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
 .ray-optics-diagram-heading span{font-size:.75rem;color:var(--muted)}
 .ray-optics-diagram svg{display:block;width:100%;height:auto;margin:.5rem auto 0;overflow:hidden}
@@ -1063,13 +1063,13 @@ input,select,textarea,button{max-width:100%}
 .ray-optics-results>div{display:grid;gap:.25rem;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .ray-optics-results strong{font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .ray-optics-results span{font-size:.78rem;color:var(--muted)}
-.ray-optics-interpretation{display:grid;grid-template-columns:minmax(130px,.35fr) 1fr;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.ray-optics-interpretation{display:grid;grid-template-columns:minmax(130px,.35fr) 1fr;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .ray-optics-interpretation h4{margin:.25rem 0;font-size:1.05rem}
 .ray-optics-interpretation p{margin:0;line-height:1.55}
 .ray-optics-equation{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .ray-optics-equation p{margin:.15rem 0;line-height:1.55}
 .ray-optics-actions{display:flex;justify-content:flex-end}
-.ray-optics-lab input:focus-visible,.ray-optics-lab select:focus-visible,.ray-optics-lab button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.ray-optics-lab input:focus-visible,.ray-optics-lab select:focus-visible,.ray-optics-lab button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .ray-optics-controls{grid-template-columns:1fr;padding:.85rem}
   .ray-optics-heading{display:grid}
@@ -1086,15 +1086,15 @@ input,select,textarea,button{max-width:100%}
 .dihybrid-heading h3{margin:.35rem 0;font-size:clamp(1.12rem,2.2vw,1.4rem)}
 .dihybrid-heading p{margin:.35rem 0;line-height:1.55}
 .dihybrid-tag{padding:.35rem .65rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.75rem;font-weight:750}
-.dihybrid-parent-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.dihybrid-parent-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
 .dihybrid-parent-controls label{display:grid;gap:.45rem;font-size:.88rem;font-weight:650}
-.dihybrid-parent-controls select{width:100%;min-height:42px;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--foreground)}
+.dihybrid-parent-controls select{width:100%;min-height:42px;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .dihybrid-parent-controls small{font-size:.75rem;color:var(--muted);font-weight:400;line-height:1.4}
 .dihybrid-gametes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 .dihybrid-gametes>div{display:grid;gap:.3rem;padding:.8rem;border:1px solid var(--line);border-radius:10px}
 .dihybrid-gametes b{font-size:.8rem}
 .dihybrid-gametes span{font-size:1rem;font-weight:750;letter-spacing:.04em;overflow-wrap:anywhere}
-.dihybrid-grid-wrap{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);min-width:0}
+.dihybrid-grid-wrap{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt);min-width:0}
 .dihybrid-grid-heading,.dihybrid-outcome-heading{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.88rem}
 .dihybrid-grid-heading span,.dihybrid-outcome-heading span{font-size:.75rem;color:var(--muted)}
 .dihybrid-grid{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:4px;font-size:clamp(.68rem,1.8vw,.9rem)}
@@ -1107,14 +1107,14 @@ input,select,textarea,button{max-width:100%}
 .dihybrid-outcome{display:grid;gap:.25rem}
 .dihybrid-outcome>div:first-child{display:flex;justify-content:space-between;gap:.75rem;font-size:.82rem}
 .dihybrid-outcome>small{color:var(--muted);font-size:.72rem}
-.dihybrid-track{height:9px;border-radius:99px;background:var(--surface-soft);overflow:hidden}
+.dihybrid-track{height:9px;border-radius:99px;background:var(--surface-alt);overflow:hidden}
 .dihybrid-track i{display:block;height:100%;border-radius:99px;background:#0d9488}
 .dihybrid-genotypes{display:grid;gap:.5rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .dihybrid-genotypes>div{display:flex;flex-wrap:wrap;gap:.5rem}
 .dihybrid-genotypes>div>span{padding:.35rem .5rem;border:1px solid var(--line);border-radius:7px;font-size:.78rem}
 .dihybrid-principle{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--line);border-radius:12px}
 .dihybrid-principle p{margin:0;line-height:1.55;font-size:.86rem}
-.dihybrid-lab select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.dihybrid-lab select:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 @media(max-width:620px){
   .dihybrid-heading{display:grid}
   .dihybrid-parent-controls{grid-template-columns:1fr;padding:.85rem}

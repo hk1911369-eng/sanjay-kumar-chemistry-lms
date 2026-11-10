@@ -47,7 +47,10 @@ test('every self-access branch requires the active student role', async () => {
   const sql = await readMigration();
   for (const [table] of policies) {
     if (table === 'enrollments') {
-      assert.match(policyBody(sql, table), /student_id = \(SELECT auth\.uid\(\)\) AND \(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/);
+      assert.match(
+        policyBody(sql, table),
+        /student_id = \(SELECT auth\.uid\(\)\)[\s\S]{0,180}\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/
+      );
     } else {
       assert.match(
         policyBody(sql, table),

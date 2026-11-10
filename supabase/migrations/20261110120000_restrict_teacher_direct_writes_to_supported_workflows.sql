@@ -27,6 +27,7 @@ CREATE POLICY "staff create own course assignments"
       (SELECT public.current_role())::text = 'admin'
       OR (
         (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND published IS FALSE
         AND EXISTS (
           SELECT 1 FROM public.course_assignments a
           WHERE a.course_id = assignments.course_id
@@ -123,6 +124,7 @@ CREATE POLICY "staff create quizzes"
       (SELECT public.current_role())::text = 'admin'
       OR (
         (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND published IS FALSE
         AND EXISTS (
           SELECT 1 FROM public.course_assignments a
           WHERE a.course_id = quizzes.course_id
@@ -227,6 +229,7 @@ CREATE POLICY "staff create written exams"
       (SELECT public.current_role())::text = 'admin'
       OR (
         (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND published IS FALSE
         AND EXISTS (
           SELECT 1 FROM public.course_assignments a
           WHERE a.course_id = written_exams.course_id

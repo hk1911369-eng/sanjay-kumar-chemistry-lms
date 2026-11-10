@@ -7,7 +7,7 @@ const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 test('Learning OS catalogue management is admin-only and supports all subjects', async () => {
   const actions = await read('app/actions/learning-os.ts');
   const page = await read('app/admin/learning/page.tsx');
-  assert.ok(actions.includes("profile?.role !== 'admin'"));
+  assert.ok(actions.includes("profile?.is_active !== true || profile.role !== 'admin'"));
   assert.ok(actions.includes("from('academic_subjects').insert"));
   assert.ok(actions.includes("from('learning_concepts').insert"));
   assert.ok(actions.includes("from('lesson_concepts').upsert"));

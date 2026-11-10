@@ -237,7 +237,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
       </div>
       <article className="portal-card">
         <h2>Review and publish curriculum</h2>
-        <p className="muted">Publication is gated: chapters require substantive content and every lesson mapped to a published concept from the course's subjects. Lessons require substantive content, a published chapter when assigned, and a valid published concept mapping.</p>
+        <p className="muted">Publication is gated: chapters require substantive content and every lesson mapped to a published concept from the course&apos;s subjects. Lessons require substantive content, a published chapter when assigned, and a valid published concept mapping.</p>
         <div className="learning-graph-subjects">
           {chapters.map(chapter => <section key={chapter.id}>
             <div><b>{courseNames.get(chapter.course_id)} · {chapter.title}</b><small>{chapter.published ? 'Published chapter' : 'Draft chapter'}</small></div>

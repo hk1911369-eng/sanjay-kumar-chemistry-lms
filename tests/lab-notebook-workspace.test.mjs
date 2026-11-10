@@ -49,3 +49,17 @@ test('structured measurement editor serialises validated notebook readings witho
   assert.match(styles, /\.lab-measurement-row/);
   assert.match(styles, /@media\(max-width:620px\).*lab-measurement-row/s);
 });
+
+
+test('teachers receive submitted measurements in a readable responsive table', async () => {
+  const [teacher, styles] = await Promise.all([
+    readFile(new URL('../app/teacher/lab-notebooks/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/globals.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(teacher, /lab-measurement-review/);
+  assert.match(teacher, /reading\.name/);
+  assert.match(teacher, /reading\.value/);
+  assert.match(teacher, /reading\.unit/);
+  assert.match(teacher, /No measurements recorded/);
+  assert.match(styles, /\.lab-measurement-review\{max-width:100%;overflow-x:auto/);
+});

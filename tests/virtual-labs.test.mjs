@@ -208,3 +208,14 @@ test('biology population genetics lab models Hardy–Weinberg genotype frequenci
   assert.match(studio, /HardyWeinbergLab/);
   assert.match(studio, /selected\.simulation_type === 'dihybrid'/);
 });
+
+
+test('admin catalogue edit dropdown includes every supported simulation type', async () => {
+  const admin = await readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8');
+  const supported = [...studio.matchAll(/type SimulationType = ([^;]+);/g)][0]?.[1] ?? '';
+  for (const type of supported.split('|').map(value => value.trim().replace(/^'|'$/g, ''))) {
+    assert.match(admin, new RegExp('\\[' + type.replace(/[.*+?^${}()|[\\]\\]/g, '\\\\$&') + ','));
+  }
+  assert.equal((admin.match(/SIMULATION_OPTIONS\.map\(\(\[value, label\]\)/g) ?? []).length, 2);
+});

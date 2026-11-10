@@ -478,3 +478,10 @@ Assigned teachers/staff and admins can update published `student_practice_questi
 The analytics RPC aggregates historical selected-option indexes and correctness flags, while the teacher analytics page joins those aggregates to the current question row and current answer key/options. A post-attempt edit can therefore make historical accuracy and distractor signals disagree with the version learners answered. No immutable version reference is stored with attempts for analytics reconstruction.
 
 **Impact:** assessment-history and analytics integrity, not learner privilege escalation. **Remediation:** freeze published question content after first attempt, or version question content and bind each attempt/aggregate to its immutable version; retain original key/options and use audited regrading for corrections. **Limits:** confirmed from branch action/page, live policy and trigger inventory; JMT Test has no practice questions or attempts, and no writes/runtime learner tests were performed.
+
+
+## Practice mistake-memory repeat counter cannot be reached
+
+The practice RPC enforces one attempt per student/question with a unique constraint and raises on duplicate submission before updating mistake memory. The mistake-memory upsert uses the same student/source-question identity and contains an `occurrence_count + 1` conflict handler, but a second answer to that question is rejected before that upsert. The successful-answer branch that resolves a prior mistake for the same question is also unreachable after the first attempt under this policy.
+
+**Impact:** repeated-error tracking and wrong-then-correct recovery are not implemented as the code suggests; this is a learning correctness gap, not an access-control issue. **Remediation:** either support append-only multiple attempts and aggregate mistake memory across them, or retain one-attempt semantics and redesign the memory model/UI to avoid promising repeat counts and same-question recovery. Add tests for the chosen behavior. **Limits:** branch RPC and live unique constraint inspected; no practice data exists in JMT Test and no runtime session was performed.

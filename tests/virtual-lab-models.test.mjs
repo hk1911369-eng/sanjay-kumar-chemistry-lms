@@ -8,6 +8,7 @@ import {
   calculateChemicalKinetics,
   calculateWaveInterference,
   calculateChemicalEquilibrium,
+  calculateCellDivision,
 } from '../lib/virtual-lab-models.mjs';
 
 test('Ohm law model calculates current and power with explicit units', () => {
@@ -321,4 +322,82 @@ test('chemical equilibrium validates inputs and reports forward, reverse and equ
   assert.throws(() => calculateChemicalEquilibrium({ ...base, temperatureKelvin: 260 }), RangeError);
   assert.throws(() => calculateChemicalEquilibrium({ ...base, catalystRateFactor: 12 }), RangeError);
   assert.throws(() => calculateChemicalEquilibrium({ ...base, sampleCount: 5 }), RangeError);
+});
+
+
+test('mitosis preserves diploid chromosome number and produces two daughter cells', () => {
+  const before = calculateCellDivision({
+    divisionType: 'mitosis',
+    diploidChromosomeNumber: 4,
+    stageIndex: 3,
+  });
+  const anaphase = calculateCellDivision({
+    divisionType: 'mitosis',
+    diploidChromosomeNumber: 4,
+    stageIndex: 4,
+  });
+  const final = calculateCellDivision({
+    divisionType: 'mitosis',
+    diploidChromosomeNumber: 4,
+    stageIndex: 5,
+  });
+  assert.equal(before.chromosomesPerCell, 4);
+  assert.equal(before.chromatidsPerChromosome, 2);
+  assert.equal(anaphase.chromosomesPerCell, 8);
+  assert.equal(anaphase.ploidy, '4n in the cell; 2n at each pole');
+  assert.equal(final.cells, 2);
+  assert.equal(final.chromosomesPerCell, 4);
+  assert.equal(final.dnaContent, '2C per daughter cell');
+});
+
+test('meiosis halves ploidy and produces four haploid products with 1C DNA', () => {
+  const meiosisI = calculateCellDivision({
+    divisionType: 'meiosis',
+    diploidChromosomeNumber: 8,
+    stageIndex: 4,
+  });
+  const meiosisII = calculateCellDivision({
+    divisionType: 'meiosis',
+    diploidChromosomeNumber: 8,
+    stageIndex: 6,
+  });
+  assert.equal(meiosisI.cells, 2);
+  assert.equal(meiosisI.chromosomesPerCell, 4);
+  assert.equal(meiosisI.chromatidsPerChromosome, 2);
+  assert.equal(meiosisI.ploidy, 'Haploid (n)');
+  assert.equal(meiosisII.cells, 4);
+  assert.equal(meiosisII.chromosomesPerCell, 4);
+  assert.equal(meiosisII.chromatidsPerChromosome, 1);
+  assert.equal(meiosisII.dnaContent, '1C per gamete');
+  assert.equal(meiosisII.independentAssortmentCombinations, 16);
+});
+
+test('crossing over and independent assortment are explicit, bounded teaching switches', () => {
+  const withCrossingOver = calculateCellDivision({
+    divisionType: 'meiosis',
+    diploidChromosomeNumber: 6,
+    stageIndex: 2,
+    crossingOver: true,
+  });
+  const withoutCrossingOver = calculateCellDivision({
+    divisionType: 'meiosis',
+    diploidChromosomeNumber: 6,
+    stageIndex: 2,
+    crossingOver: false,
+  });
+  const noAssortment = calculateCellDivision({
+    divisionType: 'meiosis',
+    diploidChromosomeNumber: 6,
+    stageIndex: 3,
+    independentAssortment: false,
+  });
+  assert.match(withCrossingOver.event, /crossing over can exchange DNA/);
+  assert.match(withoutCrossingOver.event, /switched off/);
+  assert.equal(noAssortment.independentAssortmentCombinations, 1);
+  assert.throws(() => calculateCellDivision({
+    divisionType: 'meiosis', diploidChromosomeNumber: 5, stageIndex: 0,
+  }), RangeError);
+  assert.throws(() => calculateCellDivision({
+    divisionType: 'mitosis', diploidChromosomeNumber: 4, stageIndex: 9,
+  }), RangeError);
 });

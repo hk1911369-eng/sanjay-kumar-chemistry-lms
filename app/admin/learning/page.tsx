@@ -63,7 +63,7 @@ export default async function LearningGraphPage({ searchParams }: { searchParams
   const [lessonResult, courseSubjectResult, chapterResult] = await Promise.all([
     courseIds.length
       ? db.from('lessons').select('id,title,description,content,video_url,position,course_id,chapter_id,is_published').in('course_id', courseIds).order('title').limit(1000)
-      : Promise.resolve({ data: [] as {id:string;title:string;course_id:string;chapter_id:string|null;is_published:boolean}[] }),
+      : Promise.resolve({ data: [] as {id:string;title:string;description:string|null;content:string|null;video_url:string|null;position:number;course_id:string;chapter_id:string|null;is_published:boolean}[] }),
     courseIds.length
       ? db.from('course_subjects').select('course_id,subject_id').in('course_id', courseIds)
       : Promise.resolve({ data: [] as {course_id:string;subject_id:string}[] }),

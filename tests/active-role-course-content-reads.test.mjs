@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const readMigration = () => readFile(new URL('../supabase/migrations/20261110270000_require_active_role_for_course_content_reads.sql', import.meta.url), 'utf8');
+const readMigration = () => readFile(new URL('../supabase/migrations/20261110269000_require_active_student_role_for_course_content.sql', import.meta.url), 'utf8');
 
 const policies = [
   ['assignments', 'assignments scoped read'],

@@ -26,12 +26,12 @@ CREATE POLICY "staff create own course assignments"
     AND (
       (SELECT public.current_role())::text = 'admin'
       OR (
-      (SELECT public.current_role())::text IN ('teacher', 'staff')
-      AND created_by = (SELECT auth.uid())
-      AND EXISTS (
-        SELECT 1 FROM public.course_assignments a
-        WHERE a.course_id = assignments.course_id
-          AND a.teacher_id = (SELECT auth.uid())
+        (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND EXISTS (
+          SELECT 1 FROM public.course_assignments a
+          WHERE a.course_id = assignments.course_id
+            AND a.teacher_id = (SELECT auth.uid())
+        )
       )
     )
   );
@@ -51,12 +51,12 @@ CREATE POLICY "staff create live classes"
     AND (
       (SELECT public.current_role())::text = 'admin'
       OR (
-      (SELECT public.current_role())::text IN ('teacher', 'staff')
-      AND created_by = (SELECT auth.uid())
-      AND EXISTS (
-        SELECT 1 FROM public.course_assignments a
-        WHERE a.course_id = live_classes.course_id
-          AND a.teacher_id = (SELECT auth.uid())
+        (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND EXISTS (
+          SELECT 1 FROM public.course_assignments a
+          WHERE a.course_id = live_classes.course_id
+            AND a.teacher_id = (SELECT auth.uid())
+        )
       )
     )
   );
@@ -122,12 +122,12 @@ CREATE POLICY "staff create quizzes"
     AND (
       (SELECT public.current_role())::text = 'admin'
       OR (
-      (SELECT public.current_role())::text IN ('teacher', 'staff')
-      AND created_by = (SELECT auth.uid())
-      AND EXISTS (
-        SELECT 1 FROM public.course_assignments a
-        WHERE a.course_id = quizzes.course_id
-          AND a.teacher_id = (SELECT auth.uid())
+        (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND EXISTS (
+          SELECT 1 FROM public.course_assignments a
+          WHERE a.course_id = quizzes.course_id
+            AND a.teacher_id = (SELECT auth.uid())
+        )
       )
     )
   );
@@ -226,12 +226,12 @@ CREATE POLICY "staff create written exams"
     AND (
       (SELECT public.current_role())::text = 'admin'
       OR (
-      (SELECT public.current_role())::text IN ('teacher', 'staff')
-      AND created_by = (SELECT auth.uid())
-      AND EXISTS (
-        SELECT 1 FROM public.course_assignments a
-        WHERE a.course_id = written_exams.course_id
-          AND a.teacher_id = (SELECT auth.uid())
+        (SELECT public.current_role())::text IN ('teacher', 'staff')
+        AND EXISTS (
+          SELECT 1 FROM public.course_assignments a
+          WHERE a.course_id = written_exams.course_id
+            AND a.teacher_id = (SELECT auth.uid())
+        )
       )
     )
   );

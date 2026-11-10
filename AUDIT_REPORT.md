@@ -177,6 +177,8 @@ The 22 branch-only normalized names include the 20 original foundation migration
 
 The ledger has 244 unique version identifiers, but version identifiers do not line up with current source filenames in many cases. Repeated ledger names also remain significant: a repeated name can represent distinct historical versions, replay/repair activity, or renumbering, and cannot safely be collapsed based on its label.
 
+A separate ordering check found that 49 source files have numeric filename prefixes later than the maximum JMT Test ledger version (`20261110181004`). Of those 49, 48 have a normalized migration-name match somewhere in the ledger, while only `add_ideal_gas_law_virtual_lab` has no matching ledger label. This strongly suggests that many source migration files were renamed or re-versioned after their database ledger entries were created; the prefix comparison alone cannot establish the exact SQL applied. The missing gas-law label is corroborated by the live constraint check above, which shows that the `gas-laws` value is absent from JMT Test.
+
 **Interpretation:** the normalized name comparison narrows the unmatched groups to 22 source labels and 10 ledger labels, but this is still not a migration equivalence test. It is not proof that 22 migrations are unapplied or that 10 database changes are obsolete. The database's latest ledger version for `require_active_role_for_course_subject_reads` is `20261110181004`, while the current source file is prefixed `20261110274000`; the name matches after normalization, but the version identifiers differ. Do not assume they are interchangeable without inspecting Git history, exact SQL content, ordering, and resulting schema.
 
 **Required safe resolution before a future migration push:**

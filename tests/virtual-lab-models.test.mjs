@@ -229,7 +229,7 @@ test('wave interference responds to wavelength, source spacing and time', () => 
   const changed = calculateWaveInterference({
     wavelengthMetres: 1,
     frequencyHertz: 2,
-    sourceSeparationMetres: 2,
+    sourceSeparationMetres: 1.5,
     amplitudeMetres: 0.2,
     phaseDifferenceDegrees: 90,
     screenDistanceMetres: 6,

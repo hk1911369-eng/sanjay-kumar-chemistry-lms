@@ -101,6 +101,58 @@ export async function saveConceptPrerequisite(formData: FormData) {
   redirect('/admin/learning?prerequisite_saved=1');
 }
 
+
+export async function createCourseChapter(formData: FormData) {
+  const { db } = await adminContext();
+  const courseId = String(formData.get('course_id') ?? '').trim();
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const sortOrder = Number(formData.get('sort_order') ?? 0);
+  if (!/^[0-9a-f-]{36}$/i.test(courseId) || title.length < 1 || title.length > 180
+    || description.length > 4000 || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 100000) {
+    redirect('/admin/learning?error=chapter');
+  }
+  const { data: course } = await db.from('courses').select('id').eq('id', courseId).is('archived_at', null).maybeSingle();
+  if (!course) redirect('/admin/learning?error=chapter');
+  const { error } = await db.from('chapters').insert({
+    course_id: courseId, title, description, sort_order: sortOrder, published: false,
+  });
+  if (error) redirect('/admin/learning?error=chapter');
+  revalidatePath('/admin/learning');
+  redirect('/admin/learning?chapter_saved=1');
+}
+
+export async function createCourseLesson(formData: FormData) {
+  const { db } = await adminContext();
+  const courseId = String(formData.get('course_id') ?? '').trim();
+  const chapterId = String(formData.get('chapter_id') ?? '').trim() || null;
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const content = String(formData.get('content') ?? '').trim();
+  const videoUrl = String(formData.get('video_url') ?? '').trim() || null;
+  const position = Number(formData.get('position') ?? 0);
+  if (!/^[0-9a-f-]{36}$/i.test(courseId) || title.length < 2 || title.length > 180
+    || description.length > 4000 || content.length > 30000
+    || (videoUrl !== null && (videoUrl.length > 2048 || !/^https:\/\//i.test(videoUrl)))
+    || !Number.isInteger(position) || position < 0 || position > 100000) {
+    redirect('/admin/learning?error=lesson');
+  }
+  const { data: course } = await db.from('courses').select('id').eq('id', courseId).is('archived_at', null).maybeSingle();
+  if (!course) redirect('/admin/learning?error=lesson');
+  if (chapterId) {
+    const { data: chapter } = await db.from('chapters').select('id').eq('id', chapterId).eq('course_id', courseId).maybeSingle();
+    if (!chapter) redirect('/admin/learning?error=lesson_chapter');
+  }
+  const { error } = await db.from('lessons').insert({
+    course_id: courseId, chapter_id: chapterId, title, description, content,
+    video_url: videoUrl, position, is_published: false,
+  });
+  if (error) redirect('/admin/learning?error=lesson');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + courseId);
+  redirect('/admin/learning?lesson_saved=1');
+}
+
 export async function mapLessonToConcept(formData: FormData) {
   const { db } = await adminContext();
   const lessonId = String(formData.get('lesson_id') ?? '');

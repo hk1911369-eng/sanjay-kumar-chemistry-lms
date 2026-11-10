@@ -56,7 +56,7 @@ test('administrators can configure database-driven subject-to-template mappings'
   assert.match(page, /from\('virtual_lab_catalog'\)/);
   assert.match(page, /name="lab_key"/);
   assert.match(page, /name="simulation_type"/);
-  assert.match(action, /profile\?\.role !== 'admin'/);
+  assert.match(action, /profile\?\.is_active !== true \|\| profile\.role !== 'admin'/);
   assert.match(action, /upsert\(/);
   assert.match(action, /onConflict: 'lab_key'/);
   for (const type of ['quadratic','pendulum','projectile','microscope','wave-interference','equilibrium','cell-division','electrochemical-cell','photosynthesis','spring-oscillator','dihybrid']) assert.ok(action.includes("'" + type + "'"));

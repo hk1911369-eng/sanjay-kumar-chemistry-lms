@@ -394,3 +394,14 @@ The committed `package-lock.json` resolves the root Next.js dependency to **15.5
 Sources checked: Next.js maintainers' [security advisories](https://github.com/vercel/next.js/security/advisories), [SVG advisory](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2), [Edge cookie advisory](https://github.com/vercel/next.js/security/advisories/GHSA-f3mh-rxg3-f5g2), [response-framing advisory](https://github.com/vercel/next.js/security/advisories/GHSA-pc58-hwjq-p385), and [October 14 security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026).
 
 **Assessment:** no Next.js version finding for the committed lockfile at this review date. Keep `npm ci`/lockfile use in CI and deployment, monitor advisories, and refresh the lockfile deliberately. This is not a full dependency vulnerability scan; no package installation, `npm audit`, build, or runtime test was run.
+
+
+## Practical-assessment cross-check and practice-attempt privacy verification (11 November 2026)
+
+A suspected notebook-to-assignment association gap was investigated and **not confirmed**. The server action accepts an optional `assignment_id`, but the live database has a separate `BEFORE INSERT OR UPDATE` trigger, `guard_lab_notebook_assignment_link()`, which rejects a non-null assignment unless its ID, course ID and lab ID all match and the assignment is currently published. A second trigger makes the assignment association immutable on update. The assignment foreign key alone would not have enforced this mapping; the trigger does. The live `assignment_id` column is nullable, consistent with standalone notebooks. JMT Test currently contains zero notebook rows and zero practical-assignment rows, so there are no live records to exercise the rule.
+
+The practical-assignment write trigger also independently checks that the lab is published and mapped to the course, and that any selected concept is published and belongs to the lab's subject. Non-admin creation/update is restricted to the authenticated assigned teacher, with the RLS policy also checking course assignment and teacher identity. Existing notebook work is protected from assignment reassignment, and task terms freeze once notebook work exists.
+
+**Practice-attempt identity minimization verified live:** authenticated users have SELECT column privileges only for `question_id`, `selected_option`, `is_correct`, `awarded_marks`, and `answered_at`; `student_id` and other identifying columns are not granted. The assigned-staff row policy and staff analytics RPC further constrain staff access to assigned courses, with analytics suppressing question cohorts below five attempts over the 90-day window. This is a positive control verified from live catalog metadata and function definitions, not an end-to-end Data API test.
+
+No application or database changes were made during this verification.

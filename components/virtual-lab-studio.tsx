@@ -12,6 +12,7 @@ import { CellDivisionLab } from '@/components/cell-division-lab';
 import { ElectrochemicalCellLab } from '@/components/electrochemical-cell-lab';
 import { PhotosynthesisLab } from '@/components/photosynthesis-lab';
 import { DihybridInheritanceLab } from '@/components/dihybrid-inheritance-lab';
+import { HardyWeinbergLab } from '@/components/hardy-weinberg-lab';
 import { GasLawsLab } from '@/components/gas-laws-lab';
 import { SpringOscillatorLab } from '@/components/spring-oscillator-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
@@ -173,7 +174,7 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
         <small className="muted">These are theoretical probabilities for this simplified single-gene model, not predictions for an individual child or family.</small>
       </div>}
 
-      {selected.simulation_type === 'dihybrid' && <DihybridInheritanceLab onInteraction={() => setHasInteracted(true)}/>}
+      {selected.simulation_type === 'dihybrid' && <><DihybridInheritanceLab onInteraction={() => setHasInteracted(true)}/><HardyWeinbergLab onInteraction={() => setHasInteracted(true)}/></>}
       {selected.simulation_type === 'gas-laws' && <GasLawsLab onInteraction={() => setHasInteracted(true)}/>}
 
       {selected.simulation_type === 'maths' && <div className="virtual-lab-experiment">

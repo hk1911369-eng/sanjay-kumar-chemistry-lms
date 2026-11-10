@@ -158,22 +158,26 @@ No anonymous/public write policy or unconditional anonymous row predicate was re
 
 ### Migration ledger reconciliation — detailed comparison (read-only)
 
-A second comparison was performed using the full ordered JMT Test migration ledger and the current branch's migration filenames. Matching was done by migration name (the filename without its numeric prefix and `.sql` extension), not by version number.
+A second comparison was performed using the full ordered JMT Test migration ledger and the current branch's migration filenames. For this comparison, numeric prefixes of any length were stripped from both the ledger name and source filename, then the remaining labels were compared. This is a **name-level normalization only**; it does not prove SQL equivalence or version identity.
 
 | Measure | Result |
 |---|---:|
 | JMT Test ledger rows | 244 |
 | Current branch migration files | 218 |
-| Distinct names in JMT Test ledger | 203 |
-| Distinct names in branch | 214 |
-| Names occurring more than once in JMT Test ledger | 37 |
-| Names occurring more than once in branch | 4 |
-| Distinct ledger names absent from branch filenames | 29 |
-| Distinct branch filenames absent from ledger names | 40 |
+| Distinct raw names in JMT Test ledger | 203 |
+| Distinct normalized ledger names | 202 |
+| Distinct normalized names in branch | 214 |
+| Distinct normalized names present on both sides | 192 |
+| Normalized ledger names occurring more than once | 37 |
+| Source names occurring more than once | 4 |
+| Normalized ledger names absent from branch filenames | 10 |
+| Normalized branch names absent from ledger | 22 |
 
-The 29 ledger-only names include legacy numbered migrations (for example `0036_...` through `0049_...`), old/squashed foundation names, and intermediate hardening migrations. The 40 branch-only names include the current base migration set, renamed/reworked migrations, and later branch migrations whose names do not appear in the ledger under the same label. Some repeated ledger names are expected to represent separate historical applications/revisions; some branch filenames also intentionally retain multiple versions of a function-hardening migration.
+The 22 branch-only normalized names include the 20 original foundation migrations from `initial` through `academy_public_profile`, plus `add_double_pendulum_simulation` and `add_ideal_gas_law_virtual_lab`. The ledger contains a consolidated foundation label, `jmt_academy_remaining_0009_0020`, rather than one-to-one labels for those early source files. The ledger's 10 normalized-only labels include `profile_active_flag`, intermediate payment/assessment hardening labels, `revoke_direct_quiz_attempt_updates`, `add_double_pendulum_virtual_lab_template`, `fix_practical_assignment_publication_timestamp_integrity`, and the two photosynthesis labels. Some may be superseded, renamed, consolidated, or retained as historical entries; their SQL effects must be traced before classifying them.
 
-**Interpretation:** this is a material name/version mapping discrepancy, but it is not proof that the database is missing exactly 40 SQL changes or that 29 database changes are obsolete. Filename-name matching cannot determine SQL equivalence, ordering, or whether an earlier migration's effects were later replaced. The database's latest ledger version for `require_active_role_for_course_subject_reads` is `20261110181004`, while the current source file is prefixed `20261110274000`; do not assume they are interchangeable without inspecting the exact migration history and resulting schema.
+The ledger has 244 unique version identifiers, but version identifiers do not line up with current source filenames in many cases. Repeated ledger names also remain significant: a repeated name can represent distinct historical versions, replay/repair activity, or renumbering, and cannot safely be collapsed based on its label.
+
+**Interpretation:** the normalized name comparison narrows the unmatched groups to 22 source labels and 10 ledger labels, but this is still not a migration equivalence test. It is not proof that 22 migrations are unapplied or that 10 database changes are obsolete. The database's latest ledger version for `require_active_role_for_course_subject_reads` is `20261110181004`, while the current source file is prefixed `20261110274000`; the name matches after normalization, but the version identifiers differ. Do not assume they are interchangeable without inspecting Git history, exact SQL content, ordering, and resulting schema.
 
 **Required safe resolution before a future migration push:**
 1. Export and preserve the full ordered migration ledger from JMT Test.

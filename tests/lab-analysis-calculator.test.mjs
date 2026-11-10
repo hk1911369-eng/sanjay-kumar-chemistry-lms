@@ -24,6 +24,8 @@ test('student notebook exposes accessible, bounded repeated-reading analysis on 
   assert.match(component, /readings\.length >= 20/);
   assert.match(component, /aria-live="polite"/);
   assert.match(component, /Copy analysis summary/);
+  assert.match(component, /Insert into observations/);
+  assert.match(component, /textarea\[name="observations"\]/);
   assert.match(component, /navigator\.clipboard\?\.writeText/);
   assert.match(styles, /\.lab-analysis-readings/);
   assert.match(styles, /@media\(max-width:620px\)\{\.lab-analysis-readings/);

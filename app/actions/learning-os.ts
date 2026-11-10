@@ -153,6 +153,66 @@ export async function createCourseLesson(formData: FormData) {
   redirect('/admin/learning?lesson_saved=1');
 }
 
+
+export async function publishCourseChapter(formData: FormData) {
+  const { db } = await adminContext();
+  const chapterId = String(formData.get('chapter_id') ?? '').trim();
+  if (!/^[0-9a-f-]{36}$/i.test(chapterId)) redirect('/admin/learning?error=chapter_publish');
+  const { data: chapter } = await db.from('chapters').select('id,course_id').eq('id', chapterId).maybeSingle();
+  if (!chapter) redirect('/admin/learning?error=chapter_publish');
+  const { data: lessons } = await db.from('lessons').select('id,content').eq('chapter_id', chapterId);
+  if (!lessons?.length || lessons.some(lesson => String(lesson.content ?? '').trim().length < 100)) {
+    redirect('/admin/learning?error=chapter_content');
+  }
+  const lessonIds = lessons.map(lesson => lesson.id);
+  const [{ data: links }, { data: courseSubjects }] = await Promise.all([
+    db.from('lesson_concepts').select('lesson_id,concept_id').in('lesson_id', lessonIds),
+    db.from('course_subjects').select('subject_id').eq('course_id', chapter.course_id),
+  ]);
+  const subjectIds = (courseSubjects ?? []).map(item => item.subject_id);
+  const conceptIds = [...new Set((links ?? []).map(link => link.concept_id))];
+  const { data: concepts } = conceptIds.length
+    ? await db.from('learning_concepts').select('id,subject_id,is_published').in('id', conceptIds)
+    : { data: [] as {id:string;subject_id:string;is_published:boolean}[] };
+  const validConceptIds = new Set((concepts ?? []).filter(concept => concept.is_published && subjectIds.includes(concept.subject_id)).map(concept => concept.id));
+  const mappedLessonIds = new Set((links ?? []).filter(link => validConceptIds.has(link.concept_id)).map(link => link.lesson_id));
+  if (lessons.some(lesson => !mappedLessonIds.has(lesson.id))) redirect('/admin/learning?error=chapter_mapping');
+  const { error } = await db.from('chapters').update({ published: true }).eq('id', chapterId);
+  if (error) redirect('/admin/learning?error=chapter_publish');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + chapter.course_id);
+  redirect('/admin/learning?chapter_published=1');
+}
+
+export async function publishCourseLesson(formData: FormData) {
+  const { db } = await adminContext();
+  const lessonId = String(formData.get('lesson_id') ?? '').trim();
+  if (!/^[0-9a-f-]{36}$/i.test(lessonId)) redirect('/admin/learning?error=lesson_publish');
+  const { data: lesson } = await db.from('lessons').select('id,course_id,chapter_id,content').eq('id', lessonId).maybeSingle();
+  if (!lesson || String(lesson.content ?? '').trim().length < 100) redirect('/admin/learning?error=lesson_content');
+  if (lesson.chapter_id) {
+    const { data: chapter } = await db.from('chapters').select('published').eq('id', lesson.chapter_id).eq('course_id', lesson.course_id).maybeSingle();
+    if (!chapter?.published) redirect('/admin/learning?error=chapter_unpublished');
+  }
+  const [{ data: links }, { data: courseSubjects }] = await Promise.all([
+    db.from('lesson_concepts').select('concept_id').eq('lesson_id', lessonId),
+    db.from('course_subjects').select('subject_id').eq('course_id', lesson.course_id),
+  ]);
+  const conceptIds = [...new Set((links ?? []).map(link => link.concept_id))];
+  const subjectIds = (courseSubjects ?? []).map(item => item.subject_id);
+  const { data: concepts } = conceptIds.length
+    ? await db.from('learning_concepts').select('id,subject_id,is_published').in('id', conceptIds)
+    : { data: [] as {id:string;subject_id:string;is_published:boolean}[] };
+  if (!(concepts ?? []).some(concept => concept.is_published && subjectIds.includes(concept.subject_id))) {
+    redirect('/admin/learning?error=lesson_mapping');
+  }
+  const { error } = await db.from('lessons').update({ is_published: true }).eq('id', lessonId);
+  if (error) redirect('/admin/learning?error=lesson_publish');
+  revalidatePath('/admin/learning');
+  revalidatePath('/learn/' + lesson.course_id);
+  redirect('/admin/learning?lesson_published=1');
+}
+
 export async function mapLessonToConcept(formData: FormData) {
   const { db } = await adminContext();
   const lessonId = String(formData.get('lesson_id') ?? '');

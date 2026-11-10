@@ -32,3 +32,31 @@ test('admin CSV endpoints reject inactive accounts as well as non-admins', async
     assert.match(route, /actor\?\.role !== 'admin' \|\| actor\.is_active !== true/);
   }
 });
+
+test('server actions reject inactive actors before privileged workflows', async () => {
+  const paths = [
+    'app/actions/academic.ts',
+    'app/actions/academy-settings.ts',
+    'app/actions/course-application.ts',
+    'app/actions/course-studio.ts',
+    'app/actions/finance.ts',
+    'app/actions/lab-notebook-evidence.ts',
+    'app/actions/lab-notebooks.ts',
+    'app/actions/lab-practical-assignments.ts',
+    'app/actions/learning-os.ts',
+    'app/actions/learning.ts',
+    'app/actions/payments.ts',
+    'app/actions/student-management.ts',
+    'app/actions/student-practice-authoring.ts',
+    'app/actions/teacher-learning.ts',
+    'app/actions/virtual-labs.ts',
+  ];
+
+  for (const path of paths) {
+    const action = await read(path);
+    if (/from\(['"]profiles['"]\)[\s\S]{0,80}select\(['"]role/.test(action)) {
+      assert.match(action, /select\(['"]role,is_active['"]\)/, path);
+      assert.match(action, /is_active\s*!==\s*true/, path);
+    }
+  }
+});

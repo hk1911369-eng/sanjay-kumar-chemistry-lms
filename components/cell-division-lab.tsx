@@ -11,7 +11,7 @@ function Chromosome({ x, y, duplicated, colour, crossover=false }: {x:number;y:n
   return <g>
     <line x1={x-9} y1={y-15} x2={x+9} y2={y+15} stroke={colour} strokeWidth="6" strokeLinecap="round"/>
     <line x1={x+9} y1={y-15} x2={x-9} y2={y+15} stroke={colour} strokeWidth="6" strokeLinecap="round"/>
-    {crossover&&<path d={\`M \${x-7} \${y-4} Q \${x} \${y+3} \${x+7} \${y+4}\`} stroke="#fbbf24" strokeWidth="4" fill="none"/>}
+    {crossover&&<path d={`M ${x-7} ${y-4} Q ${x} ${y+3} ${x+7} ${y+4}`} stroke="#fbbf24" strokeWidth="4" fill="none"/>}
   </g>;
 }
 
@@ -75,7 +75,7 @@ export function CellDivisionLab({onInteraction}:Props) {
 
     <div className="virtual-lab-titration-graph cell-division-visual">
       <div><b>Chromosome arrangement</b><span>{result.cells} cell{result.cells===1?'':'s'} · {result.dnaContent} DNA content</span></div>
-      <svg viewBox="0 0 600 230" role="img" aria-label={\`\${divisionType} \${result.stageName}: \${result.cells} cell(s), \${result.chromosomesPerCell} chromosomes per cell, \${result.dnaContent} DNA content. Schematic, not to scale.\`}>
+      <svg viewBox="0 0 600 230" role="img" aria-label={`${divisionType} ${result.stageName}: ${result.cells} cell(s), ${result.chromosomesPerCell} chromosomes per cell, ${result.dnaContent} DNA content. Schematic, not to scale.`}>
         {cellCentres.map((cx,index)=><g key={cx}>
           <circle cx={cx} cy="112" r={result.cells===4?48:62} fill="#f8fafc" fillOpacity=".06" stroke="#94a3b8" strokeWidth="2"/>
           {mitoticAnaphase?<g>
@@ -85,7 +85,7 @@ export function CellDivisionLab({onInteraction}:Props) {
           </g>:meiosisHaploidCell?<Chromosome x={cx} y={112} duplicated={duplicated} colour={index%2===0?'#38bdf8':'#fb923c'}/>:<g>
             <Chromosome x={cx-15} y={112} duplicated={duplicated} colour="#38bdf8" crossover={divisionType==='meiosis'&&stageIndex===2&&crossingOver}/>
             <Chromosome x={cx+15} y={112} duplicated={duplicated} colour="#fb923c"/>
-            {divisionType==='meiosis'&&stageIndex===2&&<path d={\`M \${cx-10} 109 Q \${cx} 92 \${cx+10} 115\`} fill="none" stroke={crossingOver?'#fbbf24':'#64748b'} strokeWidth="3" strokeDasharray={crossingOver?'0':'4 4'}/>}
+            {divisionType==='meiosis'&&stageIndex===2&&<path d={`M ${cx-10} 109 Q ${cx} 92 ${cx+10} 115`} fill="none" stroke={crossingOver?'#fbbf24':'#64748b'} strokeWidth="3" strokeDasharray={crossingOver?'0':'4 4'}/>}
           </g>}
           <text x={cx} y="202" textAnchor="middle" fill="currentColor" fontSize="12">{result.cells===4?'Gamete '+(index+1):result.cells===2?(divisionType==='meiosis'?'Haploid cell ':'Daughter cell ')+(index+1):'Parent cell'}</text>
         </g>)}

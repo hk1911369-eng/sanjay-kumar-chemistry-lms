@@ -246,3 +246,40 @@ export type PhotosynthesisResult = PhotosynthesisInput & {
   model: string;
 };
 export function calculatePhotosynthesis(input: PhotosynthesisInput): PhotosynthesisResult;
+
+
+export type SpringOscillatorInput = {
+  massKg: number;
+  springConstantNm: number;
+  dampingCoefficientNsM: number;
+  initialDisplacementM: number;
+  initialVelocityMps: number;
+  durationSeconds?: number;
+  sampleCount?: number;
+};
+export type SpringOscillatorPoint = {
+  timeSeconds: number;
+  displacementM: number;
+  velocityMps: number;
+  accelerationMps2: number;
+  kineticEnergyJ: number;
+  potentialEnergyJ: number;
+  mechanicalEnergyJ: number;
+  dissipatedEnergyJ: number;
+};
+export type SpringOscillatorResult = SpringOscillatorInput & {
+  naturalAngularFrequency: number;
+  naturalFrequencyHz: number;
+  naturalPeriodSeconds: number;
+  criticalDampingCoefficient: number;
+  dampingRatio: number;
+  dampingRegime: 'underdamped' | 'critical' | 'overdamped';
+  initialMechanicalEnergyJ: number;
+  finalMechanicalEnergyJ: number;
+  dissipatedEnergyJ: number;
+  maxAbsDisplacementM: number;
+  maxAbsVelocityMps: number;
+  trajectory: SpringOscillatorPoint[];
+  model: string;
+};
+export function calculateSpringOscillator(input: SpringOscillatorInput): SpringOscillatorResult;

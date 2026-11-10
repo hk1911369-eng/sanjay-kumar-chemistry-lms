@@ -1172,3 +1172,26 @@ input,select,textarea,button{max-width:100%}
 /* Include uncertainty as a first-class part of recorded measurements. */
 .lab-measurement-row{grid-template-columns:minmax(0,1.35fr) minmax(80px,.7fr) minmax(65px,.5fr) minmax(95px,.75fr) auto}
 @media(max-width:620px){.lab-measurement-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.lab-measurement-row label:first-child{grid-column:1/-1}}
+
+
+/* Repeated-reading analysis and uncertainty-aware experimental calculations. */
+.lab-analysis-calculator{display:grid;gap:.8rem;min-width:0;margin:.25rem 0;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-alt)}
+.lab-analysis-calculator legend{padding:0 .35rem;font-weight:750}
+.lab-analysis-calculator>p{margin:0;font-size:.82rem;line-height:1.5}
+.lab-analysis-readings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
+.lab-analysis-readings label,.lab-analysis-targets label{display:grid;gap:.3rem;min-width:0;font-size:.78rem;font-weight:650}
+.lab-analysis-readings input,.lab-analysis-targets input{width:100%;min-width:0;min-height:40px}
+.lab-analysis-controls{display:flex;gap:.55rem;flex-wrap:wrap}
+.lab-analysis-controls button,.lab-analysis-results button{min-height:40px}
+.lab-analysis-targets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.lab-analysis-results{display:grid;gap:.65rem;padding:.9rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.lab-analysis-results h3{margin:0}
+.lab-analysis-results dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin:0}
+.lab-analysis-results dl>div{display:grid;gap:.2rem;min-width:0;padding:.6rem;border:1px solid var(--line);border-radius:8px}
+.lab-analysis-results dt{font-size:.75rem;color:var(--muted)}
+.lab-analysis-results dd{margin:0;font-weight:750;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.lab-analysis-summary{display:grid;gap:.35rem;font-size:.8rem;font-weight:650}
+.lab-analysis-summary textarea{width:100%;min-width:0;resize:vertical;font:inherit;font-weight:400;line-height:1.5}
+.lab-analysis-calculator input:focus-visible,.lab-analysis-calculator textarea:focus-visible,.lab-analysis-calculator button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media(max-width:620px){.lab-analysis-readings{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-analysis-results dl{grid-template-columns:1fr}}
+@media(max-width:360px){.lab-analysis-readings,.lab-analysis-targets{grid-template-columns:1fr}}

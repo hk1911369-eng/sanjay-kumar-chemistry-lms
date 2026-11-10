@@ -27,10 +27,11 @@ export default async function LearningPage({
   if (!user) redirect('/login');
 
   const [{ data: profile }, { data: course }, { data: enrollment }] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('profiles').select('role,is_active').eq('id', user.id).single(),
     supabase.from('courses').select('id,title,description').eq('id', courseId).maybeSingle(),
     supabase.from('enrollments').select('status,delivery_mode,admission_fee_paid,paid_through').eq('student_id', user.id).eq('course_id', courseId).maybeSingle(),
   ]);
+  if (!profile || profile.is_active !== true) redirect('/portal');
   if (!course) notFound();
   const isStaff = ['admin', 'teacher', 'staff'].includes(profile?.role ?? '');
   const currentPaidThrough = enrollment?.paid_through && enrollment.paid_through >= billingMonthEnd(currentBangladeshBillingPeriod());

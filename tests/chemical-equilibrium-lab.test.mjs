@@ -38,13 +38,14 @@ test('equilibrium template is allowed and published for Chemistry in database mi
 });
 
 test('equilibrium controls, plot and model disclosure are responsive and accessible', async () => {
-  const [component, css] = await Promise.all([
+  const [component, css, model] = await Promise.all([
     readFile(new URL('../components/chemical-equilibrium-lab.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../app/globals.css', import.meta.url), 'utf8'),
+    readFile(new URL('../lib/virtual-lab-models.mjs', import.meta.url), 'utf8'),
   ]);
   assert.match(component, /Concentration as the system approaches equilibrium/);
   assert.match(component, /Le Chatelier prediction/);
-  assert.match(component, /van.t Hoff|van’t Hoff/);
+  assert.match(model, /van’t Hoff relation/);
   assert.match(css, /\.chemical-equilibrium-controls/);
   assert.match(css, /@media\(max-width:620px\)/);
   assert.match(css, /@media\(max-width:380px\)/);

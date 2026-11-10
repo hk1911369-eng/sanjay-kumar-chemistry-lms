@@ -7,7 +7,7 @@ const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 test('staff authoring validates content and relies on course-subject RLS and database scope trigger', async () => {
   const action = await read('app/actions/student-practice-authoring.ts');
   const migration = await read('supabase/migrations/20261109290000_add_student_practice_question_engine.sql');
-  assert.match(action, /profile\?\.role/);
+  assert.match(action, /profile\?\.is_active !== true/);
   assert.match(action, /options\.length < 2 \|\| options\.length > 6/);
   assert.match(action, /correctOption >= options\.length/);
   assert.match(action, /created_by: user\.id/);

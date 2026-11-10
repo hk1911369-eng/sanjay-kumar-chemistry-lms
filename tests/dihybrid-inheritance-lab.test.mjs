@@ -41,7 +41,7 @@ test('dihybrid model rejects malformed genotypes', () => {
 });
 
 test('dihybrid lab is integrated into Biology student experience and explains assumptions', async () => {
-  const [studio, component, css, declaration, migration] = await Promise.all([
+  const [studio, component, css, declaration, migration, admin, action] = await Promise.all([
     readFile(new URL('../components/virtual-lab-studio.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../components/dihybrid-inheritance-lab.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../app/globals.css', import.meta.url), 'utf8'),
@@ -49,7 +49,6 @@ test('dihybrid lab is integrated into Biology student experience and explains as
     readFile(new URL('../supabase/migrations/20261110255200_add_dihybrid_inheritance_lab.sql', import.meta.url), 'utf8'),
     readFile(new URL('../app/admin/virtual-labs/page.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../app/actions/virtual-labs.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../supabase/migrations/20261110255200_add_dihybrid_inheritance_lab.sql', import.meta.url), 'utf8'),
   ]);
   assert.match(studio, /DihybridInheritanceLab/);
   assert.match(studio, /selected\.simulation_type === 'dihybrid'/);
@@ -64,7 +63,5 @@ test('dihybrid lab is integrated into Biology student experience and explains as
   assert.match(migration, /'dihybrid'/);
   assert.match(admin, /value="dihybrid"/);
   assert.ok(action.includes("'dihybrid'"));
-  assert.match(migration, /biology-dihybrid-inheritance/);
-  assert.match(migration, /'dihybrid'/);
   assert.match(migration, /10000000-0000-4000-8000-000000000003/);
 });

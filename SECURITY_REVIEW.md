@@ -485,3 +485,10 @@ The analytics RPC aggregates historical selected-option indexes and correctness 
 The practice RPC enforces one attempt per student/question with a unique constraint and raises on duplicate submission before updating mistake memory. The mistake-memory upsert uses the same student/source-question identity and contains an `occurrence_count + 1` conflict handler, but a second answer to that question is rejected before that upsert. The successful-answer branch that resolves a prior mistake for the same question is also unreachable after the first attempt under this policy.
 
 **Impact:** repeated-error tracking and wrong-then-correct recovery are not implemented as the code suggests; this is a learning correctness gap, not an access-control issue. **Remediation:** either support append-only multiple attempts and aggregate mistake memory across them, or retain one-attempt semantics and redesign the memory model/UI to avoid promising repeat counts and same-question recovery. Add tests for the chosen behavior. **Limits:** branch RPC and live unique constraint inspected; no practice data exists in JMT Test and no runtime session was performed.
+
+
+## Practice question lifecycle controls are missing from staff UI
+
+The staff practice page/action only create questions; there is no existing-question inventory or UI action to edit, unpublish, archive or delete. Yet authenticated assigned staff/admin have UPDATE grants and an RLS UPDATE policy that includes `is_published`, so direct Data API mutation remains possible outside the normal workflow.
+
+**Impact:** content-governance and operational correction gap. This makes safe review/retirement awkward and compounds the historical-version integrity risk. **Remediation:** provide a scoped inventory and audited edit/unpublish/retire workflow; version content once attempts exist; restrict direct table writes if only server actions should be used. **Limits:** source page/action and live grants/policy inspected; JMT Test has no practice questions or attempts, and no writes were made.

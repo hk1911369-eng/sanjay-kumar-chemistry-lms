@@ -11,9 +11,10 @@ import { ChemicalEquilibriumLab } from '@/components/chemical-equilibrium-lab';
 import { CellDivisionLab } from '@/components/cell-division-lab';
 import { ElectrochemicalCellLab } from '@/components/electrochemical-cell-lab';
 import { PhotosynthesisLab } from '@/components/photosynthesis-lab';
+import { SpringOscillatorLab } from '@/components/spring-oscillator-lab';
 import { calculateOhmsLaw, calculateStrongAcidBaseTitration, calculatePunnettSquare, calculateIllustrativeShortCircuit } from '@/lib/virtual-lab-models.mjs';
 
-type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope' | 'wave-interference' | 'equilibrium' | 'cell-division' | 'electrochemical-cell' | 'photosynthesis';
+type SimulationType = 'physics' | 'chemistry' | 'kinetics' | 'biology' | 'maths' | 'ict' | 'quadratic' | 'pendulum' | 'projectile' | 'microscope' | 'wave-interference' | 'equilibrium' | 'cell-division' | 'electrochemical-cell' | 'photosynthesis' | 'spring-oscillator';
 type LabCatalogItem = { id: string; lab_key: string; subject_id: string; subject_name: string; title: string; summary: string; principle: string; simulation_type: SimulationType };
 type LabCourse = { id: string; title: string; subjectIds: string[] };
 
@@ -121,7 +122,8 @@ export function VirtualLabStudio({ courses, catalogue }: { courses: LabCourse[];
       {selected.simulation_type === 'equilibrium' && <ChemicalEquilibriumLab onInteraction={() => setHasInteracted(true)}/>}
       {selected.simulation_type === 'cell-division' && <CellDivisionLab onInteraction={() => setHasInteracted(true)}/>}
       {selected.simulation_type === 'electrochemical-cell' && <ElectrochemicalCellLab onInteraction={() => setHasInteracted(true)}/>}
-      {selected.simulation_type === 'photosynthesis' && <PhotosynthesisLab onInteraction={() => setHasInteracted(true)}/>}   
+      {selected.simulation_type === 'photosynthesis' && <PhotosynthesisLab onInteraction={() => setHasInteracted(true)}/>}
+      {selected.simulation_type === 'spring-oscillator' && <SpringOscillatorLab onInteraction={() => setHasInteracted(true)}/>}    
 
       {selected.simulation_type === 'physics' && <div className="virtual-lab-experiment">
         <label>Voltage: <b>{voltage} V</b><input type="range" min="1" max="24" value={voltage} onChange={e => { setHasInteracted(true); setVoltage(Number(e.target.value)); }}/></label>

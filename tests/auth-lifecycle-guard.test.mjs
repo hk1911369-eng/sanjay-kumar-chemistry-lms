@@ -15,10 +15,11 @@ test('public registration never accepts a role and database provisioning fixes s
 test('profile role and student identity cannot be self-edited', async () => {
   const migration = await read('supabase/migrations/20261108184125_restrict_profile_update_columns.sql');
   const roleMigration = await read('supabase/migrations/0005_auth_roles_and_course_guardrails.sql');
+  const identityMigration = await read('supabase/migrations/20261108202657_fail_closed_student_identity_field_guard.sql');
   assert.match(migration, /REVOKE UPDATE ON TABLE public\.profiles FROM authenticated/i);
   assert.match(migration, /GRANT UPDATE\s*\([\s\S]*full_name[\s\S]*\)\s*ON TABLE public\.profiles TO authenticated/i);
   assert.match(roleMigration, /prevent_self_role_change/);
-  assert.match(roleMigration, /protect_student_identity_fields/);
+  assert.match(identityMigration, /protect_student_identity_fields/);
 });
 
 test('admin CSV endpoints reject inactive accounts as well as non-admins', async () => {

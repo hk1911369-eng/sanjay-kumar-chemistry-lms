@@ -360,3 +360,12 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Test-coverage gap:** the existing quiz submission integrity test checks numeric answer indices against `jsonb_array_length(options)`; the publication tests check question/key completeness. Neither checks each stored option's JSON type or text validity. The written-exam builder separately validates MCQ option strings, so this finding is specific to the quiz-question creation/database path.
 
 **Verification limits:** this was confirmed from the branch action source, live JMT Test constraint definition, and student rendering source. No malformed question was inserted and no student-facing runtime failure was induced. The live JMT Test question rows were not available to demonstrate an affected record.
+
+
+## Learning OS mastery summary uses only the lowest 12 concepts (11 November 2026)
+
+**Reporting-integrity finding — “Average mastery” is not an all-concept average.** The student dashboard query in `app/student/page.tsx` orders `learner_concept_mastery` by `mastery_score` ascending and limits the result to 12 rows. `components/learning-os-dashboard.tsx` computes `averageMastery` from only those rows but labels it “Average mastery”; it also labels the returned row count “Topics tracked”. For students with more than 12 concept records, this is the mean and count of the lowest-scoring subset, not overall mastery and total tracked topics.
+
+**Recommended correction:** use a database aggregate for total concept count and a clearly defined overall mastery measure, while retaining the lowest-12 query for targeted topic cards. Label the subset as weakest/lowest-mastery topics. Add a regression test with more than 12 concepts and distinct aggregate values.
+
+**Verification limits:** source-code confirmed. The inspected JMT Test mastery table contained zero rows; no live student's displayed aggregate was observed. This is a reporting-accuracy issue, not an authorization or score-forgery finding.

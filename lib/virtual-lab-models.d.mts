@@ -192,3 +192,25 @@ export type CellDivisionResult = {
   model: string;
 };
 export function calculateCellDivision(input: CellDivisionInput): CellDivisionResult;
+
+
+export type DaniellCellInput = {
+  zincIonConcentrationMolar: number;
+  copperIonConcentrationMolar: number;
+  temperatureKelvin?: number;
+};
+export type DaniellCellResult = {
+  zincIonConcentrationMolar: number;
+  copperIonConcentrationMolar: number;
+  temperatureKelvin: number;
+  electronsTransferred: number;
+  standardCellPotentialV: number;
+  reactionQuotient: number;
+  nernstFactorV: number;
+  cellPotentialV: number;
+  gibbsEnergyKJMol: number;
+  direction: 'spontaneous-forward' | 'spontaneous-reverse' | 'equilibrium';
+  electronFlow: string;
+  model: string;
+};
+export function calculateDaniellCell(input: DaniellCellInput): DaniellCellResult;

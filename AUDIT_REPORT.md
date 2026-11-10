@@ -113,3 +113,33 @@ Recommended isolated-test matrix (must never target production):
 For each identity, test table SELECT/INSERT/UPDATE/DELETE, direct RPC execution (including denied RPCs), and Storage upload/download/delete. Include NULL/missing role, inactive profile, wrong owner, wrong course, expired payment, archived course, malformed object path, invalid MIME/extension, oversized file, duplicate submission, and concurrent upload/approval cases. Capture SQLSTATE and resulting row/object state, not just HTTP status.
 
 **Implementation gate:** First provision a disposable Supabase project or local Supabase stack, record its migration history, apply the branch migrations there, and add a reproducible CI job with separate test identities. Only then can these expected outcomes be reported as tested rather than proposed.
+
+
+### Read-only live JMT Test catalog inspection — 11 November 2026
+
+A read-only inspection was performed against the connected Supabase project named **JMT Test**. No DDL, DML, migration application, user impersonation, or Storage mutation was performed.
+
+**Observed database state**
+- The database reports 244 migration-history rows. The repository branch currently contains 218 migration SQL files.
+- The migration ledger and source filenames are not a one-to-one version match: the latest database row is version `20261110181004` named `require_active_role_for_course_subject_reads`, while the branch file with that name is `20261110274000_require_active_role_for_course_subject_reads.sql`. There are also repeated migration names and names present on only one side of the comparison. This may reflect earlier squashing, renaming, or repeated application history; it is not safe to infer exactly which SQL is missing from counts alone. Reconcile the full ordered ledger against source before any future migration push.
+- All inspected ordinary tables in `public` have RLS enabled.
+- The only public-schema tables observed with RLS enabled but no policies are `app_rate_limit_events` and `auth_rate_limit_events`. Their table grants are limited to the database owner and `service_role`; neither `anon` nor `authenticated` has table grants. This is consistent with a deliberate service-only, deny-by-default design.
+- Anonymous table SELECT grants are present only for `academy_settings`, `courses`, and `notices`; row policies still govern visibility.
+- Storage bucket catalogue: `jmt-course-media` is public (5 MiB, JPEG/PNG/WebP); `lab-notebook-evidence` is private (8 MiB, JPEG/PNG/WebP/PDF); `lesson-materials` is private (100 MiB, allowlisted course media/document/audio types); `payment-proofs` is private (3 MiB, JPEG/PNG/WebP); `student-avatars` is private (3 MiB, JPEG/PNG/WebP). Storage policy definitions were inspected at catalog level; end-to-end object access was not exercised.
+
+**SECURITY DEFINER catalog results**
+- 59 functions in the `public` schema are marked `SECURITY DEFINER`.
+- All 59 have an explicit function-level `search_path` setting.
+- One is executable by `anon`: `public.get_public_course_teachers(uuid)`. Its current definition returns only active teacher/staff IDs and full names for a specified published, non-archived course. The branch migration `20261110115928_filter_inactive_public_course_teachers.sql` explicitly grants execution to `anon` and `authenticated` for public course pages. This appears intentional and narrowly scoped; it remains a public data disclosure by design and should be documented as such.
+- 23 SECURITY DEFINER functions are executable by `authenticated`. This is not by itself a finding of vulnerability; each exposed RPC must retain its own authorization and object-scope checks. No other SECURITY DEFINER function was found executable by `anon` in this catalog query.
+- The security advisor's generic authenticated-function warnings therefore need function-by-function interpretation rather than blanket revocation.
+
+**Advisor findings**
+- Leaked-password protection is disabled in this JMT Test project's Auth configuration. Enable it in the Auth password security settings after confirming expected signup/reset behavior.
+- The two policy-free rate-limit tables above produce an informational RLS advisor notice; their observed grants indicate service-role-only access.
+- The anonymous `get_public_course_teachers` RPC produces a warning because it is a public SECURITY DEFINER function. The source explicitly intends public course-page access; retain only if public teacher names are intended to be disclosed.
+
+**Limits of this inspection**
+- These are catalog/metadata observations, not a role-matrix test. No student, teacher, staff, admin, or anonymous JWT session was used to exercise table, RPC, or Storage operations.
+- The connected project is named JMT Test. These findings must not be generalized to production.
+- Do not automatically repair migration history or change function grants based only on advisor output. First reconcile the applied migration ledger and intended public course-page behavior.

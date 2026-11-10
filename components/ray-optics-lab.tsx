@@ -33,7 +33,7 @@ export function RayOpticsLab({ onInteraction }: Props) {
   const lensPath = lensType === 'converging'
     ? 'M320 48 C292 95 292 225 320 272 C348 225 348 95 320 48 Z'
     : 'M300 48 C315 95 315 225 300 272 L340 272 C325 225 325 95 340 48 Z';
-  const update = (setter: (value: number) => void, value: number) => {
+  const update = <T,>(setter: (value: T) => void, value: T) => {
     setter(value);
     onInteraction?.();
   };

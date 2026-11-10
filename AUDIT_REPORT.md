@@ -143,3 +143,12 @@ A read-only inspection was performed against the connected Supabase project name
 - These are catalog/metadata observations, not a role-matrix test. No student, teacher, staff, admin, or anonymous JWT session was used to exercise table, RPC, or Storage operations.
 - The connected project is named JMT Test. These findings must not be generalized to production.
 - Do not automatically repair migration history or change function grants based only on advisor output. First reconcile the applied migration ledger and intended public course-page behavior.
+
+
+**Public-row-policy spot check:** the catalog query for policies assigned to `anon`/`public` or using unconditional `true` predicates returned only:
+- Public academy contact profile read, constrained to the singleton settings row.
+- Anonymous published, non-archived course reads.
+- Anonymous published notice reads.
+- Authenticated read of the academic subject catalogue with an unconditional row predicate.
+
+No anonymous/public write policy or unconditional anonymous row predicate was returned by this targeted query. This is a metadata spot check, not a complete semantic review of every policy expression.

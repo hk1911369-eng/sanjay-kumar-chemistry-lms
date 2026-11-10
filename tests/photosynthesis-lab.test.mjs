@@ -79,8 +79,8 @@ test('photosynthesis is integrated into the student studio and admin catalogue',
 
 test('photosynthesis template is allowed and published for Biology', async () => {
   const [constraint, catalogue] = await Promise.all([
-    readFile(new URL('../supabase/migrations/20261110254900_allow_photosynthesis_template.sql', import.meta.url), 'utf8'),
-    readFile(new URL('../supabase/migrations/20261110255000_add_biology_photosynthesis_lab.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110255100_allow_spring_oscillator_template.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20261110254900_add_photosynthesis_lab.sql', import.meta.url), 'utf8'),
   ]);
   assert.match(constraint, /'photosynthesis'/);
   assert.match(catalogue, /biology-photosynthesis-limiting-factors/);

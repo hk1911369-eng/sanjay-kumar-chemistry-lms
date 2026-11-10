@@ -22,4 +22,5 @@ test('teacher curriculum writes are draft-only at the RLS boundary', async () =>
   assert.match(migration, /Teachers may only edit draft chapter content fields/);
   assert.match(migration, /BEFORE INSERT OR UPDATE ON public\.lessons/);
   assert.match(migration, /BEFORE INSERT OR UPDATE ON public\.chapters/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.enforce_teacher_curriculum_draft_integrity\(\) FROM PUBLIC, anon, authenticated/);
 });

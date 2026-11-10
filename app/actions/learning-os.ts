@@ -249,10 +249,13 @@ export async function publishCourseLesson(formData: FormData) {
 
 export async function mapLessonToConcept(formData: FormData) {
   const { db } = await adminContext();
-  const lessonId = String(formData.get('lesson_id') ?? '');
-  const conceptId = String(formData.get('concept_id') ?? '');
-  const relevance = Number(formData.get('relevance_weight') ?? 1);
-  if (!lessonId || !conceptId || !Number.isFinite(relevance) || relevance <= 0 || relevance > 1) {
+  const lessonId = String(formData.get('lesson_id') ?? '').trim();
+  const conceptId = String(formData.get('concept_id') ?? '').trim();
+  const relevanceRaw = String(formData.get('relevance_weight') ?? '1').trim();
+  const relevance = Number(relevanceRaw);
+  const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  if (!isUuid(lessonId) || !isUuid(conceptId) || !/^(?:0?\.\d+|1(?:\.0+)?)$/.test(relevanceRaw)
+    || !Number.isFinite(relevance) || relevance <= 0 || relevance > 1) {
     redirect('/admin/learning?error=lesson_map');
   }
 

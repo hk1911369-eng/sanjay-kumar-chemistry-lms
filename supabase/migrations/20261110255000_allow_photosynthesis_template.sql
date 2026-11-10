@@ -18,6 +18,7 @@ alter table public.virtual_lab_catalog
     'ict',
     'quadratic',
     'pendulum',
+    'spring-oscillator',
     'projectile',
     'microscope',
     'wave-interference'

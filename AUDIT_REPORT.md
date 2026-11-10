@@ -485,3 +485,14 @@ The student quiz UI renders each option as a React child. A JSON option containi
 **Test-coverage gap:** the existing quiz submission integrity test checks numeric answer indices against `jsonb_array_length(options)`; the publication tests check question/key completeness. Neither checks each stored option's JSON type or text validity. The written-exam builder separately validates MCQ option strings, so this finding is specific to the quiz-question creation/database path.
 
 **Verification limits:** this was confirmed from the branch action source, live JMT Test constraint definition, and student rendering source. No malformed question was inserted and no student-facing runtime failure was induced. The live JMT Test question rows were not available to demonstrate an affected record.
+
+
+## Written-exam grading interface omits the question and marking guide (11 November 2026)
+
+**Functional finding — the staff marking queue displays answer values without the corresponding question text or model answer.** The written-exam builder stores MCQ correct-option indexes and short/long-answer model answers in `written_exam_answer_keys`. However, `app/academic/page.tsx` loads written-exam submissions with answers, score and feedback, and renders `Object.entries(s.answers)` as question-ID/answer pairs. It does not load `written_exam_questions` for the staff marking queue or load `written_exam_answer_keys`; those question rows are fetched only when a student opens a specific exam. The marking card therefore lacks the question prompt and the model answer/marking guide, and MCQ answer IDs are not translated into readable question/option context.
+
+This makes accurate marking unnecessarily difficult and increases the chance of inconsistent manual scoring, especially for long exams with many questions. The builder explicitly labels model answers as staff-only, so this appears to be intended grading context that is not surfaced in the marking workflow.
+
+**Recommended correction:** load question text, type, options and marks for the exams represented in the staff queue, and load answer-key/model-answer data only for authorized assigned staff/admin. Render each student's response alongside its question and marking guide. Keep student-facing queries isolated from answer-key data and retain RLS as the enforcement boundary. Add a page-level test confirming that staff see the question/marking guide while students cannot read answer keys.
+
+**Verification limits:** confirmed from the branch page and builder source. No written-exam rows existed in the inspected JMT Test environment, so this is a code-path/UI finding rather than an observed marking incident.

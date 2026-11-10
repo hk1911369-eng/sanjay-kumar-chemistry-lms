@@ -499,3 +499,14 @@ The staff practice page/action only create questions; there is no existing-quest
 The database RPC suppresses question cohorts with fewer than five responses. The page sums only returned aggregates but presents the result as “Student attempts” and overall accuracy for the last 90 days, without saying that low-volume cohorts are excluded. This is not a privacy bypass; it is a reporting-integrity caveat. Label the KPIs as reportable-cohort totals/accuracy, or design a separately privacy-reviewed grand total. Also distinguish RPC failure from a confirmed empty dataset rather than presenting the no-responses empty state after a failed query.
 
 **Limits:** source page and live JMT Test RPC definition inspected; no practice questions or attempts exist in JMT Test, so no numeric output was available to validate.
+
+
+## Written-exam and assignment grades do not feed adaptive learning evidence
+
+The deployed JMT Test trigger inventory contains learning-evidence capture for quiz attempts and reviewed practical-review history, but no corresponding trigger for `written_exam_submissions` or `assignment_submissions`. The application grading actions in `app/actions/academic.ts` only update the grade/feedback/grader metadata and return; they do not emit learning events or update mastery. Written-exam questions and assignments also lack the concept-level mapping needed for reliable attribution in the reviewed creation workflow.
+
+**Impact:** learner mastery and revision recommendations omit these assessment outcomes. This is a product/learning coverage gap, not a privilege escalation. Avoid presenting adaptive mastery as a complete summary of all graded academic work.
+
+**Remediation:** define eligible assessment types, add explicit reviewed concept mappings where defensible, and create source-linked immutable learning evidence in the same transaction as grading. Preserve grade revisions and make event generation idempotent. Do not infer concept attribution from a course-level grade alone.
+
+**Limits:** live JMT Test triggers/functions and branch grading actions/schema inspected. No written-exam or assignment submissions exist in the test project; no writes or runtime grading tests were performed.

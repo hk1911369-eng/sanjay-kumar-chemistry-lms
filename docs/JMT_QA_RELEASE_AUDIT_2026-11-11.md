@@ -543,7 +543,7 @@ Read-only inspection of both connected Supabase projects confirmed:
 - Its `slug` column has a UNIQUE constraint in both projects.
 - The table's `name` and `slug` checks accept the canonical values used by the new seed.
 
-The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` now seeds Physics, Chemistry, Biology, Mathematics and ICT by stable slug before inserting the virtual-lab catalogue. Catalogue IDs are resolved by slug; no environment-specific UUIDs are embedded. The idempotent catalogue conflict handler changes only `subject_id` and `updated_at`, preserving editorial title, principle, publication and ordering state.
+The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` now seeds Physics, Chemistry, Biology, Mathematics, Higher Mathematics and ICT by stable slug before inserting the virtual-lab catalogue. Catalogue IDs are resolved by slug; no environment-specific UUIDs are embedded. The idempotent catalogue conflict handler changes only `subject_id` and `updated_at`, preserving editorial title, principle, publication and ordering state.
 
 A source-guard test was added at `tests/virtual-lab-catalog-subject-seed.test.mjs`. It is not a live PostgreSQL integration test. No database migration was run.
 

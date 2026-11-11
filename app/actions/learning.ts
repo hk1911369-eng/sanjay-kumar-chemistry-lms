@@ -51,6 +51,8 @@ export async function completeRevisionTask(formData: FormData) {
   const taskId = String(formData.get('task_id') ?? '');
   if (!taskId) redirect('/student?revision_error=1#learning-os');
   const { error } = await supabase.rpc('complete_revision_task', { p_task_id: taskId });
+  if (error?.code === 'P0001') redirect('/student?revision_error=evidence#learning-os');
+  if (error?.code === '22023') redirect('/student?revision_error=not_due#learning-os');
   if (error) redirect('/student?revision_error=1#learning-os');
   revalidatePath('/student');
   redirect('/student?revision_success=1#learning-os');

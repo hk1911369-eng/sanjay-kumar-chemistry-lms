@@ -543,9 +543,18 @@ Read-only inspection of both connected Supabase projects confirmed:
 - Its `slug` column has a UNIQUE constraint in both projects.
 - The table's `name` and `slug` checks accept the canonical values used by the new seed.
 
-The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` now seeds Physics, Chemistry, Biology, Mathematics, Higher Mathematics and ICT by stable slug before inserting the virtual-lab catalogue. Catalogue IDs are resolved by slug; no environment-specific UUIDs are embedded. The idempotent catalogue conflict handler changes only `subject_id` and `updated_at`, preserving editorial title, principle, publication and ordering state.
+The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` seeds Physics, Chemistry, Biology, Mathematics, Higher Mathematics and ICT by stable slug before inserting the virtual-lab catalogue. Catalogue IDs are resolved by slug; no environment-specific UUIDs are embedded. The idempotent catalogue conflict handler changes only `subject_id` and `updated_at`, preserving editorial title, principle, publication and ordering state.
 
-A source-guard test was added at `tests/virtual-lab-catalog-subject-seed.test.mjs`. It is not a live PostgreSQL integration test. No database migration was run.
+A second pass found that eleven follow-on virtual-lab migrations also embedded subject UUIDs. Those migrations now resolve Physics, Chemistry, Biology and Higher Mathematics by stable slug. The existing static tests that asserted the old UUIDs were updated to assert the stable slug contract. `tests/virtual-lab-catalog-subject-seed.test.mjs` now guards all six subject seeds and all eleven follow-on migration lookups.
+
+**Current-head CI verification:** commit `17fe13dd75dfe728535b7bb67c49e6f70e38f40e`, workflow run [#1177](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43077140765) completed successfully:
+- 451/451 Node guardrail tests passed
+- ESLint passed
+- TypeScript passed
+- Next.js production build passed
+- Production dependency audit passed
+
+This is CI/static evidence only. It does not execute the SQL migrations against PostgreSQL or validate live role/RLS behavior. No database migration was run.
 
 ### Migration hygiene
 
@@ -553,7 +562,7 @@ The PR contained two byte-identical practice-review migration files at different
 
 ### Current CI state
 
-The quality-check workflow for the branch was queued/in progress during this follow-up. The last recorded job state for run `43076117302` had dependency installation in progress; later branch-head changes triggered a new run. **Do not treat the seed test or the CSS correction as CI-passed until the workflow for the exact latest PR head completes.** The previous cancelled run `43075129249` had tests, ESLint and TypeScript pass, but its build was cancelled and dependency audit skipped.
+The latest code commit before this report update is `17fe13dd75dfe728535b7bb67c49e6f70e38f40e`. Its exact-head workflow run [#1177](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43077140765) completed with all configured checks successful: 451 tests, ESLint, TypeScript, production build and production dependency audit.
 
 ### Updated release decision
 

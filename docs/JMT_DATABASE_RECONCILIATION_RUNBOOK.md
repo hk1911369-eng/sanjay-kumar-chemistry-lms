@@ -377,3 +377,27 @@ Read-only schema inspection confirmed that **both Primary and JMT Test** have th
 A new source-level test `tests/virtual-lab-catalog-subject-seed.test.mjs` checks seed ordering, canonical slugs, slug-based foreign-key resolution, idempotency and preservation of editorial fields. The current-head CI run has passed guardrail tests, ESLint and TypeScript; production build and dependency audit were still running at the time of this update.
 
 **Limit:** no SQL was executed against either Supabase project and no migration was applied. The test is a static source test, not a database integration test. The migration still needs a disposable empty-database rehearsal and a populated-database rehearsal before any release.
+
+
+## 10. Supabase Security Advisor recheck — 11 November 2026
+
+Security Advisor was queried read-only on both connected projects.
+
+### Findings common to Primary and JMT Test
+
+- Two rate-limit event tables have RLS enabled with no policies: `public.app_rate_limit_events` and `public.auth_rate_limit_events`. This commonly means client roles cannot read/write those tables through RLS, which may be intentional for server-only telemetry. Verify grants and service-role/server access before adding any policy; do not add broad policies just to silence the advisor.
+- `public.get_public_course_teachers(uuid)` is callable by `anon` and is SECURITY DEFINER. This may be intentional for public course pages, but the function must expose only approved public teacher fields, filter inactive profiles, and constrain course visibility. The earlier function-definition comparison found Primary does not filter inactive profiles while JMT Test does. Treat this as a concrete P1 public-data minimization/function-drift issue, not merely a generic advisor warning.
+- Authenticated execution of SECURITY DEFINER functions is flagged by the advisor (18 functions in Primary, 23 in JMT Test). This is not automatically a vulnerability: several functions are designed as guarded RPC entry points. For every function, review EXECUTE grants, auth/role/ownership/entitlement checks, search_path, returned columns and mutation boundaries. Do not blanket-revoke authenticated execution without checking application dependencies.
+
+### Auth configuration
+
+- Both projects report Supabase Auth leaked-password protection disabled. Enablement is recommended for account security, but it is an Auth configuration change and was not made during this read-only audit. Schedule a controlled configuration change with product-owner approval and test password signup/reset flows afterward.
+
+### Severity and action
+
+1. **P1:** Align `get_public_course_teachers` with the active-profile filter and confirm published-course scope.
+2. **P1:** Review all SECURITY DEFINER functions by intended caller and prove each grant/guard pair. Start with payment approval/rejection, account activation, staff analytics, revision completion and student answer submission.
+3. **P2:** Confirm rate-limit tables are intentionally server-only and that no client-facing operation is broken.
+4. **P2:** Enable leaked-password protection after an approved auth-configuration window and verify recovery/signup flows.
+
+No advisor remediation, grant change, function replacement or Auth setting change was performed.

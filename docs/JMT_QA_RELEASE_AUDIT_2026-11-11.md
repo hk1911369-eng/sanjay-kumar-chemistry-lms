@@ -531,3 +531,30 @@ Commit `c34245e30f3da952cc77432adac32d1c6429be17` adds narrow-screen CSS overrid
 ### Public catalogue operational dependency
 
 The live public course catalogue currently reports 0 of 0 available courses. This is a production content/readiness dependency, not a reason to insert demo records. The authorized academy operator must confirm the real course offering and publish the approved catalogue through the supported admin workflow before public enrolment launch.
+
+
+## Follow-up engineering work — 12 November 2026
+
+### Empty-subject virtual-lab migration defect corrected on PR branch
+
+Read-only inspection of both connected Supabase projects confirmed:
+- `public.academic_subjects` exists in both environments.
+- It has zero rows in Primary and eight in JMT Test.
+- Its `slug` column has a UNIQUE constraint in both projects.
+- The table's `name` and `slug` checks accept the canonical values used by the new seed.
+
+The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` now seeds Physics, Chemistry, Biology, Mathematics and ICT by stable slug before inserting the virtual-lab catalogue. Catalogue IDs are resolved by slug; no environment-specific UUIDs are embedded. The idempotent catalogue conflict handler changes only `subject_id` and `updated_at`, preserving editorial title, principle, publication and ordering state.
+
+A source-guard test was added at `tests/virtual-lab-catalog-subject-seed.test.mjs`. It is not a live PostgreSQL integration test. No database migration was run.
+
+### Migration hygiene
+
+The PR contained two byte-identical practice-review migration files at different timestamps. Repository search found no references to the later duplicate. The duplicate `20261111145000_practice_review_fallback.sql` was removed from the PR branch; `20261111140100_practice_review_fallback.sql` remains. The current migration file inventory has 118 migration files and no duplicate 14-digit version prefixes. No live migration ledger was changed.
+
+### Current CI state
+
+The quality-check workflow for the branch was queued/in progress during this follow-up. The last recorded job state for run `43076117302` had dependency installation in progress; later branch-head changes triggered a new run. **Do not treat the seed test or the CSS correction as CI-passed until the workflow for the exact latest PR head completes.** The previous cancelled run `43075129249` had tests, ESLint and TypeScript pass, but its build was cancelled and dependency audit skipped.
+
+### Updated release decision
+
+Still **NOT READY for production merge/deploy**. The subject seed correction fixes a real empty-database migration defect in source, but production schema parity, migration rehearsal, private Storage configuration, Auth hardening, catalogue content approval and browser E2E remain open. No production mutation, deployment or merge was performed.

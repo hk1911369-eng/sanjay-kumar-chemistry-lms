@@ -485,3 +485,35 @@ These advisor findings are not automatically confirmed vulnerabilities. The auth
 6. Enable leaked-password protection through a reviewed Auth configuration change after confirming user impact and supported settings.
 
 All checks in this section were read-only. No database mutation, project setting change, deployment, merge or PR state change was performed.
+
+
+
+## Live public-site smoke check — 11 November 2026
+
+**Scope:** Read-only browser inspection of the public Render production URL. No sign-in, form submission, course application, private route access or data mutation was performed.
+
+### Public homepage
+
+- URL: https://sanjay-kumar-chemistry-lms.onrender.com/
+- HTTP status: 200; page rendered with title `JMT Academy | Online & Offline Learning`.
+- Main navigation and landing sections were present: Courses, About, Contact, Student login; live+recorded, recorded-only and offline academy descriptions.
+- Render free-service cold start was observed before the page became available (approximately 15 seconds in this browser session).
+- A 390px mobile viewport inspection found two child elements extending beyond the viewport:
+  - Student login anchor right edge approximately 470px.
+  - Hero JMT text span right edge approximately 413px.
+- The document's reported scroll width was 390px, indicating outer overflow is constrained/hidden; that does not establish that the two child elements remain fully visible or operable. The earlier automated summary that reported no overflow is therefore not accepted as a clean mobile pass.
+
+**Finding MOB-01 — P2 responsive clipping:** inspect the mobile header/navigation and hero illustration/text layout. Ensure every interactive control and visible brand element stays within the viewport and can be reached without clipping at 320px, 360px, 390px and 430px. Retest with screenshots and DOM bounding boxes after a code fix.
+
+### Public course catalogue
+
+- URL: https://sanjay-kumar-chemistry-lms.onrender.com/courses
+- HTTP status: 200.
+- Rendered catalogue reported **0 of 0 available courses** and showed the empty-state message “No matching courses”.
+- This is consistent with the earlier read-only live database audit that found zero production courses and zero academic subjects, but the browser check alone does not prove the underlying database cause.
+
+**Finding CAT-01 — P1 public launch readiness:** the live public catalogue currently exposes no enrolable courses. Before inviting learners or advertising open enrolment, an authorized administrator must publish at least one verified course with subjects, format, schedule, fees, teacher, and working application/enrolment path. Confirm the intended production catalogue content with the product owner; do not seed demo records or alter production data as part of QA.
+
+### Limits
+
+This was a bounded public-page smoke check, not a full Playwright suite or an authenticated student/teacher journey. No visual pixel comparison, accessibility audit, authenticated workflow, private data check, database query, deployment, or mutation was performed. No claim is made that all routes work.

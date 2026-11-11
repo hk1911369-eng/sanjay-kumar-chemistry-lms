@@ -12,6 +12,7 @@ GRANT SELECT (attempt_number) ON public.student_practice_attempts TO authenticat
 CREATE OR REPLACE FUNCTION public.prevent_practice_question_history_rewrite()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = ''
 AS $
 BEGIN

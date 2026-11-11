@@ -771,3 +771,12 @@ The live payment-submission trigger has a NULL-`delivery_mode` compatibility bra
 **Impact:** A student can submit a NULL-mode initial payment for a new admission without an accepted application and while enrollment is closed; if an admin approves it, the RPC can activate enrollment. This is a workflow gate bypass, not automatic payment approval. Publication, amount, provider, sender and proof checks remain separate controls.
 
 **Recommended remediation (not applied):** Restrict NULL-mode compatibility to verified legacy accounts/enrollments, preferably monthly renewals only; reject new NULL-mode initial payments; enforce enrollment-open and accepted-application checks at both submission and approval. Add direct Data API and server-action regression tests for missing application and closed enrollment. No rows were read or changed during this review.
+
+
+### Revision-task completion does not enforce parent-course lifecycle
+
+`complete_revision_task(p_task_id)` checks active student role, ownership/pending status, and current active paid enrollment, then completes the task, may generate a follow-on spaced-repetition task, and inserts a `revision_completed` event. It does not check the parent course's `is_published` or `archived_at` state. Learner SELECT RLS allows the student to see their own revision tasks without a parent-course lifecycle condition. Consequently, pending tasks can still be completed and new tasks/events generated after course unpublishing or archival while the enrollment row remains active and paid.
+
+**Impact:** Learning activity and telemetry continue after course withdrawal from the catalogue; this is a lifecycle-consistency gap, not a payment or cross-student authorization bypass.
+
+**Recommended remediation (not applied):** If archival/unpublishing is intended to freeze study activity, enforce both parent-course gates inside the RPC before updating tasks or emitting events. Add tests for archived, unpublished, and active published courses. No task or learning-event rows were read or changed.

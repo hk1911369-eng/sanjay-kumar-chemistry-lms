@@ -276,6 +276,34 @@ export async function submitWrittenExam(formData:FormData) {
  redirect(error?'/academic?error=written_duplicate':'/academic?saved=written_submission');
 }
 
+export async function saveWrittenExamDraft(
+ examId:string,
+ answers:Record<string,string>,
+ expectedVersion:number
+) {
+ const {supabase,role}=await actor();
+ if(role!=='student'
+   || !/^[0-9a-f-]{36}$/i.test(examId)
+   || !Number.isSafeInteger(expectedVersion)
+   || expectedVersion<0
+   || !answers
+   || typeof answers!=='object'
+   || Array.isArray(answers)
+   || Object.keys(answers).length>30
+   || Object.values(answers).some(value=>typeof value!=='string'||value.length>12000)) {
+  return {ok:false,conflict:false};
+ }
+ const {data,error}=await supabase.rpc('save_written_exam_draft',{
+  p_exam_id:examId,
+  p_answers:answers,
+  p_expected_version:expectedVersion,
+ });
+ if(error) return {ok:false,conflict:error.code==='40001'};
+ const row=Array.isArray(data)?data[0]:null;
+ if(!row||!Number.isSafeInteger(Number(row.draft_version))) return {ok:false,conflict:false};
+ return {ok:true,version:Number(row.draft_version),savedAt:String(row.saved_at)};
+}
+
 export async function gradeWrittenExam(formData:FormData) {
  const {supabase,user,role}=await actor();
  if(!['admin','teacher','staff'].includes(role)) redirect('/portal');

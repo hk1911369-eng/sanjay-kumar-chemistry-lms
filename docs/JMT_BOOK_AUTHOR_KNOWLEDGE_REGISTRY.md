@@ -152,3 +152,13 @@ The following tranche documents extend the discovery register. Each remains a so
 
 | 18C | NCTB 2026–27 notice plus CESC institution-scoped HSC 2028 Science syllabus | The official notice title/date are verified but its attachment remains unread; CESC's chapter and term schedule is local institutional evidence only. | [Tranche 18C](JMT_HSC_2028_CURRICULUM_EVIDENCE_BOUNDARY_TRANCHE_18_NCTB_CESC.md) |
 
+
+
+## 11. Language-subject bibliography expansion — tranche 19 (11 November 2026)
+
+| Tranche | Coverage | Evidence boundary | Record |
+|---|---|---|---|
+| 19 | NCTB Bangla/English core-text listing; Akkharpatra Bangla Grammar; Nobodoot and Advanced English Second Paper; Panjeree practice books; 10 Minute School Bangla Second Paper | NCTB official list is 2025–26 only; commercial grammar/practice resources are distinct; retailer metadata contains page-count and language/byline conflicts. | [Tranche 19](JMT_HSC_BANGLA_ENGLISH_RESOURCE_AUTHOR_REGISTRY_TRANCHE_19_NCTB_AKKHARPATRA_PANJEREE_10MS.md) |
+
+**Key correction:** The NCTB official 2025–26 higher-secondary page lists Sahityapath, Sahaypath, English for Today, ICT and ICT English Version. This is not evidence that the 2026–27 cohort's final textbook/syllabus list is identical; the 1 October 2026 higher-secondary notice attachment remains a blocking source-retrieval task.
+

@@ -109,3 +109,36 @@ The system should synthesize independent explanations in its own words, cite the
 ## 8. Current status
 
 This is an initial discovery register, not “every book” yet. No claim is made that all Bangladesh authors, editions, or book contents have been found or reviewed. The programme must measure completeness by subject/cohort/publisher coverage and verified edition records, not by the number of search results.
+
+
+## 9. Subject bibliography expansion — tranches 12–17 (11 November 2026)
+
+The following tranche documents extend the discovery register. Each remains a source-linked bibliography, not proof of NCTB prescription, full-text review, or content quality.
+
+| Tranche | Coverage | Key integrity observations | Record |
+|---|---|---|---|
+| 12 | Biology: Akkharpatra Bengali/English and practical editions; Gazi Publishers; Lecture; Nisharga lead | Language variants and practical manuals are separate; Lecture Exam 2028 byline conflict unresolved; Gazi author spelling/page count varies; Nisharga is an unverified lead. | [Tranche 12](JMT_HSC_BIOLOGY_AUTHOR_EDITION_REGISTRY_TRANCHE_12_AKKHARPATRA_GAZI_LECTURE.md) |
+| 13 | Physics: Metro Publications / Prof. Dr. Gias Uddin Ahmed; ordinary Physics and Mathematical Physics | Ordinary paper textbooks and Mathematical Physics are distinct; source bylines differ; title-page verification remains necessary. | [Tranche 13](JMT_HSC_PHYSICS_AUTHOR_EDITION_REGISTRY_TRANCHE_13_METRO_GIAS_UDDIN_AHMED.md) |
+| 14 | ICT: NCTB boundary, Systech, Akkharpatra, Lecture Creative ICT and Panjeree | Official NCTB textbook is the curriculum anchor; commercial textbooks, practice books and historical Q&A resources must not be conflated; some language/byline/page conflicts remain. | [Tranche 14](JMT_HSC_ICT_RESOURCE_AUTHOR_REGISTRY_TRANCHE_14_NCTB_SYSTECH_AKKHARPATRA_LECTURE_PANJEREE.md) |
+| 15 | Higher Mathematics: Akkharpatra, SKL and Alpha | Bengali/English and textbook/solution editions are separate; page counts and bylines conflict across publisher/retailer records. | [Tranche 15](JMT_HSC_HIGHER_MATHEMATICS_AUTHOR_EDITION_REGISTRY_TRANCHE_15_AKKHARPATRA_SKL_ALPHA.md) |
+| 16 | Chemistry: Abacus, Akkharpatra, Hasan Book House and Lecture | Abacus identifier 9789843376725 appears against two different products; Akkharpatra page counts conflict; Hasan author lists vary by edition/source; Lecture identifiers shown as ISBNs are 22 digits and are not valid ISBN lengths. | [Tranche 16](JMT_HSC_CHEMISTRY_AUTHOR_EDITION_REGISTRY_TRANCHE_16_ABACUS_AKKHARPATRA_HASAN_LECTURE.md) |
+| 17 | Chemistry practice/supplement resources: Panjeree and historical Colour Web / Swapan Kumar Mistry | Practice books and supplements are not core textbooks; exam-year labels must be respected; Panjeree identifiers require ISBN validation; Colour Web records are historical. | [Tranche 17](JMT_HSC_CHEMISTRY_PRACTICE_AND_HISTORICAL_REGISTRY_TRANCHE_17_PANJEREE_COLOUR_WEB.md) |
+
+### Consolidated author and publisher discovery leads
+
+- **Biology:** Professor Dr. Md. Azibor/Azibur Rahman; Professor Debashish Roy; Professor Dr. Nur-e-Parvin Khanom/Khanam; Professor Dr. Md. Fazlul Haque; Dr. Irm Jahan; Muid Mustarik; Gazi S. M. Azmol / Gazi Ajmal; Lecture contributors surfaced across editions include Milon Kanti, Dr. Ashfaqul Muid Khandaker, Nadira Akter, Milon Kanti Barua and Professor Md. Ashraf Uddin. Exact edition-level responsibility statements remain to be confirmed.
+- **Physics:** Professor Dr. Gias Uddin Ahmed and Mathematical Physics co-contributors Prof. Rashidul Hasan, Prof. Mahera Ahmed, Mohammad Alamgeer Hossain and Dr. Md. Mominul Haque; exact bylines vary across editions and retailers.
+- **ICT:** Mahbubur Rahman (Systech); A. Z. M. Asaduzzaman, Dr. Md. Masud Rana and Mohammad Ariful Islam (Akkharpatra Bengali publisher record); Lecture and Panjeree practice resources have separate editorial/publisher attribution.
+- **Higher Mathematics:** Professor Ashim Kumar Saha; Professor Dr. B. M. Ikramul Haque; Md. Nurul Islam; Md. Khalilur Rahman (Akkharpatra editions); Md. Ketab Uddin and Prof. Md. Nazrul Islam (SKL); S. U. Ahmed (Alpha), with older Alpha records also naming A. F. M. Abdur Rahman and M. A. Jabbar.
+- **Chemistry:** Dr. Gazi Md. Ahsanul Kabir; Dr. Rabiul Islam; Mahbub Hasan Linkon/Lingcon; Dr. Md. Abdul Karim; Dr. Md. Nurul Islam; Prof. Haradhan Nag; Dr. Saroj Kanti Singha Hazari (name spelling varies); Sanjit Kumar Guha; Swapan Kumar Mistry (historical Colour Web records).
+
+### Bibliography status rules reinforced
+
+1. A discovered author is not automatically a verified canonical person. Keep alias candidates and exact printed bylines separately.
+2. An edition's language, paper, resource type and cohort are edition-level facts, not book-family assumptions.
+3. ISBNs must be validated for length/check digit and checked for duplicate assignment. Retailer SKU/product IDs are not ISBNs.
+4. A publisher catalogue proves portfolio existence, not NCTB endorsement.
+5. A retailer's Exam 2028 label is a source observation until reconciled with the official cohort/syllabus record.
+6. Physical title/copyright pages and contents pages remain the preferred verification evidence.
+7. Rights review must precede full-text ingestion, storage, indexing for redistribution, or public display.
+

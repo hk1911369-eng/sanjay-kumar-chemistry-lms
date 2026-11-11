@@ -216,3 +216,22 @@ These queries inspect metadata only. Row counts and synthetic fixture checks sho
 - Latest live checks are read-only; no SQL/DDL, Auth settings, Storage settings, migration history or production data were changed.
 - Browser E2E remains unexecuted because the BrowserAct CLI could not be installed in the current execution environment; no browser result is claimed.
 - Release decision: **NOT READY**.
+
+
+## 7. Live migration-ledger version check
+
+A fresh read-only migration inventory on 11 November 2026 returned:
+
+| Measure | Primary project | JMT Test |
+|---|---:|---:|
+| Recorded migration entries | 105 | 255 |
+| Latest recorded version | `20261108221907` | `20261111133701` |
+
+Important exact differences:
+- Primary has no recorded `database_driven_virtual_lab_catalog` migration; JMT Test records it as version `20261109134826`.
+- The branch file is named/versioned `20261110100000_database_driven_virtual_lab_catalog.sql`. A matching migration name under a different version is not evidence that its SQL body is identical.
+- JMT Test records three `revoke_client_truncate_and_trigger` entries at versions `20261110171105`, `20261110175009` and `20261110175102`. Primary records none. The branch currently contains a single migration file `20261110263000_revoke_client_truncate_and_trigger.sql`. Do not replay or collapse these entries without comparing their SQL bodies and the resulting ACL state.
+- Neither project records `20261111110000_add_written_exam_autosave_recovery`; neither has the `written_exam_drafts` table.
+- JMT Test records later feature migrations and additional practice/assignment-history migrations that are not part of the primary ledger.
+
+This confirms that the migration histories differ not only in entry count but also in version ordering and feature coverage. The branch migration directory, primary ledger and JMT Test ledger must be reconciled semantically before a release plan is executable.

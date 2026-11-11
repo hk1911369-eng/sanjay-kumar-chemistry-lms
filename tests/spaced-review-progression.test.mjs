@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261111160000_refine_spaced_review_progression.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261111170000_refine_spaced_review_progression.sql', import.meta.url), 'utf8');
 
 test('spaced review intervals count only completed spaced-repetition tasks for the same course and concept', () => {
   assert.match(migration, /course_id = v_course_id[\s\S]*concept_id = v_concept_id[\s\S]*source_type = 'spaced_repetition'[\s\S]*status = 'completed'/i);

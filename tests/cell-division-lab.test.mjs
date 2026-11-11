@@ -32,7 +32,7 @@ test('cell division template is allowed and published for Biology', async () => 
   ]);
   assert.match(constraint, /'cell-division'/);
   assert.match(catalogue, /biology-cell-division/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000003/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'biology'/);
   assert.match(catalogue, /'cell-division'/);
   assert.match(catalogue, /is_published,[\s\S]*true/);
 });

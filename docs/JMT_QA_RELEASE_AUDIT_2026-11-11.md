@@ -88,3 +88,30 @@ These are recorded findings from the prior environment comparison; they were not
 ## Verdict
 
 **NOT READY for production merge/deploy.** Reconsider only after the production security/schema gaps are resolved through a reviewed staging reconciliation, representative critical journeys pass, and backup/restore plus rollback are demonstrated.
+
+
+## Follow-up verification — 11 November 2026
+
+After the initial report commit, the repository test directory was enumerated directly:
+- **129** files matching the current Node test glob `tests/*.test.mjs` were present.
+- The suite is broad and includes security/role guards, payment ownership and approval, assessment integrity, practice/revision, learning-event integrity, virtual-lab and lab-notebook logic, and written-exam validation/drafts.
+- These are valuable automated tests; they should not be confused with browser-driven end-to-end tests. The package manifest still has no Playwright dependency or browser-test script, and no Playwright config was found at the audited branch.
+
+The CI run associated with report commit `5b1e8687e11b5b791989429a391d9e2319b7250f` subsequently completed successfully:
+- `npm ci`: passed.
+- `npm test`: passed.
+- `npm run lint`: passed.
+- `npm run typecheck`: passed.
+- `npm run build`: passed.
+- `npm audit --omit=dev`: passed.
+- Workflow run: [43065189910](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43065189910).
+
+This successful run validates the exact report commit, not a later commit created by this follow-up edit. CI must be checked again for the resulting branch head.
+
+### Browser tooling constraint
+
+The BrowserAct skill is present in the available skill catalogue, but its CLI was not installed in this execution environment. The documented installation attempt failed because the environment could not resolve/download the required Python 3.12 runtime from GitHub. No browser was launched and no browser journey was executed. This is an environment limitation, not a test failure in the application.
+
+### Updated interpretation
+
+The correct conclusion is **strong automated Node-level regression coverage, but no verified browser E2E coverage yet**. The earlier wording “no browser-level coverage” refers specifically to the missing Playwright/browser harness, not absence of automated tests generally. The release verdict remains **NOT READY** because staging, production parity, and critical browser journeys remain unverified.

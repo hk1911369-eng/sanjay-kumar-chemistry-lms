@@ -6,12 +6,14 @@ ALTER TABLE public.virtual_lab_catalog
 
 INSERT INTO public.virtual_lab_catalog
   (lab_key, subject_id, title, summary, principle, simulation_type, is_published, sort_order)
-VALUES
-  ('physics-projectile-motion', '10000000-0000-4000-8000-000000000002',
+SELECT
+  'physics-projectile-motion', subject.id,
    'Projectile motion and air resistance',
    'Investigate launch speed, angle, gravity and quadratic air resistance with a numerical trajectory model.',
    'The trajectory is integrated using fourth-order Runge–Kutta in SI units. A no-drag analytical reference is shown for comparison; the drag model assumes constant air density and fixed drag coefficient.',
-   'projectile', true, 16)
+   'projectile', true, 16
+FROM public.academic_subjects subject
+WHERE subject.slug = 'physics'
 ON CONFLICT (lab_key) DO UPDATE SET
   subject_id = EXCLUDED.subject_id,
   title = EXCLUDED.title,

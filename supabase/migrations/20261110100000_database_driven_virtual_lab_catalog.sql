@@ -49,6 +49,7 @@ VALUES
   ('Chemistry', 'chemistry', 'Chemistry learning and practical simulations'),
   ('Biology', 'biology', 'Biology learning and practical simulations'),
   ('Mathematics', 'mathematics', 'Mathematics learning and simulations'),
+  ('Higher Mathematics', 'higher-mathematics', 'Higher mathematics learning and simulations'),
   ('ICT', 'ict', 'ICT learning and interactive simulations'),
   ('Higher Mathematics', 'higher-mathematics', 'Higher Mathematics learning and simulations')
 ON CONFLICT (slug) DO NOTHING;

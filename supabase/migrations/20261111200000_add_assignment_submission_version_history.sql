@@ -35,8 +35,10 @@ USING (
   OR (
     (SELECT public.current_role())::text = ANY (ARRAY['teacher'::text, 'staff'::text])
     AND EXISTS (
-      SELECT 1 FROM public.course_assignments ca
-      WHERE ca.course_id = assignment_submission_versions.assignment_id
+      SELECT 1
+      FROM public.assignments a
+      JOIN public.course_assignments ca ON ca.course_id = a.course_id
+      WHERE a.id = assignment_submission_versions.assignment_id
         AND ca.teacher_id = (SELECT auth.uid())
     )
   )

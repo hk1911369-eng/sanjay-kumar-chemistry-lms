@@ -12,6 +12,7 @@ export type StudentPracticeQuestion = {
   question_text: string;
   options: string[];
   marks: number;
+  selection_reason: string;
 };
 
 const difficultyLabel: Record<StudentPracticeQuestion['difficulty'], string> = {
@@ -94,6 +95,7 @@ export function StudentPracticeWorkspace({ questions }: { questions: StudentPrac
           <span className="practice-marks">{question.marks} mark{question.marks === 1 ? '' : 's'}</span>
         </header>
         {(question.chapter_label || question.topic) && <p className="practice-topic">{[question.chapter_label, question.topic].filter(Boolean).join(' · ')}</p>}
+        <p className="muted"><b>Why this question:</b> {question.selection_reason}</p>
         <h2>{question.question_text}</h2>
         <fieldset className="practice-options" disabled={Boolean(result) || pending === question.question_id}>
           <legend className="sr-only">Choose your answer</legend>

@@ -385,7 +385,7 @@ BEGIN
     title, scheduled_for, priority
   ) VALUES (
     NEW.student_id, v_course_id, NEW.concept_id, 'spaced_repetition', v_event_id,
-    'Review: ' || v_title, NEW.next_review_at,
+    'Review: ' || left(v_title, 172), NEW.next_review_at,
     CASE WHEN NEW.mastery_score < 0.50 THEN 5
          WHEN NEW.mastery_score < 0.70 THEN 4 ELSE 3 END
   )

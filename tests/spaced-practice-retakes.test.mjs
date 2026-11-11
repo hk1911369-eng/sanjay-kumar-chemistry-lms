@@ -40,7 +40,7 @@ test('retakes do not increase mastery evidence count or mastery score', () => {
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SET search_path = ''/i);
   const scheduler = migration.split('CREATE OR REPLACE FUNCTION public.schedule_revision_after_mastery_update()')[1]?.split('$$;')[0] ?? '';
   assert.match(scheduler, /SET search_path = ''/i);
-  assert.doesNotMatch(scheduler, /SECURITY DEFINER/i);
+  assert.match(scheduler, /SECURITY DEFINER/i);
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path = ''/i);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.schedule_revision_after_mastery_update\(\) FROM PUBLIC, anon, authenticated/i);
 });

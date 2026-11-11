@@ -507,3 +507,26 @@ The later duplicate had no references in repository search and was removed from 
 ### Current-head CI
 
 The resulting PR head is `eaf0299bbeb7e9b216c755cb8f1f596ae4d40f17`. Quality Checks run `43076045771` was queued at the time of this note. No result is claimed for this head until that exact run completes.
+
+
+## 13. Confirmed function-drift migration provenance
+
+The branch contains corrective migrations for three of the previously identified function-definition differences. The current Primary ledger lacks these migrations, while JMT Test records them.
+
+| Function / behavior | PR branch migration | Primary ledger | JMT Test ledger | Consequence |
+|---|---|---|---|---|
+| `get_public_course_teachers(uuid)` filters inactive staff | `20261110115928_filter_inactive_public_course_teachers.sql` | Absent | Present as `20261110115928` | Primary still exposes inactive assigned teachers on public course pages. |
+| `can_staff_access_student(uuid)` limits manual-payment access to pending review | `20261109120000_limit_staff_profile_access_to_pending_payments.sql` | Absent | Present under versions `20261109095530` and `20261109120000` | Primary retains broader payment-submission visibility than Test. The duplicate Test ledger name/version history must be understood before migration planning. |
+| `complete_revision_task(uuid)` requires paid access at completion | `20261109130000_require_paid_access_for_revision_completion.sql` | Absent | Present under versions `20261109095846` and `20261109130000` | Primary lacks this entitlement hardening. |
+| `complete_revision_task(uuid)` also enforces due time and course/concept state | `20261111150000_enforce_revision_task_due_and_course_access.sql` | Absent | Present as `20261111131559` | Primary may allow completion outside the stricter due/published-course/concept evidence conditions. |
+| `record_simulation_completion(uuid,text,integer)` resolves published catalogue entries and subject-course relationship | `20261110100000_database_driven_virtual_lab_catalog.sql` | Absent | Present under version `20261109134826` | Primary still has the older fixed subject mapping and lacks the database-driven catalogue schema. |
+
+### Why this matters
+
+These are not hypothetical differences inferred from source files alone. They were observed by querying `pg_get_functiondef` in both live projects, then correlating the changed definitions to migration files and migration-ledger entries. In particular, the stricter JMT Test `complete_revision_task` definition adds due-time and published course/concept checks, while Primary's function does not.
+
+The Test ledger contains multiple versions with the same migration name for several fixes. Treat those as migration-history anomalies requiring source/checksum and schema-effect reconciliation; do not attempt to resolve by deleting ledger rows or replaying the latest file blindly.
+
+**Priority:** `complete_revision_task` is P1 entitlement/learning-evidence integrity; `can_staff_access_student` is P2 privacy minimization; `get_public_course_teachers` is P2 public-profile correctness; `record_simulation_completion` is a feature-contract/schema mismatch that blocks safe practical-learning parity.
+
+No corrective function was deployed to Primary. No migration was applied in this step.

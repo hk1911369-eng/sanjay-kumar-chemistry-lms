@@ -12,8 +12,7 @@ GRANT SELECT (attempt_number) ON public.student_practice_attempts TO authenticat
 CREATE OR REPLACE FUNCTION public.prevent_practice_question_history_rewrite()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, public, pg_temp
+SET search_path = ''
 AS $
 BEGIN
   IF ROW(
@@ -357,8 +356,7 @@ GRANT EXECUTE ON FUNCTION public.submit_student_practice_answer(uuid, integer) T
 CREATE OR REPLACE FUNCTION public.schedule_revision_after_mastery_update()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, public, pg_temp
+SET search_path = ''
 AS $$
 DECLARE
   v_course_id uuid;

@@ -144,3 +144,103 @@ The PR file inventory was re-counted after the CI follow-up. Across 363 changed 
 - 0 Playwright or dedicated E2E files/configuration in the PR diff.
 
 These are changed-file counts, not a claim that every item is newly created or that every scenario has runtime coverage. The absence of Playwright/E2E files is consistent with the root `package.json`, which currently exposes only the Node test, lint, typecheck and build scripts. The 106 Node tests are valuable guardrails, but source-inspection assertions and model/unit tests do not replace real browser journeys against seeded data.
+
+
+## Live Supabase parity and security recheck — 11 November 2026
+
+Read-only checks were run against the connected non-test project (the primary project referred to as production in the existing reconciliation) and the separately named **JMT Test** project. No SQL writes, migrations, Auth changes, or data mutations were performed.
+
+### Exact current schema inventory
+
+| Inventory | Primary non-test project | JMT Test | Difference |
+|---|---:|---:|---:|
+| Public base tables | 49 | 57 | 8 missing in primary |
+| Public functions | 53 | 78 | 25 missing in primary |
+| Public RLS policies | 100 | 147 | 47 fewer in primary |
+| Non-internal public triggers | 30 | 60 | 30 fewer in primary |
+| Public-table constraints | 295 | 377 | 82 fewer in primary |
+| Public indexes | 170 | 210 | 40 fewer in primary |
+| Storage buckets | 4 | 5 | 1 fewer in primary |
+| Migration ledger rows | 105 | 255 | 150 fewer in primary |
+| Latest migration version | `20261108221907` | `20261111133701` | Test ledger is substantially ahead |
+
+The eight public tables present in JMT Test but absent in the primary project are:
+- `assignment_submission_versions`
+- `lab_notebook_entries`
+- `lab_notebook_evidence`
+- `lab_notebook_review_history`
+- `lab_practical_assignments`
+- `student_practice_attempts`
+- `student_practice_questions`
+- `virtual_lab_catalog`
+
+The 25 public function names present in JMT Test but absent in the primary project are:
+- `capture_practical_learning_mastery`
+- `enforce_assessment_content_draft_integrity`
+- `enforce_lesson_concept_draft_integrity`
+- `enforce_student_activity_rate_limit`
+- `enforce_teacher_curriculum_draft_integrity`
+- `get_staff_practice_analytics`
+- `get_student_practice_questions`
+- `guard_assessment_submission_edits`
+- `guard_concept_parent_edge`
+- `guard_lab_notebook_assignment_link`
+- `guard_lab_notebook_entry_write`
+- `guard_lab_notebook_evidence_insert`
+- `guard_lab_practical_assignment_write`
+- `guard_manual_payment_approval`
+- `guard_notification_read_state`
+- `guard_student_practice_question_scope`
+- `prevent_practice_question_history_rewrite`
+- `prevent_teacher_attendance_identity_change`
+- `record_assignment_submission_version`
+- `record_lab_notebook_review_history`
+- `record_lesson_completion`
+- `record_practical_review_as_learning_event`
+- `schedule_revision_after_mastery_update`
+- `set_lesson_discussion_pin`
+- `submit_student_practice_answer`
+
+These are live metadata counts and name differences, not a migration recommendation. They confirm that the current primary and test schemas are not at parity. Do not replay the test ledger blindly: versions and history differ, and some migrations may be non-idempotent or depend on prior state. Build a reviewed, ordered reconciliation plan with backups and explicit rollback/forward-fix steps.
+
+### Security advisor findings
+
+Both projects' live Supabase security advisors reported:
+- One anonymous-executable `SECURITY DEFINER` function: `public.get_public_course_teachers(uuid)`.
+- Multiple authenticated-executable `SECURITY DEFINER` RPCs (18 in the primary project, 23 in JMT Test).
+- Leaked-password protection disabled.
+- Two RLS-enabled, policy-free rate-limit event tables: `app_rate_limit_events` and `auth_rate_limit_events` (INFO finding).
+
+The authenticated RPC warnings are not automatically vulnerabilities. I inspected the definitions of payment approval, student-account activation, quiz submission, practice-question delivery and practice-answer submission. The sampled functions check the active authenticated identity and expected role; payment approval checks for admin, and student learning functions check student role and paid active enrollment. `current_role()` returns a role only for an active profile. These source checks reduce concern but do not replace negative authorization tests with real role fixtures.
+
+The anonymous teacher-listing RPC is intentionally public-facing, but a concrete primary/test mismatch exists:
+- Primary project definition filters for published, non-archived courses and teacher/staff roles, but **does not filter `profiles.is_active`**.
+- JMT Test definition additionally requires `p.is_active IS TRUE`.
+- The PR contains migration `20261110115928_filter_inactive_public_course_teachers.sql` and a Node guard test for this rule.
+- The primary project's migration ledger currently ends at `20261108221907`, so that migration is not recorded as applied there; JMT Test includes it.
+
+**Finding (P1 privacy/parity):** before the primary project is treated as release-equivalent, apply and verify the reviewed active-teacher filter through the approved migration reconciliation. Until then, the public course-teacher RPC can return the names/IDs of inactive assigned teachers. This is narrower than a general profile-data leak; the inspected return shape contains only ID and full name.
+
+**Finding (P1 security configuration):** leaked-password protection is disabled in both projects according to the live advisors. Enable it through a reviewed Auth configuration change before broad public onboarding, then verify the setting. No Auth setting was changed during this audit.
+
+The rate-limit tables' RLS-enabled/no-policy state is consistent with a deny-by-default, server-only design if clients are not meant to query them directly. Verify table grants and intended access before changing policies; do not add broad client policies just to silence the INFO finding.
+
+### Current-head CI
+
+The latest PR head at the time of this check is `ac217af815df289d8a7c53e97ad4341b9c4e03fa`. Its Quality checks workflow run `43065916384` completed successfully:
+- Dependency installation: passed.
+- Guardrail tests: passed.
+- ESLint: passed.
+- TypeScript: passed.
+- Production build: passed.
+- Production dependency audit: passed.
+
+This is the first verified CI result for the exact current documentation-updated PR head. It does not resolve the live schema gap, Auth configuration warning, or missing browser E2E.
+
+### Browser tooling attempt
+
+The Web App QA & Release Copilot skill and its `audit-release`, `map-critical-journeys`, `build-playwright-tests`, `audit-api-data`, `audit-security-privacy`, `review-dependencies-ci`, and `decide-release` workflows are now present in the available skill catalogue and were read for this review. The separate BrowserAct skill is also available. However, the BrowserAct CLI is absent; installation was attempted with the available `uv 0.10.0` and failed because the execution environment could not resolve/download the Python 3.12 runtime from GitHub. No browser session was started, and no browser journey is claimed as passed.
+
+### Updated release decision
+
+**NOT READY for production merge/deploy.** The exact current-head CI is green, but the live database comparison confirms eight missing tables, 25 missing functions, 47 fewer public policies, 30 fewer triggers, 82 fewer constraints, 40 fewer indexes and one fewer storage bucket in the primary project relative to JMT Test. The inactive-teacher public RPC mismatch and disabled leaked-password protection also remain open. Reconcile these deliberately in a controlled staging/release process; do not blindly replay migrations or change production/Auth settings as part of this audit.

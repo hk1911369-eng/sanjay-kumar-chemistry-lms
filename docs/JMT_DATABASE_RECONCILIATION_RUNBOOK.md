@@ -305,3 +305,24 @@ The current public catalogue result of 0 courses is consistent with Primary havi
 **Release remains NOT READY.** The immediate engineering task is to create a migration-by-migration reconciliation matrix and compare the eight missing table definitions plus their dependencies against the branch. Then provision or designate an approved isolated staging environment, subject to cost approval, and rehearse only the semantically selected migration set there.
 
 This inventory was read-only. No migration was applied, no SQL/DDL was executed, no Auth/Storage configuration was changed, and no production data was inserted, updated or deleted.
+
+
+## 10. Virtual-lab subject seed correction prepared on PR branch
+
+The earlier section 3.A identified a real empty-database defect: the Learning OS foundation only creates academic subjects by deriving them from existing course subject arrays. Primary currently has no courses and no academic-subject rows. The original virtual-lab catalogue migration then attempted to insert catalogue rows using fixed UUIDs, which would violate the subject foreign key on a fresh/empty primary schema.
+
+**Correction committed on PR #42:**
+- Migration: `supabase/migrations/20261110100000_database_driven_virtual_lab_catalog.sql`
+- Commit: `df53d8a5f524707aeb84ac215cb94e536c01a0c4`
+- Test: `tests/virtual-lab-catalog-subject-seed.test.mjs`
+- Test commit: `9499dc448e9b1e6d34f3d0770da016f775b1374e`
+
+The migration now:
+1. Inserts the five required canonical subject slugs (physics, chemistry, biology, mathematics, ict) with `ON CONFLICT (slug) DO NOTHING`.
+2. Resolves subject foreign keys by joining the stable slug, rather than assuming UUIDs generated in another environment.
+3. Preserves existing subject IDs and any existing course-subject relationships.
+4. Keeps the catalogue upsert idempotent by `lab_key`.
+
+This makes the catalogue seed independent of pre-existing course rows and environment-specific subject UUIDs. It does **not** prove that the migration runs successfully on either live database. The static Node test only guards the migration source contract; a disposable PostgreSQL integration test must still verify clean install, rerun behavior, existing-subject preservation, FK validity and catalogue row count.
+
+**Status:** code correction committed on the unmerged PR branch; CI run `43074650506` was queued/in progress at the time of this note. No live database was modified and no migration was applied. This resolves the identified source-level seed precondition, not the broader migration-ledger, schema-parity or release blockers.

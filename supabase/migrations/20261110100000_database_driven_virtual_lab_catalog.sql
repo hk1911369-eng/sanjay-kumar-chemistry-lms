@@ -68,12 +68,6 @@ FROM (VALUES
 JOIN public.academic_subjects subject ON subject.slug = seed.subject_slug
 ON CONFLICT (lab_key) DO UPDATE SET
   subject_id = EXCLUDED.subject_id,
-  title = EXCLUDED.title,
-  summary = EXCLUDED.summary,
-  principle = EXCLUDED.principle,
-  simulation_type = EXCLUDED.simulation_type,
-  is_published = EXCLUDED.is_published,
-  sort_order = EXCLUDED.sort_order,
   updated_at = now();
 
 CREATE OR REPLACE FUNCTION public.record_simulation_completion(

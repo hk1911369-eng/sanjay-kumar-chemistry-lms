@@ -339,3 +339,24 @@ The PR migration now updates only the resolved `subject_id` and `updated_at` on 
 - Current PR CI run: `43074970623` (in progress at documentation time).
 
 This remains source-level protection until PostgreSQL integration tests verify both first application and repeated execution against a disposable database.
+
+
+## 11. Fresh Supabase security-advisor comparison — 11 November 2026
+
+Read-only Supabase security advisor results were refreshed for both projects at approximately 18:09 UTC.
+
+| Advisor finding | Primary | JMT Test | Interpretation |
+|---|---:|---:|---|
+| RLS enabled with no policies | 2 | 2 | Both are `app_rate_limit_events` and `auth_rate_limit_events`; likely intentional server-only tables, but confirm they are not expected to be client-accessible. |
+| Anon can execute SECURITY DEFINER RPC | 1 | 1 | `get_public_course_teachers(uuid)`; public exposure may be intentional, but review returned fields, inactive-profile filtering and course publication checks. |
+| Authenticated can execute SECURITY DEFINER RPC | 18 | 23 | Advisor warns on all exposed SECURITY DEFINER RPCs, including intended guarded operations. Review function-by-function; warning count alone is not a vulnerability count. |
+| Leaked-password protection disabled | 1 | 1 | Both Auth projects have compromised-password checking disabled; enablement requires an authorized Auth configuration change and should be tested before rollout. |
+
+### Immediate review priorities
+
+1. Inspect `get_public_course_teachers(uuid)` anon contract and confirm only public teacher fields for published courses are returned; align active-profile filtering.
+2. Review every SECURITY DEFINER RPC for explicit caller identity, role, ownership, paid-entitlement, input validation, pinned search_path, and minimal EXECUTE grants. Keep intentional authenticated RPCs only when their own guards are proven.
+3. Confirm the two no-policy rate-limit tables are server-only and cannot be reached through exposed RPCs or other privileged paths.
+4. Plan leaked-password protection as a separate Auth configuration change with user-impact assessment; do not toggle it during this read-only audit.
+
+**Important:** These advisor findings are triage signals, not proof of exploitability. No function was invoked, no grant was changed, no Auth setting was modified, and no data was changed.

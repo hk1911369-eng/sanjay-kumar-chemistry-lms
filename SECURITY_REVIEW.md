@@ -647,3 +647,8 @@ The admin Course Studio candidate query and save-action validation filter teache
 ### Role demotion also leaves course assignments dormant
 
 The admin `updateAccountRole()` action allows role changes among student, teacher and staff but only updates the profile role. It does not delete or suspend `course_assignments`. The database assignment-validation trigger is attached to assignment INSERT/UPDATE, not profile role changes. Staff-only access is denied while the profile is demoted to student because `current_role()` changes, but promotion back to teacher/staff can restore access through the stale assignment rows. **Remediation:** transactionally revoke assignments on staff demotion or require explicit reapproval on promotion.
+
+
+### Missing staff suspension/reactivation control
+
+The student-management page's activation form calls `set_student_account_active`, whose database implementation deliberately updates only profiles with role `student`. The admin dashboard lists teachers/staff for course assignment but has no staff active-status control, and the live public function inventory contains no staff equivalent. Role demotion to student is the only visible admin control that can remove staff privileges; it does not change `is_active` or revoke course assignments. This creates an avoidable operational gap and compounds the dormant-assignment risk: later role promotion may restore old course access. **Remediation:** implement an admin-only, audited staff suspend/reactivate workflow with explicit course-assignment revocation or reapproval.

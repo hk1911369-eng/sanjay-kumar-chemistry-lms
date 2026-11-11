@@ -235,3 +235,19 @@ Important exact differences:
 - JMT Test records later feature migrations and additional practice/assignment-history migrations that are not part of the primary ledger.
 
 This confirms that the migration histories differ not only in entry count but also in version ordering and feature coverage. The branch migration directory, primary ledger and JMT Test ledger must be reconciled semantically before a release plan is executable.
+
+
+## 8. Live SECURITY DEFINER function comparison
+
+The following function definitions were read from both live databases using read-only `pg_get_functiondef` queries. They were not invoked and no records were changed.
+
+| Function | Primary project | JMT Test | Risk / follow-up |
+|---|---|---|---|
+| `get_public_course_teachers(uuid)` | Public directory function returns assigned teacher/staff IDs and names for published, non-archived courses; does not filter inactive profiles | Same function also requires `profiles.is_active IS TRUE` | P2 privacy/data freshness: reconcile active-profile filtering. Keep public exposure only if intentionally required. |
+| `complete_revision_task(uuid)` | Checks signed-in student, task ownership/pending state and active enrollment; does not enforce due time, published course/concept, current paid-through period or evidence for spaced-repetition completion | Also checks due time, published course/concept, active paid-through entitlement and verified concept-linked practice/exam evidence for spaced-repetition completion | P1 behavior/entitlement drift: primary permits completion of an owned pending task after expiry or before scheduled time. It does not expose another student's records, but can corrupt learning/revision state and bypass the stronger test-project rules. |
+| `can_staff_access_student(uuid)` | Teacher/staff access predicate includes any manual-payment submission for a course assigned to that teacher | Payment-submission branch additionally restricts to `status = 'pending_review'` | P2 privacy minimization: primary may permit staff visibility to historical payment-submission-linked student records; review every caller and data path. |
+| `record_simulation_completion(uuid,text,integer)` | Uses fixed subject-name mapping and course subject arrays/subject mappings | Resolves a published virtual-lab catalogue entry and validates its subject mapping against course-subject rows | Feature/schema drift: primary has no virtual-lab catalogue and uses a legacy RPC contract. Do not expose the catalogue-driven UI/RPC until its schema and data migration are reconciled. |
+
+All inspected definitions pin `search_path` to `pg_catalog, public, pg_temp`. The relevant functions are SECURITY DEFINER and have authenticated execution warnings from the Supabase advisor; this is not automatically a vulnerability because some are intentional guarded RPCs. Continue to review their EXECUTE grants, identity/role/ownership checks and intended exposure individually.
+
+**Priority order:** reconcile `complete_revision_task` semantics first; then staff payment-visibility minimization; then public teacher active-state filtering; finally align the legacy and catalogue-driven virtual-lab contracts. Implement only through reviewed migrations after staging tests. Do not patch live function definitions directly.

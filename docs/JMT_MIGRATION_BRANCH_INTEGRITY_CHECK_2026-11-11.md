@@ -1,35 +1,44 @@
-# JMT Migration Branch-Integrity Check — 2026-11-11
+# JMT Migration Branch-Integrity Check — corrected 11 November 2026
 
-## Result
+## Corrected result
 
-**Status: unresolved — do not treat the practice-history protection migration as part of PR #42.**
+**Status: migration is present on PR #42 under a different timestamp; database execution remains unverified.**
 
-The following checks were performed against `audit/jmt-master-prompt-follow-through`:
+The earlier check looked only for `20261111160000_preserve_deleted_practice_history.sql` and concluded that the expected path was absent. A full PR changed-file inventory subsequently revealed the equivalent implementation at:
 
-- `docs/JMT_DATABASE_RECONCILIATION_RUNBOOK.md` exists and was readable.
-- `docs/JMT_CRITICAL_JOURNEY_E2E_TEST_PLAN.md` exists and was readable.
-- `supabase/migrations/20261111160000_preserve_deleted_practice_history.sql` returned GitHub Contents API `404 Not Found` on the PR branch.
+- `supabase/migrations/20261111170100_preserve_deleted_practice_history.sql`
+- `tests/practice-question-delete-history.test.mjs`
 
-The migration content was separately inspected in commit `c6c4deae1d6ce152be866dd175ddedb4dd559e6d`. It adds a trigger that rejects deletion of a practice question with student attempt history and rejects edits to selected question-content fields when attempts exist.
+Both files were fetched and inspected on `audit/jmt-master-prompt-follow-through`.
 
-The subsequent commit `141d49343d80452c0871cec77fbc02367346e847` deletes that migration from the default branch, with the message: “Revert unintended default-branch migration file; keep work on PR branch”.
+## What the migration does
 
-**Important limitation:** this check establishes that the expected path is absent from the PR branch at the time of inspection. It does not establish whether an equivalent migration exists under a different filename or whether the database already has an equivalent trigger.
+The migration defines `public.prevent_practice_question_history_rewrite()` as a SECURITY DEFINER trigger function with an empty search_path. It:
 
-## Required follow-up
+1. Rejects deletion of a practice question if any `student_practice_attempts` row references it.
+2. Rejects edits to course/subject/concept/chapter/topic/difficulty/question/options/correct-option/explanation/marks if attempts already reference the question.
+3. Allows non-content metadata updates because those fields are not in the compared row.
+4. Revokes direct execution from PUBLIC, anon and authenticated.
+5. Installs a BEFORE UPDATE OR DELETE row trigger on `student_practice_questions`.
 
-1. Search the entire PR branch migration directory for `prevent_practice_question_history_rewrite` and equivalent trigger/function definitions.
-2. Inspect the PR diff and migration ledger to determine whether the migration is included under another path.
-3. If absent and still required, restore it only on the PR branch with a unique timestamp and verify the schema/table/column names against the branch's actual migrations.
-4. Add database tests for:
-   - deleting a question with no attempts (allowed if policy intends);
-   - deleting a question with attempts (rejected);
-   - editing question content with attempts (rejected);
-   - editing non-content metadata with attempts (explicitly decide and test);
-   - archiving/unpublishing a question with attempts (allowed);
-   - preserving historical answer snapshots and scoring after question versioning.
-5. Run migration tests against a disposable local/staging database and verify the exact PR-head CI run.
+The test file verifies migration source patterns, trigger attachment and deletion guard text. **It is a static source test, not an executed PostgreSQL integration test.** It does not prove trigger behavior, cascade behavior, role grants, or migration success against a real schema.
+
+## Remaining verification
+
+1. Run the migration in a disposable database with the exact branch schema.
+2. Verify delete with zero attempts succeeds (subject to other constraints) and delete with attempts fails.
+3. Verify content edits with attempts fail; non-content metadata edits behave as intended.
+4. Verify archive/unpublish remains possible with attempt history.
+5. Verify historical attempts retain correct scoring and display semantics after any supported question-version workflow.
+6. Verify SECURITY DEFINER owner, execute grants, trigger behavior under authenticated writes, and rollback.
+7. Add SQL integration tests rather than relying only on regex/source assertions.
+
+## Historical context and superseded conclusion
+
+Commit `c6c4deae1d6ce152be866dd175ddedb4dd559e6d` introduced the function and trigger. Commit `141d49343d80452c0871cec77fbc02367346e847` reverted an unintended default-branch copy. The PR branch contains the equivalent implementation at the later filename above.
+
+The earlier version of this document stated that the migration was unresolved and should not be treated as part of PR #42. **That conclusion is superseded by this corrected inventory.** The migration is present in the PR branch; only runtime/database verification remains open.
 
 ## Safety
 
-No database was changed. No migration was restored. No production query or destructive test was run. Do not apply this migration to production until the branch/schema review and staging tests pass.
+No database was changed. No migration was applied. No production query or destructive test was run. Do not apply this migration to production until the full migration-ledger, schema, staging-test and rollout review is complete.

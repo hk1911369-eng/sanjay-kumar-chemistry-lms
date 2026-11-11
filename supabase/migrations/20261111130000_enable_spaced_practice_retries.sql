@@ -84,9 +84,15 @@ AS $$
           AND mm.concept_id = q.concept_id
           AND mm.resolved_at IS NULL
       ) THEN 'Targeted review: this concept is linked to a previous mistake'
-      WHEN mastery.next_review_at IS NOT NULL
+      WHEN (
+        mastery.next_review_at IS NOT NULL
         AND mastery.next_review_at <= now()
-        THEN 'Scheduled review: this concept is due for retrieval practice'
+      ) OR (
+        COALESCE(attempts.attempt_count, 0) > 0
+        AND attempts.last_attempt_at <= now() - interval '1 day'
+        AND (q.concept_id IS NULL OR mastery.next_review_at IS NULL)
+      )
+        THEN 'Scheduled review: this question is due for retrieval practice'
       WHEN mastery.evidence_count >= 3
         AND mastery.mastery_score <= 0.65
         THEN 'Focus practice: recent evidence shows this concept needs strengthening'
@@ -140,7 +146,14 @@ AS $$
     )
     AND (
       COALESCE(attempts.attempt_count, 0) = 0
-      OR (q.concept_id IS NOT NULL AND mastery.next_review_at <= now())
+      OR (
+        attempts.last_attempt_at <= now() - interval '1 day'
+        AND (
+          q.concept_id IS NULL
+          OR mastery.next_review_at IS NULL
+          OR mastery.next_review_at <= now()
+        )
+      )
     )
   ORDER BY
     CASE WHEN EXISTS (

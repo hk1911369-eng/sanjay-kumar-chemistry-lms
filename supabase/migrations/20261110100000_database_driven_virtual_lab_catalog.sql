@@ -50,8 +50,7 @@ VALUES
   ('Biology', 'biology', 'Biology learning and practical simulations'),
   ('Mathematics', 'mathematics', 'Mathematics learning and simulations'),
   ('Higher Mathematics', 'higher-mathematics', 'Higher mathematics learning and simulations'),
-  ('ICT', 'ict', 'ICT learning and interactive simulations'),
-  ('Higher Mathematics', 'higher-mathematics', 'Higher Mathematics learning and simulations')
+  ('ICT', 'ict', 'ICT learning and interactive simulations')
 ON CONFLICT (slug) DO NOTHING;
 
 -- Resolve subject IDs from stable slugs; never assume a UUID generated in another

@@ -35,9 +35,9 @@ test('retakes do not increase mastery evidence count or mastery score', () => {
   assert.match(migration, /prevent_practice_question_history_rewrite/i);
   assert.match(migration, /create a new question version instead/i);
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SET search_path = ''/i);
-  assert.match(migration, /FUNCTION public\.schedule_revision_after_mastery_update\(\)[\s\S]*?SET search_path = ''/i);
+  assert.match(migration, /FUNCTION public\.schedule_revision_after_mastery_update\(\)[\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path = ''/i);
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path = ''/i);
-  assert.doesNotMatch(migration, /FUNCTION public\.schedule_revision_after_mastery_update\(\)[\s\S]*?SECURITY DEFINER/i);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.schedule_revision_after_mastery_update\(\) FROM PUBLIC, anon, authenticated/i);
 });
 
 test('verified mastery schedules one pending review task and updates only spaced-repetition tasks', () => {

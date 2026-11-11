@@ -728,3 +728,10 @@ Recommended remediation: make approved payment submissions the sole source of ve
 ### Student-register export labels submission time as latest payment date (11 November 2026)
 
 The `get_student_register_export()` function chooses the latest approved payment by `manual_payment_submissions.created_at` and returns that same submission timestamp as `latest_payment_date`. The CSV labels it “Latest payment date”, although `created_at` is when the student submitted the claim; the actual approval timestamp is `reviewed_at`. A claim submitted earlier but approved later can therefore be reported with misleading recency. Recommended remediation: return both submission and approval timestamps with explicit labels, and choose “latest approved payment” using `reviewed_at` (with a deterministic tie-breaker). No student rows were queried or exported in this review.
+
+
+### Course publication is committed before its dependent catalogue and staff setup (11 November 2026)
+
+The admin `saveAcademyCourse()` action writes the course row, including `is_published`, before it upserts the subject catalogue, writes `course_subjects`, removes stale subject links, and calls `replace_course_assignments`. These are separate database requests rather than one transaction. The live anonymous course SELECT policy makes a published, non-archived course visible immediately, and the course-subject mapping is a separate relation. If a later request fails (or another user reads between requests), a newly published course can be visible with missing/incomplete subject mappings or staff assignments; an update can expose a partially applied configuration. The action redirects with an error but does not roll back the earlier course write. No course rows were modified during this review.
+
+Recommended remediation: save course metadata, subject links, stale-link cleanup, and assignment replacement through one database transaction/RPC; publish only as the final step after all required relations validate. For edits to already-published courses, stage changes or keep the previous published configuration until the transaction commits.

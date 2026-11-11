@@ -427,3 +427,19 @@ Primary's `information_schema.role_table_grants` also currently reports authenti
 The two RLS-enabled/no-policy rate-limit tables should be confirmed as server-only and inaccessible to anon/authenticated direct reads/writes. Do not add broad policies simply to silence the advisor.
 
 The leaked-password setting should be enabled through an approved Auth configuration change after confirming user-facing password-reset/support behavior. No Auth setting, grant, policy or database object was changed during this recheck.
+
+
+### Re-probed high-risk function drift — Primary versus JMT Test
+
+The four function bodies were fetched directly from both connected projects, not inferred from old notes.
+
+| Function | Primary behavior | JMT Test behavior | Risk / branch remediation |
+|---|---|---|---|
+| `get_public_course_teachers(uuid)` | Returns assigned teacher/staff profiles for a published course, but does not require `profiles.is_active IS TRUE`. | Filters active profiles. | Public profile exposure/stale roster. Branch migration `20261110115928_filter_inactive_public_course_teachers.sql` adds the active check. |
+| `can_staff_access_student(uuid)` | Assigned-course enrollment OR any manual-payment submission grants teacher/staff profile access. | Payment branch requires `status='pending_review'`. | Historical/rejected payment can keep profile access open. Branch migration `20261109120000_limit_staff_profile_access_to_pending_payments.sql` narrows the branch. |
+| `complete_revision_task(uuid)` | Checks student, task ownership/pending status and active enrollment, but does not check due time, course publication/archive, published concept, paid-through status or post-due retrieval evidence. | Checks due time, published course/concept, active paid enrollment and a concept-linked practice/exam event after the task became due. | High-impact learning-record and entitlement drift. Branch migrations `20261111150000_enforce_revision_task_due_and_course_access.sql` and `20261111180000_require_retrieval_evidence_for_spaced_review.sql` add these checks. |
+| `record_simulation_completion(uuid,text,integer)` | Accepts a fixed text subject map and checks course text/subject membership. | Resolves a published `virtual_lab_catalog` row, requires the subject relation in `course_subjects`, and records catalogue identity. | Feature/schema contract drift. Branch migration `20261110100000_database_driven_virtual_lab_catalog.sql` creates the catalogue and updates the function. |
+
+All four inspected definitions pin `search_path` to `pg_catalog, public, pg_temp`. The fact that the advisor reports SECURITY DEFINER execution is not by itself proof of a vulnerability; each RPC needs authorization and output review.
+
+**Important deployment distinction:** the branch contains forward migrations for these differences, but Primary still exposes the older function bodies. Their presence in the Git branch does not mean they are applied to production. The 105-versus-255 migration-ledger mismatch and eight-table schema gap must be reconciled first. No function was changed in either live database.

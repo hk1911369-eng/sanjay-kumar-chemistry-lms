@@ -97,6 +97,8 @@ Do not infer that a book is officially prescribed merely because a retailer labe
 - Pages: 932.
 - Language: English.
 - ISBN: 9789843337139.
+- Additional retailer cross-check: Rokomari's product record https://www.rokomari.com/book/574605/physics-second-paper-class-xi-xii identifies the same Hasan Book House 9th Edition, 2026 English-version title and the author team Dr. Shahjahan Tapan, Muhammad Aziz Hasan and Dr. Rana Chowdhury, but reports 991 pages rather than PBS's 932 pages.
+- **Page-count conflict:** retain PBS 932 and Rokomari 991 as source-specific observations; do not choose one without the physical copy. Rokomari's product title/byline also corroborates the three-person contributor set, while PBS's title headline is abbreviated.
 
 The English and Bengali editions must be separate records, even where the author team is shared. Retailer extracts may show the author names on one page and omit them on another; use the physical responsibility statement as final authority.
 

@@ -274,3 +274,8 @@ The current `next.config.ts` applies a CSP with `script-src 'self' 'unsafe-inlin
 ### Updated conclusion
 
 The latest PR head has a green configured CI pipeline and the inspected source contains several meaningful server-side controls. The release verdict remains **NOT READY**: no browser E2E execution, no representative staging database test, and no fresh production schema/privilege reconciliation or restore/rollback rehearsal have been evidenced.
+
+
+## Documentation commit status note
+
+This audit update itself was committed as `152441de76526829d48c4d517ac8c7e2560a927f`. The PR head now points to that documentation-only commit. At the time of this check, GitHub returned no PR workflow run and no combined status checks for this new SHA. Therefore the green run #1117 above is evidence for its exact parent code head `ac217af815df289d8a7c53e97ad4341b9c4e03fa`, not a claimed CI pass for this later documentation commit. No application code changed in the documentation-only commit.

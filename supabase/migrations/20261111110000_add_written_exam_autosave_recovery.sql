@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.written_exam_drafts (
   exam_id uuid NOT NULL REFERENCES public.written_exams(id) ON DELETE CASCADE,
   student_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   answers jsonb NOT NULL DEFAULT '{}'::jsonb
-    CHECK (jsonb_typeof(answers) = 'object' AND jsonb_object_length(answers) <= 30),
+    CHECK (jsonb_typeof(answers) = 'object'),
   version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (exam_id, student_id)
@@ -91,7 +91,7 @@ BEGIN
     RAISE EXCEPTION 'Draft answers must be a JSON object' USING ERRCODE = '22023';
   END IF;
 
-  IF jsonb_object_length(p_answers) > 30 THEN
+  IF (SELECT count(*) FROM jsonb_object_keys(p_answers)) > 30 THEN
     RAISE EXCEPTION 'A draft cannot contain more than 30 answers' USING ERRCODE = '22023';
   END IF;
 

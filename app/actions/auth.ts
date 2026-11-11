@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { normalizeBangladeshMobile } from '@/lib/validation';
 import { enforceAuthRateLimit } from '@/lib/auth-rate-limit';
 
+const MIN_PASSWORD_LENGTH = 10;
+
 function getAppUrl() {
   const configured = process.env.APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
   if (configured) return configured.replace(/\/+$/, '');
@@ -18,7 +20,7 @@ function safeMessage(message: string) {
   if (/email not confirmed|email_not_confirmed/i.test(message)) return 'Please confirm your email address before signing in. Open the latest confirmation email.';
   if (/rate limit|email rate limit exceeded/i.test(message)) return 'Supabase email limit reached. Wait before requesting another email.';
   if (/already registered/i.test(message)) return 'An account with this email already exists. Sign in or reset its password.';
-  if (/password.*(length|short)|at least 8 characters/i.test(message)) return 'Password must be at least 8 characters.';
+  if (/password.*(length|short)|at least \d+ characters/i.test(message)) return 'Password must be at least 10 characters.';
   return 'Authentication failed. Please check your details and try again.';
 }
 
@@ -39,7 +41,7 @@ export async function signUp(formData: FormData) {
   const rawPhone = String(formData.get('phone') ?? '').trim();
   const phone = rawPhone ? normalizeBangladeshMobile(rawPhone) : null;
   const password = String(formData.get('password') ?? '');
-  if (fullName.length < 2 || !email || password.length < 8 || (rawPhone && !phone)) redirect('/register?error=invalid');
+  if (fullName.length < 2 || !email || password.length < MIN_PASSWORD_LENGTH || (rawPhone && !phone)) redirect('/register?error=invalid');
   if (!await enforceAuthRateLimit('sign_up', email)) redirect('/register?error=' + encodeURIComponent('Too many registration attempts. Please wait before trying again.'));
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
@@ -72,7 +74,7 @@ export async function requestPasswordReset(formData: FormData) {
 
 export async function updatePassword(formData: FormData) {
   const password = String(formData.get('password') ?? '');
-  if (password.length < 8) redirect('/reset-password?error=invalid');
+  if (password.length < MIN_PASSWORD_LENGTH) redirect('/reset-password?error=invalid');
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?error=reset_session');

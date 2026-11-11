@@ -251,3 +251,57 @@ The following function definitions were read from both live databases using read
 All inspected definitions pin `search_path` to `pg_catalog, public, pg_temp`. The relevant functions are SECURITY DEFINER and have authenticated execution warnings from the Supabase advisor; this is not automatically a vulnerability because some are intentional guarded RPCs. Continue to review their EXECUTE grants, identity/role/ownership checks and intended exposure individually.
 
 **Priority order:** reconcile `complete_revision_task` semantics first; then staff payment-visibility minimization; then public teacher active-state filtering; finally align the legacy and catalogue-driven virtual-lab contracts. Implement only through reviewed migrations after staging tests. Do not patch live function definitions directly.
+
+
+## 9. Re-probed live schema and ledger comparison — 11 November 2026
+
+A further read-only Supabase MCP inventory was taken after the prior section. Project identities were confirmed from the connected project list:
+- Primary project: `jpoxrxjixkcgjqvyyznw` (ACTIVE_HEALTHY, ap-southeast-2).
+- JMT Test: `cullxqklmbdiosibgois` (ACTIVE_HEALTHY, ap-south-1).
+
+### Current public schema inventory
+
+| Measure | Primary project | JMT Test |
+|---|---:|---:|
+| Public tables | 49 | 57 |
+| Recorded migration entries | 105 | 255 |
+| Profiles | 3 | 3 |
+| Courses | 0 | 3 |
+| Academic subjects | 0 | 8 |
+| Enrollments | 0 | 0 |
+| Lessons | 0 | 0 |
+
+All 49 primary public tables and all 57 JMT Test public tables returned RLS enabled in the compact table inventory. This is not proof that every policy is correct or that grants are minimal.
+
+The eight tables present in JMT Test but absent from Primary are:
+
+1. `student_practice_questions`
+2. `student_practice_attempts`
+3. `virtual_lab_catalog`
+4. `lab_notebook_entries`
+5. `lab_practical_assignments`
+6. `lab_notebook_evidence`
+7. `lab_notebook_review_history`
+8. `assignment_submission_versions`
+
+No public table was found in Primary that was absent from JMT Test in this inventory.
+
+### Migration-ledger semantic mismatch
+
+The latest recorded versions remain `20261108221907` in Primary and `20261111133701` in JMT Test. Exact (version, name) pairs shared by both ledgers: **0**. There are 88 Primary entries whose migration names also appear somewhere in JMT Test, but their version/name pairs differ; the remaining entries include project-specific and differently named migrations.
+
+This is a stronger warning than a simple 105-versus-255 count. It means neither a blind replay of JMT Test migrations nor a simple version-number merge is safe. For each candidate migration, compare:
+- exact SQL body and checksum;
+- objects/columns/functions/policies/triggers/ACLs created or changed;
+- prerequisites and dependency order;
+- whether the live schema already contains the effect;
+- whether the migration is reversible or requires a forward fix;
+- data backfill and idempotency behavior.
+
+The current public catalogue result of 0 courses is consistent with Primary having 0 rows in both `courses` and `academic_subjects`. Do not copy the three JMT Test courses or eight test subjects to Primary; those are test records and not approved production curriculum/catalogue content.
+
+### Consequence and safe next action
+
+**Release remains NOT READY.** The immediate engineering task is to create a migration-by-migration reconciliation matrix and compare the eight missing table definitions plus their dependencies against the branch. Then provision or designate an approved isolated staging environment, subject to cost approval, and rehearse only the semantically selected migration set there.
+
+This inventory was read-only. No migration was applied, no SQL/DDL was executed, no Auth/Storage configuration was changed, and no production data was inserted, updated or deleted.

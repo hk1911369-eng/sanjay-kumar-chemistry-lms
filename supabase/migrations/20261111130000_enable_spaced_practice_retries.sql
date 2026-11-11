@@ -7,6 +7,39 @@ CREATE UNIQUE INDEX IF NOT EXISTS student_practice_attempts_question_attempt_uid
   ON public.student_practice_attempts(student_id, question_id, attempt_number);
 GRANT SELECT (attempt_number) ON public.student_practice_attempts TO authenticated;
 
+-- Once a learner has answered a question, freeze its learning meaning.
+-- Teachers can unpublish it, but must create a new question for changed content.
+CREATE OR REPLACE FUNCTION public.prevent_practice_question_history_rewrite()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, pg_temp
+AS $
+BEGIN
+  IF ROW(
+    NEW.course_id, NEW.subject_id, NEW.concept_id, NEW.chapter_label,
+    NEW.topic, NEW.difficulty, NEW.question_text, NEW.options,
+    NEW.correct_option, NEW.explanation, NEW.marks
+  ) IS DISTINCT FROM ROW(
+    OLD.course_id, OLD.subject_id, OLD.concept_id, OLD.chapter_label,
+    OLD.topic, OLD.difficulty, OLD.question_text, OLD.options,
+    OLD.correct_option, OLD.explanation, OLD.marks
+  ) AND EXISTS (
+    SELECT 1 FROM public.student_practice_attempts a
+    WHERE a.question_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION 'Practice question has attempt history; create a new question version instead'
+      USING ERRCODE = '55000';
+  END IF;
+  RETURN NEW;
+END;
+$;
+REVOKE ALL ON FUNCTION public.prevent_practice_question_history_rewrite() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS prevent_practice_question_history_rewrite ON public.student_practice_questions;
+CREATE TRIGGER prevent_practice_question_history_rewrite
+BEFORE UPDATE ON public.student_practice_questions
+FOR EACH ROW EXECUTE FUNCTION public.prevent_practice_question_history_rewrite();
+
 DROP FUNCTION IF EXISTS public.get_student_practice_questions(uuid, uuid, text, integer);
 CREATE OR REPLACE FUNCTION public.get_student_practice_questions(
   p_course_id uuid,

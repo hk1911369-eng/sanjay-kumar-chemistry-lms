@@ -489,7 +489,7 @@ No DDL, DML, Storage configuration or migration-ledger change was performed in t
 The branch migration `20261110100000_database_driven_virtual_lab_catalog.sql` originally depended on canonical subject rows already existing. The primary project's live `academic_subjects` table exists but contains zero rows; the migration would therefore have produced an empty virtual-lab catalogue when applied there.
 
 The PR branch now:
-- inserts Physics, Chemistry, Biology, Mathematics and ICT by stable slug with `ON CONFLICT (slug) DO NOTHING`;
+- inserts Physics, Chemistry, Biology, Mathematics, Higher Mathematics and ICT by stable slug with `ON CONFLICT (slug) DO NOTHING`;
 - resolves each catalogue row's `subject_id` by joining the canonical slug;
 - avoids hard-coded subject UUIDs;
 - on repeated lab-key seed, updates only the subject link and timestamp, not editorial fields such as title, principle, visibility or sort order.

@@ -480,3 +480,30 @@ The eight JMT Test-only tables were traced to the PR branch's migration family. 
 7. Only after successful rehearsal, backup and owner approval, schedule a production migration window with rollback/restore evidence.
 
 No DDL, DML, Storage configuration or migration-ledger change was performed in this investigation.
+
+
+## 12. Follow-up migration hygiene and empty-catalogue correction — 12 November 2026
+
+### Canonical subject seed correction
+
+The branch migration `20261110100000_database_driven_virtual_lab_catalog.sql` originally depended on canonical subject rows already existing. The primary project's live `academic_subjects` table exists but contains zero rows; the migration would therefore have produced an empty virtual-lab catalogue when applied there.
+
+The PR branch now:
+- inserts Physics, Chemistry, Biology, Mathematics and ICT by stable slug with `ON CONFLICT (slug) DO NOTHING`;
+- resolves each catalogue row's `subject_id` by joining the canonical slug;
+- avoids hard-coded subject UUIDs;
+- on repeated lab-key seed, updates only the subject link and timestamp, not editorial fields such as title, principle, visibility or sort order.
+
+The live JMT Test schema confirms `academic_subjects.slug` is UNIQUE and the `name`, `slug`, and `description` columns are NOT NULL. The branch adds a Node source-guard test for seed ordering, stable slug mapping and preservation of editorial state. This remains a static source test; it is not proof of PostgreSQL migration success. It was not applied to either connected database.
+
+### Redundant practice-review migration removed
+
+The PR branch contained two migration files with identical blob content and identical `CREATE OR REPLACE FUNCTION public.get_student_practice_questions(...)` SQL:
+- retained: `20261111140100_practice_review_fallback.sql`
+- removed: `20261111145000_practice_review_fallback.sql`
+
+The later duplicate had no references in repository search and was removed from the unmerged PR branch in commit `eaf0299bbeb7e9b216c755cb8f1f596ae4d40f17`. This is a PR-branch hygiene change only. No live migration ledger was modified. The migration-version uniqueness check also found no duplicate 14-digit version prefixes in the current PR file inventory.
+
+### Current-head CI
+
+The resulting PR head is `eaf0299bbeb7e9b216c755cb8f1f596ae4d40f17`. Quality Checks run `43076045771` was queued at the time of this note. No result is claimed for this head until that exact run completes.

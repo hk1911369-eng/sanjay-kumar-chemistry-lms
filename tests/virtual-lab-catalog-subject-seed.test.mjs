@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const migrationUrl = new URL(
+  '../supabase/migrations/20261110100000_database_driven_virtual_lab_catalog.sql',
+  import.meta.url,
+);
+
+test('virtual-lab catalogue seeds required subjects before resolving catalogue foreign keys', async () => {
+  const sql = await readFile(migrationUrl, 'utf8');
+  const subjectSeed = sql.indexOf('INSERT INTO public.academic_subjects (name, slug, description)');
+  const catalogueInsert = sql.indexOf('INSERT INTO public.virtual_lab_catalog');
+  const catalogueJoin = sql.indexOf('JOIN public.academic_subjects subject ON subject.slug = seed.subject_slug');
+
+  assert.notEqual(subjectSeed, -1, 'required academic subjects must be seeded');
+  assert.notEqual(catalogueInsert, -1, 'catalogue rows must be inserted');
+  assert.notEqual(catalogueJoin, -1, 'catalogue subject IDs must be resolved by stable slug');
+  assert.ok(subjectSeed < catalogueInsert, 'subject seed must precede catalogue FK insertion');
+  assert.ok(catalogueInsert < catalogueJoin, 'catalogue insert must use slug-resolved subjects');
+
+  for (const slug of ['physics', 'chemistry', 'biology', 'mathematics', 'ict']) {
+    assert.match(sql, new RegExp(`'[^']+', '${slug}',`), `missing idempotent seed for ${slug}`);
+    assert.match(sql, new RegExp(`'[^']+', '${slug}', '[^']+'`), `missing catalogue mapping for ${slug}`);
+  }
+
+  assert.match(sql, /ON CONFLICT \(slug\) DO NOTHING/);
+  assert.doesNotMatch(
+    sql.slice(catalogueInsert, sql.indexOf('ON CONFLICT (lab_key)', catalogueInsert)),
+    /10000000-0000-4000-8000-00000000000[1-6]/,
+    'catalogue seeds must not depend on UUIDs generated in another environment',
+  );
+});

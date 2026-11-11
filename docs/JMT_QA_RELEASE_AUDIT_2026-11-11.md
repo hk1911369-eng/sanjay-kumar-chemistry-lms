@@ -279,3 +279,34 @@ The latest PR head has a green configured CI pipeline and the inspected source c
 ## Documentation commit status note
 
 This audit update itself was committed as `152441de76526829d48c4d517ac8c7e2560a927f`. The PR head now points to that documentation-only commit. At the time of this check, GitHub returned no PR workflow run and no combined status checks for this new SHA. Therefore the green run #1117 above is evidence for its exact parent code head `ac217af815df289d8a7c53e97ad4341b9c4e03fa`, not a claimed CI pass for this later documentation commit. No application code changed in the documentation-only commit.
+
+
+## Representative data and migration precondition recheck — 11 November 2026
+
+Read-only row-count checks further clarify staging readiness:
+
+| Data | Primary non-test project | JMT Test |
+|---|---:|---:|
+| Profiles | 3 | 3 |
+| Courses | 0 | 3 |
+| Academic subjects | 0 | 8 |
+| Course-subject mappings | 0 | 24 |
+| Enrollments | 0 | 0 |
+| Lessons | 0 | 0 |
+| Student practice questions | Table absent | 0 |
+| Lab notebooks | Table absent | 0 |
+| Lab practical assignments | Table absent | 0 |
+
+No row contents or personal data were retrieved; only aggregate counts were queried. The test project has a synthetic course/subject scaffold, but it still cannot exercise paid student access, lesson completion, written/quiz attempts, practice grading, notebook submission or teacher review because the required enrollment/lesson/question/notebook records are absent. The primary non-test project has no courses or academic subjects at all.
+
+### Migration seed precondition
+
+The branch migration `20261110100000_database_driven_virtual_lab_catalog.sql` inserts virtual-lab catalogue rows using fixed subject UUIDs and foreign keys to `public.academic_subjects(id)`. JMT Test contains those predetermined subject IDs; the primary non-test project's `academic_subjects` table is empty. Applying that migration to the primary project without a prior, verified subject seed would fail at the catalogue insert's foreign-key constraint.
+
+The earlier multi-subject foundation migration creates the subject table and derives subjects from existing course subject arrays; it does not create the eight fixed subject rows when there are no courses. Therefore the rollout needs an explicit, idempotent subject-catalogue seed/precondition and a verification query before the virtual-lab catalogue migration. Do not simply run the current migration sequence against the primary project.
+
+**Finding (P1 migration safety):** the virtual-lab catalogue migration is not self-sufficient on an empty academic-subject dataset. Add a reviewed, idempotent seed/reconciliation step (or make the catalogue insert resolve subjects by stable slugs and tolerate absent subjects) and test it against an empty database before any production rollout.
+
+### Current-head CI qualification
+
+The last confirmed successful workflow run remains run `43065916384` on commit `ac217af815df289d8a7c53e97ad4341b9c4e03fa`. The current audit-document commit is newer; at the time of this write, GitHub reports no workflow run/status checks for that documentation-only commit. Do not describe the latest document commit itself as CI-green until a run is observed.

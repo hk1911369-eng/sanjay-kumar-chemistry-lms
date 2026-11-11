@@ -58,14 +58,14 @@ PR #42 touches a broad surface including student/teacher/admin routes, server ac
 
 The repository's `docs/security-release-reconciliation.md` records the following environment-specific findings:
 1. Production has authenticated-client `TRUNCATE` and `TRIGGER` privileges on 33 of 49 public tables.
-2. Production is missing seven tables and 22 public functions present in JMT Test.
+2. Production is missing eight tables present in JMT Test; the exact live schema comparison is recorded in the updated reconciliation document.
 3. Production security policies are older than the hardened test policies in several student, discussion, payment, notification and assessment paths.
 4. Supabase Auth leaked-password protection is disabled in production.
 5. JMT Test has only three profiles and three courses and lacks enrollments, lessons, assignments, quizzes, written exams and discussion records; it is not representative for complete student E2E testing.
 6. No separate staging service exists; PR previews are disabled.
 7. Migration ledgers differ materially and must not be reconciled by blindly replaying test migrations or deleting history rows.
 
-These are recorded findings from the prior environment comparison; they were not re-probed or modified during this audit.
+These findings have since been re-probed read-only on 11 November 2026. See the live verification section below and `docs/security-release-reconciliation.md` for exact current counts. No database settings or data were modified.
 
 ## Recommended next sequence
 
@@ -310,3 +310,89 @@ The earlier multi-subject foundation migration creates the subject table and der
 ### Current-head CI qualification
 
 The last confirmed successful workflow run remains run `43065916384` on commit `ac217af815df289d8a7c53e97ad4341b9c4e03fa`. The current audit-document commit is newer; at the time of this write, GitHub reports no workflow run/status checks for that documentation-only commit. Do not describe the latest document commit itself as CI-green until a run is observed.
+
+
+## Live database and schema verification — 11 November 2026
+
+The two connected Supabase projects were re-queried read-only. This section supersedes the earlier historical counts in this report where they differ.
+
+### Current project state
+
+| Measure | Primary / production | JMT Test |
+|---|---:|---:|
+| Public base tables | 49 | 57 |
+| Tables with RLS enabled | 49 | 57 |
+| Tables granting authenticated TRUNCATE | 33 | 0 |
+| Tables granting authenticated TRIGGER | 33 | 0 |
+| Tables granting anon TRUNCATE or TRIGGER | 0 | 0 |
+| Recorded migration entries | 105 | 255 |
+| Distinct migration names | 98 | 213 |
+
+The eight tables present in JMT Test but absent from primary are: `assignment_submission_versions`, `lab_notebook_entries`, `lab_notebook_evidence`, `lab_notebook_review_history`, `lab_practical_assignments`, `student_practice_attempts`, `student_practice_questions`, and `virtual_lab_catalog`.
+
+The two rate-limit event tables have RLS enabled and no client SELECT/INSERT/UPDATE/DELETE privileges in either project. Their no-policy advisor notices are consistent with an internal-only design.
+
+### Migration-history and feature rollout risks
+
+After normalizing numeric prefixes and underscores in migration names, the ledger inventory has 94 common names, 119 names present only in JMT Test, and 4 names present only in primary. This is only a name-based comparison, not proof of semantic equivalence. Version identifiers differ. Do not replay the test ledger or delete migration history to force parity.
+
+The branch contains `20261111110000_add_written_exam_autosave_recovery.sql`, but that version is not in the live JMT Test migration ledger. The `written_exam_drafts` table and its load/save RPCs are absent from both live schemas. The test ledger already contains later versions through `20261111133701`; migration sequencing and reconciliation must be reviewed before applying the missing earlier-version migration.
+
+The virtual-lab catalogue migration `20261110100000_database_driven_virtual_lab_catalog.sql` seeds rows using fixed subject UUIDs. Live primary `academic_subjects` contains zero rows; JMT Test contains eight subjects. Applying that catalogue migration to primary without an explicit subject seed/precondition would fail its foreign-key inserts. The rollout needs an idempotent subject-catalogue seed/reconciliation step and a verified preflight query.
+
+### Representative data check
+
+| Data fixture | Primary / production | JMT Test |
+|---|---:|---:|
+| Profiles | 3 | 3 |
+| Courses | 0 | 3 |
+| Enrollments | 0 | 0 |
+| Lessons | 0 | 0 |
+| Assignments | 0 | 0 |
+| Quizzes | 0 | 0 |
+| Written exams | 0 | 0 |
+| Discussions | 0 | 0 |
+| Notifications | 0 | 0 |
+| Academic subjects | 0 | 8 |
+
+Neither project currently supports meaningful end-to-end role testing with real enrollment and assessment fixtures. JMT Test is structurally more complete, but not populated enough to test paid/unpaid student journeys, teacher grading, payment approval, or practical evidence review.
+
+### Live advisor results
+
+| Advisor | Primary / production | JMT Test |
+|---|---:|---:|
+| Security | 22 findings (2 INFO, 20 WARN) | 27 findings (2 INFO, 25 WARN) |
+| Performance | 91 findings (64 INFO, 27 WARN) | 120 findings (98 INFO, 22 WARN) |
+
+The security WARNs include one anon-callable `SECURITY DEFINER` directory function, 18 authenticated-callable functions in primary, 23 in JMT Test, and leaked-password protection disabled in both projects. The rate-limit tables account for the two INFO notices. Source review of all primary authenticated-callable functions and the five additional test-only functions found pinned search paths and explicit identity/role/ownership checks. These advisor warnings are not 41 proven vulnerabilities and should not be “fixed” by blanket revocation.
+
+One public-directory discrepancy remains: primary `get_public_course_teachers` returns IDs and names for assigned teachers/staff on published, non-archived courses but does not filter `profiles.is_active`; JMT Test does. This is a P2 privacy/data-freshness discrepancy.
+
+Additional function drift confirmed:
+- JMT Test `complete_revision_task` enforces due time, active paid enrollment, published course/concept and verified concept-linked evidence for spaced-repetition completion; primary's version only checks an active enrollment and ownership of the pending task.
+- JMT Test `record_simulation_completion` uses the published subject-linked virtual-lab catalogue; primary's version uses a fixed subject-name mapping.
+- JMT Test `can_staff_access_student` limits its payment-submission visibility branch to pending submissions; primary does not apply that status filter.
+
+Performance notices include unused indexes and multiple permissive policies. Do not drop indexes based on a fresh/low-traffic usage snapshot; review query plans and workload before changing them.
+
+### Default-privilege check
+
+The primary project's current `postgres` default ACL still grants `TRUNCATE` and `TRIGGER` on future public tables to client roles. JMT Test's `postgres` default ACL has those privileges removed. The `supabase_admin` default ACL still grants them to `anon` and `authenticated` in both projects. All existing JMT Test tables currently have no client TRUNCATE/TRIGGER privileges, but the owner-specific default remains a future-object risk.
+
+### Current CI qualification
+
+The latest successful workflow run verified before this live-audit documentation update is [Quality checks #1117](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43065916384) on commit `ac217af815df289d8a7c53e97ad4341b9c4e03fa`. Its dependency installation, guardrail tests, ESLint, TypeScript, production build and production dependency audit all passed.
+
+The current report/reconciliation documentation commit is newer and has no workflow run recorded yet. Do not describe the new documentation commit as CI-green until a run is observed. The successful run on `ac217af` does not substitute for browser E2E or database role-matrix testing.
+
+### Updated release blockers
+
+1. Remove authenticated `TRUNCATE`/`TRIGGER` privileges from the 33 primary tables and harden future-object defaults for the actual object-creation roles.
+2. Produce a semantic migration reconciliation and reviewed backup/rollback plan; do not bulk-replay JMT Test history.
+3. Add an idempotent academic-subject seed/preflight before virtual-lab catalogue insertion.
+4. Reconcile the missing written-exam draft migration and its ordering before claiming autosave is live.
+5. Resolve the public teacher-directory active-profile discrepancy and leaked-password protection setting.
+6. Seed representative synthetic users, enrollments, lessons, assessments and practical assignments in isolated staging.
+7. Run browser E2E, storage ownership, payment, assessment-window, role-boundary and accessibility checks against that populated staging environment.
+
+**Release verdict remains NOT READY for production merge/deploy.** This live database verification was read-only; no project settings, schema, data, deployments, or PR state were changed.

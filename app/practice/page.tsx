@@ -55,6 +55,7 @@ export default async function StudentPracticePage({
     ? await db.from('learning_concepts').select('id,subject_id,title').eq('id', params.concept).maybeSingle()
     : { data: null };
   const concept = requestedConcept && subjectIds.includes(requestedConcept.subject_id) ? requestedConcept : null;
+  const conceptUnavailable = Boolean(params.concept) && !concept;
   const { data: subjects } = subjectIds.length
     ? await db.from('academic_subjects').select('id,name').in('id', subjectIds).order('name')
     : { data: [] as { id: string; name: string }[] };
@@ -71,7 +72,7 @@ export default async function StudentPracticePage({
   let questions: StudentPracticeQuestion[] = [];
   let loadError = false;
 
-  if (courseId && subjectId) {
+  if (courseId && subjectId && !conceptUnavailable) {
     const { data, error } = await db.rpc('get_student_practice_questions', {
       p_course_id: courseId,
       p_subject_id: subjectId,
@@ -140,6 +141,10 @@ export default async function StudentPracticePage({
       </section> : !availableSubjects.length ? <section className="portal-card practice-empty">
         <h2>No subject mapping found</h2>
         <p className="muted">This course needs subject mappings before subject-specific practice can be published.</p>
+      </section> : conceptUnavailable ? <section className="portal-card practice-empty">
+        <h2>Revision topic unavailable</h2>
+        <p className="muted">This topic is no longer published for the selected course. Return to your learning dashboard or ask your teacher to review the revision task.</p>
+        <Link href="/student#learning-os">Back to my learning dashboard</Link>
       </section> : loadError ? <section className="portal-card practice-empty">
         <h2>Practice could not be loaded</h2>
         <p className="muted">Your access or the practice service could not be verified. Please refresh or contact your teacher.</p>

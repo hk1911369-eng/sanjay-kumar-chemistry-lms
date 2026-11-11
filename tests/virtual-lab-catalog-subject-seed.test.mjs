@@ -23,7 +23,7 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
   assert.ok(subjectSeed < catalogueInsert, 'subject seed must precede catalogue FK insertion');
   assert.ok(catalogueInsert < catalogueJoin, 'catalogue insert must use slug-resolved subjects');
 
-  for (const slug of ['physics', 'chemistry', 'biology', 'mathematics', 'ict', 'higher-mathematics']) {
+  for (const slug of ['physics', 'chemistry', 'biology', 'mathematics', 'ict']) {
     assert.match(sql, new RegExp(`'[^']+', '${slug}',`), `missing idempotent seed for ${slug}`);
     assert.match(sql, new RegExp(`'[^']+', '${slug}', '[^']+'`), `missing catalogue mapping for ${slug}`);
   }

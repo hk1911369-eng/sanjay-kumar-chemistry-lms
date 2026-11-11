@@ -781,3 +781,10 @@ The policy is row-level, not column-level. The live `profiles` table includes fu
 
 
 The same lifecycle gap also affects the private `student-avatars` Storage bucket. Its staff SELECT policy joins `course_assignments`, `enrollments` and `profiles` by course/student and checks only that the requesting staff member is assigned and that the object path belongs to that student. It does not require an active/current paid enrollment or `profiles.is_active`. Thus assigned staff can continue reading private avatar objects for students with historical enrollment rows, including deactivated profiles. Student owners and admins have separate read branches. This finding concerns Storage policy authorization; no avatar objects were fetched.
+
+
+## Signed-URL issuance paths reviewed (11 November 2026)
+
+The lesson-resource server action `getLessonResourceUrl` uses the authenticated server Supabase client, obtains the user with `auth.getUser()`, selects the resource row through normal `lesson_resources` RLS, enforces the resource's `downloadable` flag for download mode, and then requests a Storage signed URL through the same authenticated client. It does not accept a client-supplied Storage path and does not use the service-role key. The signed URL lifetime is 300 seconds. The separate lab-notebook evidence GET route authenticates the user, selects the evidence metadata row through `lab_notebook_evidence` RLS, derives the object path from that row, and issues a 60-second signed URL. Its redirect is private/no-store, no-referrer and nosniff; malformed IDs return 404, unauthenticated calls return 401, and missing/inaccessible rows return 404.
+
+These controls provide a positive authorization boundary at link issuance and avoid exposing arbitrary storage paths. Residual limitation: once issued, a signed URL is a bearer credential and normally remains usable until its short expiry even if enrollment, assignment or profile state changes during that window. Avoid logging signed URLs; retain short TTLs and test revocation behavior at issuance and expiry. Code review only; no signed URLs were generated and no private files were accessed.

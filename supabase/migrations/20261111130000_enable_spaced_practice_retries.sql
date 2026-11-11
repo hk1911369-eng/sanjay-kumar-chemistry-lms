@@ -348,7 +348,7 @@ BEGIN
   WHERE lc.id = NEW.concept_id AND lc.is_published IS TRUE;
   IF v_title IS NULL THEN RETURN NEW; END IF;
 
-  INSERT INTO public.revision_tasks (
+  INSERT INTO public.revision_tasks AS existing_task (
     student_id, course_id, concept_id, source_type, source_id,
     title, scheduled_for, priority
   ) VALUES (
@@ -365,7 +365,7 @@ BEGIN
     priority = EXCLUDED.priority,
     title = EXCLUDED.title,
     updated_at = now()
-  WHERE public.revision_tasks.source_type = 'spaced_repetition';
+  WHERE existing_task.source_type = 'spaced_repetition';
   RETURN NEW;
 END;
 $$;

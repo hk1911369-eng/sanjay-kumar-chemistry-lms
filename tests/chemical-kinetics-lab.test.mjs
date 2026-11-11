@@ -38,7 +38,7 @@ test('admin and server catalogue configuration both recognise the kinetics templ
   assert.match(action, /'chemistry','kinetics','biology'/);
   assert.match(typeMigration, /'kinetics'/);
   assert.match(catalogueMigration, /chemistry-reaction-kinetics/);
-  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'chemistry'/);
+  assert.match(catalogueMigration, /(?:subject|s)\.slug\s*=\s*'chemistry'/);
   assert.match(catalogueMigration, /'kinetics'/);
   assert.match(catalogueMigration, /is_published,[\s\S]*true/);
 });

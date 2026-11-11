@@ -188,3 +188,55 @@ Research sources:
 - Search-indexed third-party question banks are leads, not authoritative or automatically licensed corpora. Verify each paper against scans/official releases and establish content rights.
 - No implementation should begin for the predictor until the historical corpus, cutoff and baseline evaluation are reproducible.
 - No production migrations, deployment or PR merge are authorized by this research task.
+
+
+## 7. Research wave 1 — additional discoveries (same date)
+
+### 7.1 ACS public social/community trail and materials
+
+The official ACS Future School 2026 programme page links a public class-based Facebook group (`facebook.com/groups/acsfutureschoolstudents`) and a downloadable routine hosted on Google Drive. The public-page links establish that these resources are part of the advertised learning journey. In this research pass, the Facebook group and Drive routine did not render through the public fetch interface (cache/access limitation), so their actual posts, files and details have **not** been independently audited. Follow-up should inspect publicly accessible posts, videos and screenshots where available; private group content should not be represented as public evidence.
+
+The same official page enumerates the Academic Series subject books: ICT, General Math, Higher Math, Biology, Physics and Chemistry (with part/volume references). It lists Bangla and English paper subjects and other group subjects in its course section. This gives us a concrete book-and-course inventory to compare against the official NCTB curriculum, but it does not establish that ACS books are official textbooks or that the full book contents may be copied.
+
+Source: https://www.acsfutureschool.com/academic-program-2026/f139905f-ebb2-42b8-b42b-8c1c3dcc4f64
+
+### 7.2 ACS ecosystem finding changes the competitive map
+
+The official ACS Group hub explicitly frames the organisation as six brands and links:
+- ACS Future School — Class 6–10;
+- ASG Shop / Apar's Classroom — HSC and Medical, Engineering, Varsity and IBA admission;
+- Rhombus Publications — HSC cycles, compact series, question banks and books;
+- Achieve — offline model tests and exam batches;
+- ACS Engineering School — engineering learning (marked as upcoming on the hub);
+- ACS Mart — marketplace (marked as upcoming on the hub).
+
+The group's own homepage claims 1M+ learners. This is a first-party marketing claim, not an independently audited active-user count. We must record it as such, not treat it as verified adoption. The strategic lesson is that ACS's moat may be the integrated funnel and distribution across brands, not any single app feature.
+
+Source: https://www.acsedtech.com/
+
+### 7.3 Admission exam corpus: official circulars first
+
+A 2025–26 GST integrated admission circular was located on a participating university's official admission domain. It contains eligibility rules, unit exam dates, negative marking (0.25 per wrong answer), pass mark (30), and the participating-university list. The circular is the canonical source for those fields; coaching sites with conflicting marks tables must not override it.
+
+Source: https://admission.kiu.ac.bd/assets/Circular%20GST%202025-26.pdf
+
+The University of Dhaka's official admission portal exposes separate guidance areas for Science, Arts/Law/Social Science, Business Studies, Fine Arts and IBA, including eligibility and examination rules. Each unit therefore needs its own versioned exam specification; do not collapse DU into a single generic test.
+
+Source: https://admission.eis.du.ac.bd/
+
+BUET 2025–26 search results surfaced third-party circular summaries but not yet a verified primary circular PDF in this pass. Those summaries are leads only. Obtain the official BUET admission notice and archive it before writing any BUET marks distribution or syllabus into JMT.
+
+### 7.4 Virtual lab research adds an important design warning
+
+A peer-reviewed design study of two virtual laboratories identifies recurring trade-offs: exploration versus scripted interaction, realism versus enhanced visualization, ambition versus available resources, and the need for guided learning/debriefing. It warns against disguising a linear demonstration as a genuinely interactive lab. A Cambridge Assessment review similarly notes that virtual labs can assess some practical skills but have validity threats and cannot automatically replace all physical practical experience.
+
+Sources:
+- https://link.springer.com/article/10.1007/s10639-018-09857-0
+- https://www.cambridgeassessment.org.uk/Images/747198-the-validity-of-virtual-labs-for-assessing-science-practical-skills.pdf
+
+### 7.5 Predictor research: distinguish two different forecasting targets
+
+1. **Paper-content forecasting:** forecast topic, subtopic, question archetype and marks distribution before the exam. Evaluate against held-out real papers.
+2. **Student-performance forecasting:** estimate an individual student's likely score/readiness from their learning evidence. Evaluate against actual outcomes with cohort/time holdouts and calibration.
+
+These are separate models, data products, metrics and user promises. The first cannot be evaluated using student score accuracy, and the second cannot be judged by topic overlap. JMT should not conflate them under one vague “AI prediction” label.

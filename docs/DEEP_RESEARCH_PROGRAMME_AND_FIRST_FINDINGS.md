@@ -240,3 +240,50 @@ Sources:
 2. **Student-performance forecasting:** estimate an individual student's likely score/readiness from their learning evidence. Evaluate against actual outcomes with cohort/time holdouts and calibration.
 
 These are separate models, data products, metrics and user promises. The first cannot be evaluated using student score accuracy, and the second cannot be judged by topic overlap. JMT should not conflate them under one vague “AI prediction” label.
+
+
+## 8. Wave-1 source extraction — curriculum and admission details
+
+### 8.1 Official NCTB 2025–26 HSC textbook page
+
+The NCTB page last updated 7 May 2026 lists five higher-secondary titles: সাহিত্যপাঠ, সহপাঠ, English for Today, ICT and ICT (English version). It is important not to assume that every HSC subject has a centrally published NCTB textbook PDF in that list. The full subject syllabus, board-prescribed content, approved references and practical requirements need separate evidence. ACS's Academic Series books for Physics, Chemistry, Biology, General Math and Higher Math are supplementary commercial materials and must be mapped to the applicable official syllabus, not mistaken for official NCTB textbooks.
+
+Canonical page: https://nctb.gov.bd/pages/static-pages/6922e145933eb65569e2b37b
+
+### 8.2 HSC exam source archive
+
+The Ministry of Education's HSC/Equivalent page provides the 2026 notices and timetable and links earlier 2025, 2024, 2023 and 2022/2021 examination information. The Rajshahi Education Board's HSC statistics page lists year-specific statistics for 2019–2026, including a 2026 statistics PDF. These are useful for exam chronology, candidate volume and cohort context; they are not substitutes for question-paper scans or subject syllabuses.
+
+Sources:
+- https://shed.gov.bd/pages/static-pages/694146bea31054345f0fcb25
+- https://rajshahieducationboard.gov.bd/pages/static-pages/691997b2933eb65569dde245
+
+### 8.3 GST 2025–26 official circular facts
+
+The 2025–26 GST circular hosted on a participating university's official admission domain states:
+- Unit A (Science), Unit B (Humanities), Unit C (Business Studies);
+- 100-mark, one-hour admission tests;
+- 0.25 marks deducted per wrong answer;
+- pass mark 30;
+- unit-specific eligibility rules;
+- exam dates in March/April 2026 and a listed participating-university group.
+
+The subject/marks matrix must be extracted directly from the circular PDF and independently checked before encoding. The same circular states that the integrated admission committee's decision is final. Third-party summaries found in the same search disagreed on some subject distributions; this is precisely why JMT must use the official circular as the source of truth.
+
+Source: https://admission.kiu.ac.bd/assets/Circular%20GST%202025-26.pdf
+
+### 8.4 DU is not one generic admission exam
+
+The official Dhaka University admission portal has separate unit-specific guidance for Science, Arts/Law/Social Science, Business Studies, Fine Arts and IBA. Each unit needs a separate versioned syllabus, eligibility rules, question format and mark distribution. Current-year details must be read from the applicable session's official circular, not inferred from an old question bank.
+
+Source: https://admission.eis.du.ac.bd/
+
+### 8.5 Predictor data integrity: important calendar reality
+
+As of this research date (11 November 2026), HSC 2026 and the 2025–26 GST admission cycle are past events. Therefore, the requested “predict HSC 2026 without giving the model 2026 exam material, then compare with the real paper” can only be run as a **retrospective blind reconstruction**. It is not possible to honestly call it a prospective live prediction now.
+
+The experiment remains useful only if we can reconstruct a trustworthy pre-exam snapshot of the permitted sources. If no timestamped pre-exam corpus exists, use a stricter rolling-origin backtest on earlier years and label the 2026 exercise non-blind. Never remove post-exam documents from today's search index and claim that proves they were unavailable to the model at prediction time; preserve a source manifest and cutoff audit.
+
+### 8.6 HSC and admission predictor should support multiple output levels
+
+For HSC, create separate subject-paper models, including CQ/creative, MCQ, practical/viva where applicable, and marks distribution. For admissions, create independent models by institution + session + unit/group + subject + exam format. For each, predict syllabus coverage and question archetypes, not just the wording of a question. A forecast can be useful even when no exact question repeats, provided it helps students allocate revision time without abandoning the full syllabus.

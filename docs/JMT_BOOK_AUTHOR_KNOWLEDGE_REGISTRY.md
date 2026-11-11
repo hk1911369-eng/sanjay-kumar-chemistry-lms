@@ -162,3 +162,13 @@ The following tranche documents extend the discovery register. Each remains a so
 
 **Key correction:** The NCTB official 2025–26 higher-secondary page lists Sahityapath, Sahaypath, English for Today, ICT and ICT English Version. This is not evidence that the 2026–27 cohort's final textbook/syllabus list is identical; the 1 October 2026 higher-secondary notice attachment remains a blocking source-retrieval task.
 
+
+
+## 12. Statistics and Agriculture Studies bibliography expansion — tranche 20 (11 November 2026)
+
+| Tranche | Coverage | Evidence boundary | Record |
+|---|---|---|---|
+| 20 | Statistics: Lecture, Panjeree, Grantha Kutir; Agriculture Studies: Abacus, Lecture, Panjeree, Newton | Lecture Statistics First Paper is listed for Exam 2028 but lacks ISBN/pages; Second Paper has incomplete retailer metadata. Agriculture records are mostly Exam 2026/2027 or 2023 practical resources; do not infer a current Exam 2028 core textbook. | [Tranche 20](JMT_HSC_STATISTICS_AGRICULTURE_RESOURCE_AUTHOR_REGISTRY_TRANCHE_20_LECTURE_PANJEREE_GRANTHAKUTIR_ABACUS_NEWTON.md) |
+
+**Key cohort warning:** The discovered Abacus Agriculture First Paper is an Exam 2027 edition; Lecture's Agriculture Second Paper supplement is also HSC 2027; Panjeree's combined Agriculture test paper is HSC 2026. These are not verified Exam 2028 core textbooks. Newton's direct Agriculture/Statistics pages describe practical books with 2023 edition data, not current core theory textbooks.
+

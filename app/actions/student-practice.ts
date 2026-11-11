@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 export type PracticeAnswerResult =
-  | { ok: true; attemptId: string; isCorrect: boolean; correctOption: number; explanation: string; awardedMarks: number }
+  | { ok: true; attemptId: string; attemptNumber: number; isCorrect: boolean; correctOption: number; explanation: string; awardedMarks: number }
   | { ok: false; error: 'login' | 'invalid' | 'already_answered' | 'unavailable' | 'failed' };
 
 export async function submitStudentPracticeAnswer(
@@ -34,6 +34,7 @@ export async function submitStudentPracticeAnswer(
   if (!row || typeof row !== 'object') return { ok: false, error: 'failed' };
   const result = row as {
     attempt_id?: string;
+    attempt_number?: number;
     is_correct?: boolean;
     correct_option?: number;
     explanation?: string;
@@ -41,6 +42,7 @@ export async function submitStudentPracticeAnswer(
   };
   if (
     typeof result.attempt_id !== 'string'
+    || typeof result.attempt_number !== 'number'
     || typeof result.is_correct !== 'boolean'
     || typeof result.correct_option !== 'number'
   ) return { ok: false, error: 'failed' };
@@ -50,6 +52,7 @@ export async function submitStudentPracticeAnswer(
   return {
     ok: true,
     attemptId: result.attempt_id,
+    attemptNumber: result.attempt_number,
     isCorrect: result.is_correct,
     correctOption: result.correct_option,
     explanation: result.explanation ?? '',

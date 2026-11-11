@@ -396,3 +396,33 @@ The current report/reconciliation documentation commit is newer and has no workf
 7. Run browser E2E, storage ownership, payment, assessment-window, role-boundary and accessibility checks against that populated staging environment.
 
 **Release verdict remains NOT READY for production merge/deploy.** This live database verification was read-only; no project settings, schema, data, deployments, or PR state were changed.
+
+
+## Critical journey plan and latest CI — 11 November 2026
+
+A dedicated browser-journey specification has now been added:
+
+- [JMT Critical Journey E2E Test Plan](JMT_CRITICAL_JOURNEY_E2E_TEST_PLAN.md)
+- It defines synthetic student-paid/unpaid/expired/inactive fixtures, assigned/unassigned teachers, active/inactive admins, and Course A/Course B isolation.
+- It specifies four P0 journeys: authentication/role boundaries, paid-course entitlement, payment submission/reconciliation/approval, and assessment integrity/written-exam recovery.
+- It specifies P1 practical evidence, teacher authoring/review, practice/revision/analytics, and P2 accessibility/responsive checks.
+- It explicitly marks itself **SPECIFICATION ONLY — NOT EXECUTED**. No journey is passed by virtue of being documented.
+
+### Browser automation attempt
+
+The BrowserAct skill is installed in the skill catalogue, but the CLI is not available. The environment has `uv 0.10.0`; the documented install command `uv tool install browser-act-cli --python 3.12` was attempted and failed after retries because the environment could not resolve/download the Python 3.12 runtime from GitHub (DNS resolution failure). No browser was launched and no Playwright/BrowserAct test was executed. This is an execution-environment limitation, not an application test failure.
+
+### Latest verified CI
+
+The latest PR head at this check is `f5c5ffd9615602ec4900f254cdc1b2080b7c9298`, which adds the critical journey plan. GitHub Actions run [Quality checks #1124](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43067942576) completed successfully on that exact commit:
+
+- Dependency installation: passed.
+- Guardrail tests: passed.
+- ESLint: passed.
+- TypeScript: passed.
+- Production build: passed.
+- Production dependency audit: passed.
+
+This validates the repository's configured CI gates for that commit. It does not validate the browser journeys, live Supabase role policies, Storage permissions, or migration promotion.
+
+**Current PR state:** #42 remains open, draft and unmerged. **Release verdict:** NOT READY for production merge/deploy. No deployment or database mutation was performed.

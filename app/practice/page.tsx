@@ -15,6 +15,7 @@ type PracticeQuestionRow = {
   question_text: string;
   options: unknown;
   marks: number;
+  selection_reason: string;
 };
 
 export default async function StudentPracticePage({
@@ -83,6 +84,7 @@ export default async function StudentPracticePage({
         question_text: row.question_text,
         options,
         marks: Number(row.marks),
+        selection_reason: row.selection_reason,
       }];
     });
   }

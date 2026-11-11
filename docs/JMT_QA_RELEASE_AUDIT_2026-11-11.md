@@ -130,3 +130,17 @@ The previously in-progress run completed successfully on the audited report comm
 - Production dependency audit: passed.
 
 This establishes that the repository's configured CI gates passed for that exact commit. It does **not** close the browser E2E, populated staging, production schema/security reconciliation, or manual operational release gates described above. The release verdict therefore remains **NOT READY for production merge/deploy**.
+
+
+## PR change inventory follow-up
+
+The PR file inventory was re-counted after the CI follow-up. Across 363 changed paths:
+- 106 Node test files (`tests/*.test.mjs`) are included in the PR diff.
+- 23 changed app page routes.
+- 16 changed server-action files.
+- 118 Supabase migration files.
+- 3 GitHub Actions workflow files.
+- 18 lab-related component files.
+- 0 Playwright or dedicated E2E files/configuration in the PR diff.
+
+These are changed-file counts, not a claim that every item is newly created or that every scenario has runtime coverage. The absence of Playwright/E2E files is consistent with the root `package.json`, which currently exposes only the Node test, lint, typecheck and build scripts. The 106 Node tests are valuable guardrails, but source-inspection assertions and model/unit tests do not replace real browser journeys against seeded data.

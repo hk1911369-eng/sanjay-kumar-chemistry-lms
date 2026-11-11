@@ -12,6 +12,8 @@ export type StudentPracticeQuestion = {
   question_text: string;
   options: string[];
   marks: number;
+  attempt_count: number;
+  last_attempt_at: string | null;
   selection_reason: string;
 };
 
@@ -25,6 +27,7 @@ export function StudentPracticeWorkspace({ questions }: { questions: StudentPrac
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [results, setResults] = useState<Record<string, {
     correct: boolean;
+    attemptNumber: number;
     correctOption: number;
     explanation: string;
     awardedMarks: number;
@@ -56,6 +59,7 @@ export function StudentPracticeWorkspace({ questions }: { questions: StudentPrac
           ...current,
           [questionId]: {
             correct: response.isCorrect,
+            attemptNumber: response.attemptNumber,
             correctOption: response.correctOption,
             explanation: response.explanation,
             awardedMarks: response.awardedMarks,
@@ -96,6 +100,7 @@ export function StudentPracticeWorkspace({ questions }: { questions: StudentPrac
         </header>
         {(question.chapter_label || question.topic) && <p className="practice-topic">{[question.chapter_label, question.topic].filter(Boolean).join(' · ')}</p>}
         <p className="muted"><b>Why this question:</b> {question.selection_reason}</p>
+        {question.attempt_count > 0 && <p className="muted">Review question · previously attempted {question.attempt_count} time{question.attempt_count === 1 ? '' : 's'}{question.last_attempt_at ? ` · last attempt ${new Date(question.last_attempt_at).toLocaleDateString('en-GB')}` : ''}</p>}
         <h2>{question.question_text}</h2>
         <fieldset className="practice-options" disabled={Boolean(result) || pending === question.question_id}>
           <legend className="sr-only">Choose your answer</legend>
@@ -135,7 +140,7 @@ export function StudentPracticeWorkspace({ questions }: { questions: StudentPrac
         >{pending === question.question_id ? 'Checking answer…' : 'Check answer'}</button> : <section className={result.correct ? 'practice-feedback is-correct' : 'practice-feedback is-incorrect'} aria-live="polite">
           <strong>{result.correct ? 'Correct — well done.' : 'Not quite. Review the explanation.'}</strong>
           <p>{result.explanation || 'Review the correct option and revisit this concept in your next study session.'}</p>
-          <small>{result.awardedMarks} / {question.marks} marks · Evidence added to your learning profile</small>
+          <small>{result.awardedMarks} / {question.marks} marks · {result.attemptNumber === 1 ? 'Initial evidence recorded' : 'Retake recorded; this repeat does not inflate mastery evidence'}</small>
         </section>}
       </article>;
     })}

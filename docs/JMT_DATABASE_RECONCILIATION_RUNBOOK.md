@@ -326,3 +326,16 @@ The migration now:
 This makes the catalogue seed independent of pre-existing course rows and environment-specific subject UUIDs. It does **not** prove that the migration runs successfully on either live database. The static Node test only guards the migration source contract; a disposable PostgreSQL integration test must still verify clean install, rerun behavior, existing-subject preservation, FK validity and catalogue row count.
 
 **Status:** code correction committed on the unmerged PR branch; CI run `43074650506` was queued/in progress at the time of this note. No live database was modified and no migration was applied. This resolves the identified source-level seed precondition, not the broader migration-ledger, schema-parity or release blockers.
+
+
+### Seed rerun safety refinement
+
+A follow-up review found that the first subject-seed correction still updated catalogue title, explanatory text, publication state and sort order on a `lab_key` conflict. That could overwrite teacher/admin editorial changes if the seed were replayed in a rehearsal or recovery workflow.
+
+The PR migration now updates only the resolved `subject_id` and `updated_at` on conflict. It does not overwrite `is_published`, title, summary, principle, simulation type or sort order. The static guardrail test now asserts this editorial-state preservation rule.
+
+- Migration refinement commit: `40fa8635e9295bc9543cc9f986fbf8cd26b0500d`
+- Test refinement commit: `fce4adc79e43012ec704de42f2a94376a29037e4`
+- Current PR CI run: `43074970623` (in progress at documentation time).
+
+This remains source-level protection until PostgreSQL integration tests verify both first application and repeated execution against a disposable database.

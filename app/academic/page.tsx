@@ -19,7 +19,7 @@ export default async function AcademicHub({searchParams}:{searchParams:Promise<{
  const {data:assignments}=staff?(profile.role==='admin'?await supabase.from('courses').select('id,title').eq('is_published',true):await supabase.from('course_assignments').select('course:courses(id,title)').eq('teacher_id',user.id)):await supabase.from('enrollments').select('course:courses(id,title)').eq('student_id',user.id).eq('status','active');
  const courses=(assignments??[]).map((x:any)=>staff?(profile.role==='admin'?x:x.course):x.course).filter(Boolean);
  const ids=courses.map((c:any)=>c.id);
- const [classes,work,quizzes,attempts,submissions,questions,notifications,bankQuestions,writtenExams,writtenQuestions,writtenSubmissions]=await Promise.all([
+ const [classes,work,quizzes,attempts,submissions,questions,notifications,bankQuestions,writtenExams,writtenQuestions,writtenSubmissions,writtenDraft]=await Promise.all([
   ids.length?supabase.from('live_classes').select('id,course_id,title,description,starts_at,ends_at,meeting_url,recording_url,status').in('course_id',ids).order('starts_at',{ascending:true}).limit(40):Promise.resolve({data:[] as any[]}),
   ids.length?supabase.from('assignments').select('id,course_id,title,instructions,attachment_url,due_at,max_marks,published').in('course_id',ids).order('due_at',{ascending:true}).limit(60):Promise.resolve({data:[] as any[]}),
   ids.length?supabase.from('quizzes').select('id,course_id,title,instructions,duration_minutes,total_marks,starts_at,ends_at,published').in('course_id',ids).order('created_at',{ascending:false}).limit(60):Promise.resolve({data:[] as any[]}),

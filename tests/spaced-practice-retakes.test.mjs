@@ -21,6 +21,8 @@ test('previously attempted questions return only when their concept review is du
   assert.match(migration, /attempt_count integer/i);
   assert.match(migration, /max\(a\.answered_at\) AS last_attempt_at/i);
   assert.match(migration, /COALESCE\(attempts\.attempt_count, 0\) = 0[\s\S]*mastery\.next_review_at <= now\(\)/i);
+  assert.match(migration, /attempts\.last_attempt_at <= now\(\) - interval '1 day'/i);
+  assert.match(migration, /q\.concept_id IS NULL OR mastery\.next_review_at IS NULL/i);
   assert.match(page, /attempt_count: Number\(row\.attempt_count \?\? 0\)/i);
   assert.match(workspace, /Review question · previously attempted/i);
 });

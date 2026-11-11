@@ -7,7 +7,7 @@ type Goal = {
   period_start: string; period_end: string; course_id: string | null; status: 'active' | 'completed';
 };
 type RevisionTask = {
-  id: string; title: string; scheduled_for: string; priority: number; course_id: string; source_type: string;
+  id: string; title: string; scheduled_for: string; priority: number; course_id: string; concept_id: string | null; source_type: string;
 };
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null };
 type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };

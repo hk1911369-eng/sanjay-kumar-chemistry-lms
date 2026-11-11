@@ -76,7 +76,8 @@ export default async function StudentPracticePage({
       p_course_id: courseId,
       p_subject_id: subjectId,
       p_difficulty: difficulty || null,
-      p_limit: 20,\n      p_concept_id: concept?.id ?? null,
+      p_limit: 20,
+      p_concept_id: concept?.id ?? null,
     });
     loadError = Boolean(error);
     questions = ((data ?? []) as PracticeQuestionRow[]).flatMap(row => {

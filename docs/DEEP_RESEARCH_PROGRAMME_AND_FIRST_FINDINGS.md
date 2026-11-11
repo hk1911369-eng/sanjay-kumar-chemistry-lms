@@ -555,3 +555,76 @@ The SSC manual itself is potentially useful background on Bangladesh's creative-
 Sources:
 - Official HSC Corner index: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
 - Official CMS page that was retrieved, explicitly headed for SSC/equivalent: https://dhakaeducationboard.gov.bd/index.php/site/cms/24590?w=on
+
+
+## 12. Research tranche 4 — HSC 2026 assessment architecture and exam operations (11 November 2026)
+
+### 12.1 Official HSC 2026 routine exposes the written assessment structure
+
+The Dhaka Education Board's official HSC Corner includes the HSC 2026 examination routine and candidate instructions. The extracted instructions state:
+- For subjects without a 25-mark practical component: MCQ 30 marks in 30 minutes, followed immediately by CQ 70 marks in 2 hours 30 minutes.
+- For subjects with a 25-mark practical component: MCQ 25 marks in 25 minutes, followed immediately by CQ 50 marks in 2 hours 35 minutes; the practical component is separately assessed.
+- MCQ is held first, then CQ, with no break between the two.
+- Candidates must pass the theory, MCQ and practical components separately where applicable.
+- Candidates may use a general non-programmable scientific calculator and an ordinary wristwatch; programmable calculators and smartwatches are prohibited.
+
+These rules are high-value for the assessment engine, timed mock exams and score reports. JMT must model component-level marks and pass rules, not merely total marks. The exam simulator must support sequential sections with an automatic section transition and no inter-section break where the official pattern requires it. The calculator policy must be versioned by exam session and must not be generalized to university admission tests.
+
+Primary source: Dhaka Education Board HSC Corner, including the HSC 2026 routine and the 17 June 2026 calculator/watch notice: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+
+### 12.2 Do not hardcode the assessment split across all subjects
+
+The board instruction explicitly distinguishes subjects with and without a 25-mark practical component. Therefore the marks blueprint must be a subject-paper-session record. It must not assume:
+- every subject has practical marks;
+- every subject uses 30 MCQ + 70 CQ;
+- practical marks can be combined with theory for pass/fail;
+- every institution's internal mock exam should exactly mimic the national public exam.
+
+The source-backed schema should include component name, maximum marks, duration, sequence, mandatory/optional status, separate pass requirement, permitted tools, and effective exam session. For a practical subject, store theory MCQ, theory CQ, practical, and any viva/other components separately only when the official subject-specific rules support them.
+
+### 12.3 HSC practical administration: external examiner and marks submission are explicit workflows
+
+The HSC Corner lists subject-code-grouped examiner instructions, external examiner lists by district/city, urgent practical-exam notices, and a deadline-extension notice for practical examination and online marks submission. This confirms that practical assessment is institutionally administered and examiner-governed.
+
+For JMT:
+- Virtual labs should be labelled as simulation-based learning and practice.
+- A completed virtual experiment must not automatically be treated as an official HSC practical pass or official practical mark.
+- A teacher-facing practical record may capture task, date, candidate, observations, apparatus/simulation mode, rubric, examiner, viva, review and marks, but official mark status must remain distinct from student practice evidence.
+- Practical assessment data should support audit trails and role-based access.
+
+Primary source: same official HSC Corner index above; notices dated 4–11 August 2026.
+
+### 12.4 Question-setter/moderator training manual: HSC resource is listed but direct file resolution is pending
+
+The HSC Corner lists an HSC/equivalent question-setter and moderator training manual dated 1 February 2026, as well as HSC question-paper preparation and moderation training notices in late 2025 and early 2026. The public file link was not resolved in this extraction. A separate official page discovered earlier is clearly for SSC-25 and must not be mistaken for the HSC manual.
+
+The HSC Corner also records that the inter-board coordination committee and Dhaka Board's Bangladesh Examination Development Unit were conducting HSC question-paper setter/moderator training. The programme's 23-subject coverage is described in contemporaneous reporting; primary notices remain the preferred source. JMT should pursue the HSC manual and any public assessment-framework materials, but should not infer confidential exam content or seek restricted documents.
+
+Primary source index: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+
+### 12.5 Implications for the JMT exam engine
+
+Required domain model:
+- Exam blueprint (session, board, qualification, subject, paper, candidate status).
+- Exam section (MCQ/CQ/practical/viva/other), ordering, time, maximum marks and instructions.
+- Question type and response mode, including choice rules and section-specific navigation.
+- Component-level grading and separate pass rules.
+- Tool policy (calculator class, watch, device restrictions) by session.
+- Exam attempt timer with reliable autosave, reconnect handling and audit events.
+- Results that show total score and each separately passed/failed component.
+- Mock exam mode that clearly distinguishes official-pattern simulation from a teacher-created assessment.
+
+Acceptance tests:
+1. A 2026 HSC subject without practical can configure 30-minute MCQ followed by 150-minute CQ, 100 total marks, with no break.
+2. A 2026 HSC subject with 25 practical marks can configure 25-minute MCQ followed by 155-minute CQ, with the 25-mark practical component recorded separately.
+3. The result evaluator cannot award an overall pass if a required component's separate pass threshold is not met.
+4. Candidate instructions can display the correct calculator/watch policy for that exam session.
+5. The same engine supports a different admission exam blueprint without inheriting HSC-specific assumptions.
+
+### 12.6 Evidence grade and limitations
+
+- **A — Primary source:** Dhaka Education Board official HSC Corner and its HSC 2026 routine/candidate instructions and calculator notice.
+- **A — Primary source:** official HSC Corner listings of practical examiner instructions and examiner assignments.
+- **Open:** exact subject-by-subject mapping of which HSC subjects have 25-mark practical components and their practical rubrics; must be transcribed from official subject-specific documents.
+- **Open:** HSC setter/moderator manual direct PDF and contents.
+- **Do not use:** third-party "HSC 2026 short syllabus" claims where they contradict the official full-syllabus notice for regular candidates.

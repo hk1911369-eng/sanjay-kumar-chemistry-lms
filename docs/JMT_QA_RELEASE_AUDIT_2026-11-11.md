@@ -426,3 +426,62 @@ The latest PR head at this check is `f5c5ffd9615602ec4900f254cdc1b2080b7c9298`, 
 This validates the repository's configured CI gates for that commit. It does not validate the browser journeys, live Supabase role policies, Storage permissions, or migration promotion.
 
 **Current PR state:** #42 remains open, draft and unmerged. **Release verdict:** NOT READY for production merge/deploy. No deployment or database mutation was performed.
+
+
+## Latest PR-head and live Supabase recheck — 11 November 2026
+
+### GitHub CI — exact current head
+
+The PR head at this recheck is `df6e0a53fb513884d0e77c953a8e43fa8e5e5b7f`. GitHub Actions run [Quality checks #1125](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43068490766) completed successfully on that exact SHA. All steps passed: dependency installation, guardrail tests, ESLint, TypeScript, production build and production dependency audit.
+
+PR #42 remains open and draft. This confirms configured CI only; browser journeys remain unexecuted.
+
+### Read-only live database recheck
+
+Both connected Supabase projects were queried again without changing schema, data, settings or migration history.
+
+| Measure | Primary project | JMT Test |
+|---|---:|---:|
+| Public base tables | 49 | 57 |
+| Tables with RLS enabled | 49 | 57 |
+| Existing tables granting authenticated TRUNCATE | 33 | 0 |
+| Existing tables granting authenticated TRIGGER | 33 | 0 |
+| Existing tables granting anon TRUNCATE or TRIGGER | 0 | 0 |
+| Academic subjects | 0 | 8 |
+| Courses | 0 | 3 |
+| Course-subject mappings | 0 | 24 |
+| Enrollments | 0 | 0 |
+| Lessons | 0 | 0 |
+| Quizzes / quiz questions / attempts | 0 / 0 / 0 | 0 / 0 / 0 |
+| Written exams / submissions | 0 / 0 | 0 / 0 |
+| Lab notebook entries / evidence / practical assignments | Tables absent | 0 / 0 / 0 |
+| Student practice questions / attempts | Tables absent | 0 / 0 |
+
+The written-exam draft table is absent from both live projects. The test project has more structural coverage, but neither project contains the fixtures required for meaningful paid-student, lesson, assessment, payment, lab or teacher-review end-to-end tests.
+
+### Default privilege nuance — clarified
+
+The current default ACL query shows that the `postgres` object owner in the primary project still grants both `TRUNCATE` and `TRIGGER` by default to `anon` and `authenticated`; the same grants are absent from the `postgres` defaults in JMT Test.
+
+However, the `supabase_admin` object owner's default ACL still grants `TRUNCATE` and `TRIGGER` to `anon` and `authenticated` in **both** projects. This means the test project's zero current-table grants do not prove that every future object-creation path is hardened. The actual migration/object-creation roles must be confirmed, and default ACLs must be remediated and verified for every role that can create exposed public tables. Do not revoke platform-managed role privileges blindly.
+
+### Current advisor recheck
+
+- Primary project: 1 anon-callable SECURITY DEFINER function warning; 18 authenticated-callable SECURITY DEFINER function warnings; leaked-password protection disabled; two no-policy INFO notices for internal rate-limit tables.
+- JMT Test: 1 anon-callable SECURITY DEFINER function warning; 23 authenticated-callable SECURITY DEFINER function warnings; leaked-password protection disabled; the same two rate-limit INFO notices.
+- Performance advisor WARNs for multiple permissive policies: 27 in primary and 22 in JMT Test.
+
+These advisor findings are not automatically confirmed vulnerabilities. The authenticated-callable functions require function-by-function review of grants, identity/role checks, search_path and intended API exposure. The two no-policy rate-limit tables are consistent with their intended internal-only design. Multiple permissive policies should be assessed for semantic overlap before any consolidation.
+
+### Updated decision and next safe sequence
+
+**Release remains NOT READY.** The highest-value next steps are:
+
+1. Prepare a reviewed privilege-hardening migration covering existing primary tables and all actual object-creation roles; verify grants before and after in a disposable database.
+2. Add an idempotent subject seed/preflight before the fixed-UUID virtual-lab catalogue migration.
+3. Reconcile written-exam draft migration ordering against both live migration ledgers before applying anything.
+4. Build synthetic fixtures in an isolated environment only after confirming its schema is representative.
+5. Run real PostgreSQL role/RLS/RPC/Storage tests and browser journeys; do not substitute source-text tests.
+6. Enable leaked-password protection through a reviewed Auth configuration change after confirming user impact and supported settings.
+
+All checks in this section were read-only. No database mutation, project setting change, deployment, merge or PR state change was performed.

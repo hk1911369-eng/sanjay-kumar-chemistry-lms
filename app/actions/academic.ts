@@ -280,7 +280,7 @@ export async function saveWrittenExamDraft(
  examId:string,
  answers:Record<string,string>,
  expectedVersion:number
-) {
+): Promise<{ok:true;version:number;savedAt:string}|{ok:false;conflict:boolean}> {
  const {supabase,role}=await actor();
  if(role!=='student'
    || !/^[0-9a-f-]{36}$/i.test(examId)

@@ -780,3 +780,10 @@ The live payment-submission trigger has a NULL-`delivery_mode` compatibility bra
 **Impact:** Learning activity and telemetry continue after course withdrawal from the catalogue; this is a lifecycle-consistency gap, not a payment or cross-student authorization bypass.
 
 **Recommended remediation (not applied):** If archival/unpublishing is intended to freeze study activity, enforce both parent-course gates inside the RPC before updating tasks or emitting events. Add tests for archived, unpublished, and active published courses. No task or learning-event rows were read or changed.
+
+
+### Course notification audience ignores current paid-enrollment eligibility
+
+`notify_course_audience()` sends course notifications to every enrollment row with `status = 'active'`, without checking current Dhaka billing-period payment eligibility or admission-fee state. Assignment/quiz publication and live-class creation triggers call this helper. The own-notification read policy checks only that `current_role()` is non-null and the recipient matches the authenticated user; `current_role()` checks profile activity, not paid enrollment. An active-profile student whose course payment has expired can therefore continue receiving and reading new course-specific notification titles and links. This does not bypass separate content-access policies for the underlying course resources.
+
+**Recommended remediation (not applied):** If notifications are part of paid course access, filter the audience by the same active, admission-fee-paid, currently paid enrollment predicate used by student content access. Decide explicitly how archived/unpublished courses and historical notices should behave. No notification rows were read or changed.

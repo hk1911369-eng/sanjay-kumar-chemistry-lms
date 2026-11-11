@@ -762,3 +762,12 @@ The live `record_simulation_completion` SECURITY DEFINER RPC validates active pa
 ### Payment approval does not recheck student-account activity
 
 `approve_manual_payment_submission()` validates the pending submission and course but does not check the target student's current `profiles.is_active` state or role before activating/extending enrollment. `set_student_account_active()` deactivates only the profile and leaves pending submissions intact. An admin can therefore approve a previously submitted payment after account deactivation, creating an active enrollment for an inactive student. The inactive profile still fails the student role/access checks, so this is a lifecycle-consistency issue rather than an immediate access bypass; paid entitlement may become usable if the account is reactivated later. Recheck active student status during approval and define whether deactivation cancels pending submissions. No records were changed.
+
+
+### NULL delivery-mode payment compatibility path bypasses admission gates
+
+The live payment-submission trigger has a NULL-`delivery_mode` compatibility branch that validates legacy course fees but omits both `courses.enrollment_open` and an accepted `course_applications` record for initial payments. The approval guard returns early for NULL mode, and the approval RPC's legacy initial-payment branch creates/activates enrollment after checking only the legacy fee amount. The authenticated student INSERT policy permits the student's own pending submission without requiring a delivery mode. The `submitManualPayment()` server action also accepts an omitted mode and calls this a compatibility path for existing accounts, but no server/database condition proves the account is actually grandfathered.
+
+**Impact:** A student can submit a NULL-mode initial payment for a new admission without an accepted application and while enrollment is closed; if an admin approves it, the RPC can activate enrollment. This is a workflow gate bypass, not automatic payment approval. Publication, amount, provider, sender and proof checks remain separate controls.
+
+**Recommended remediation (not applied):** Restrict NULL-mode compatibility to verified legacy accounts/enrollments, preferably monthly renewals only; reject new NULL-mode initial payments; enforce enrollment-open and accepted-application checks at both submission and approval. Add direct Data API and server-action regression tests for missing application and closed enrollment. No rows were read or changed during this review.

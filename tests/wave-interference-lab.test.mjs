@@ -33,7 +33,7 @@ test('wave interference database migrations allow and publish the Physics templa
   ]);
   assert.match(constraint, /'wave-interference'/);
   assert.match(catalogue, /physics-wave-interference/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000002/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'physics'/);
   assert.match(catalogue, /'wave-interference'/);
   assert.match(catalogue, /is_published,[\s\S]*true/);
 });

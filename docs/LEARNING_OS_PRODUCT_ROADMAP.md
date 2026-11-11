@@ -128,3 +128,103 @@ Report separate percentages for:
 - verified quality and pilot readiness.
 
 Never report a foundation-only percentage as completion of the whole Learning OS. Each percentage must be tied to a checklist and evidence (merged code, tests, staging validation or pilot results).
+
+## Benchmark-driven scope expansion — November 2026
+
+This section expands the product ambition after reviewing the student-facing experience described by the product owner and the publicly documented ACS Future School offering. These are target capabilities, not claims of current implementation. JMT should learn from the category benchmark without copying proprietary branding, visual assets, or unsupported claims.
+
+### 1. Personal Academic Command Centre
+
+Build a genuine annual-to-daily planner, not a simple task list.
+
+- Annual syllabus map by board, class, subject, chapter, lesson, concept and exam; show planned teaching dates, target completion dates, revision windows and assessment dates.
+- Student availability profile: school/coaching timetable, weekday and weekend availability (including Saturday/Sunday), preferred study windows, daily study capacity, sleep and wake targets, breaks, commute and recurring commitments.
+- Student-defined goals: exam target, subject targets, chapter targets, habits and personal milestones.
+- Generate a realistic year plan, term plan, weekly plan and daily timetable from syllabus workload, available time, prerequisite order and exam deadlines.
+- Let students edit, pause, archive, duplicate and restore plans; preserve plan versions and explain what changed.
+- Automatic replanning when a class is missed, a task is delayed, an exam date changes or a learner's available time changes. Protect completed work and avoid silently moving commitments.
+- A catch-up engine that prioritizes prerequisite gaps and high-impact syllabus coverage without creating impossible daily workloads.
+- Class attendance/completion, homework, revision, practice, tests and lab work all feed the same progress model.
+- Daily check-in, completion evidence, streaks with grace rules, weekly review and end-of-term/year reports.
+- Calendar/timetable views, reminders and downloadable/printable plans; low-bandwidth and offline-friendly operation.
+- Optional, permission-scoped parent visibility and teacher-assigned plan templates.
+
+### 2. JMT Learning Community
+
+Treat the community as a first-class learning product with safety and academic quality built in.
+
+- Topic-, subject-, chapter- and concept-linked doubt posts; text first, with image attachments and later audio/video where safe.
+- Peer answers, threaded discussion, follow-up questions, accepted answers and teacher-verified answers.
+- Notes marketplace/library for sharing, saving, downloading, reporting and organizing student-created notes.
+- Note quality evaluation with transparent rubric signals (accuracy, syllabus alignment, clarity, completeness, originality and usefulness); ranked collections such as top notes, not popularity-only ranking.
+- Compare notes side by side, annotate, suggest corrections, maintain versions and attribute original authors.
+- Homework discussion spaces where teachers can publish work, review submissions, give feedback and identify common misconceptions without exposing private student work.
+- Study groups, topic rooms, peer challenges, collaborative revision and class/cohort spaces.
+- Reputation based on verified helpfulness and quality, not spam, raw posting volume or reciprocal vote rings.
+- Moderation queue, report/block/mute, anti-harassment controls, plagiarism/copyright reporting, rate limits and teacher/admin oversight.
+- Minor-safe defaults: private identity and academic records, opt-in public profiles, controlled direct messaging (off by default for minors), guardian/institution controls and auditable moderation.
+- Accessibility, Bangla/English support, content search, bookmarks and export/download controls.
+
+### 3. Curriculum-linked Virtual Lab Network
+
+Expand the current simulation catalogue into a reviewed, multi-subject laboratory system.
+
+- Physics lab: interactive motion and projectile-motion experiments, force, energy, waves, electricity, optics and circuits, with adjustable parameters, live graphs, prediction prompts and experiment reports.
+- Chemistry lab: reaction, equilibrium, gas laws, titration, bonding, stoichiometry and safe virtual practicals, with units and safety notes.
+- Mathematics lab: matrices, vectors, transformations, coordinate geometry, functions, calculus and statistics with visual manipulation and graphing.
+- Biology lab: cell structures, genetics, physiology, ecology and data interpretation models.
+- ICT/computing lab: HTML/CSS/JavaScript editor with live preview; SQL editor with a constrained practice database and query output; C and other curriculum-approved language exercises with compile/run output.
+- Every lab maps to curriculum concepts, prerequisites, learning objectives, guided tasks, reflection questions and follow-up practice.
+- Sandbox code execution with strict CPU/memory/time limits, isolated ephemeral environments, no arbitrary network access, no secret exposure and abuse controls. Never execute learner code in the application server process.
+- Save experiment state, export/download reports and let teachers assign practicals and review evidence.
+- Separate simulation interaction telemetry from demonstrated understanding; use prediction, explanation and assessment evidence before updating mastery.
+- Teacher review, accessibility checks, device performance testing and scientific validation before a lab is published.
+
+### 4. Student Productivity and Study Tools
+
+- Built-in scientific calculator with standard/scientific modes, equation/history support and exam-appropriate functions; create an original implementation and interface rather than copying Casio branding or proprietary screen assets.
+- Focus sessions, configurable Pomodoro/deep-work modes, distraction-light study view and session reflection.
+- Optional routine modes and user-controlled appearance (classic/modern, light/dark, reduced motion, font sizing).
+- Optional faith/cultural routine preferences, including user-configured prayer-time-aware scheduling where reliable local data is available; never force a mode or infer a student's religion.
+- Personal notifications for classes, deadlines, revision, community replies, teacher feedback and plan changes, with quiet hours and per-category controls.
+- Notes workspace, formula sheet, bookmarks, downloads and offline access to eligible content.
+- Accessibility and wellbeing safeguards: breaks, realistic workload warnings, quiet hours and no punitive streak mechanics.
+
+### 5. Unified Teacher and Parent Workspaces
+
+- Teacher home: upcoming classes, attendance, homework to review, doubt queue, assessment marking, at-risk concept clusters and intervention suggestions.
+- Teacher content studio: create/review/publish lessons, notes, questions, labs, study-plan templates and revision packs with version history.
+- Assignment lifecycle: due dates, late policy, drafts, resubmissions, submission history, rubrics, feedback and pagination at scale.
+- Parent dashboard: authorized progress, attendance, syllabus coverage, upcoming work, teacher feedback, wellbeing/workload indicators and actionable support guidance.
+- Clear role boundaries, guardian consent/revocation, audit trails and tenant isolation.
+
+### 6. Unified Learning Intelligence and AI
+
+- A shared learner model connects syllabus coverage, planner execution, attendance, lessons, practice, assessments, mistakes, labs and community contribution.
+- Explainable next-best-action engine: recommend a class, lesson, note, lab, doubt thread, practice set or rest/replanning action with a reason and confidence.
+- Detect plan drift, prerequisite gaps, misconceptions, exam risk and overload; distinguish missing evidence from poor performance.
+- AI Tutor and Doubt Solver grounded in approved course material, with hints-first pedagogy, worked steps, Bengali/English, source references, uncertainty and teacher escalation.
+- AI-generated questions, notes and plan suggestions remain drafts until teacher or authorized content-owner approval.
+- Predictive scores only after sufficient representative data and calibration; show uncertainty and never present forecasts as guarantees.
+- Privacy-preserving community and classroom insights with minimum cohort thresholds.
+
+### 7. Product quality bar and delivery gates
+
+- One coherent student experience across web and mobile; fast on low-cost Android devices and weak connections.
+- Search across syllabus, lessons, notes, questions, labs and community, with permission-aware results.
+- Notifications, downloads, accessibility, offline recovery, localization and responsive layouts are core acceptance criteria, not polish deferred indefinitely.
+- Product analytics must measure meaningful outcomes: syllabus completion, learning gains, resolved doubts, quality of peer help, plan adherence, lab understanding and student/teacher retention—not merely clicks or time spent.
+- Run task-based usability tests with real students, teachers and guardians in Bangladesh before declaring a major module ready.
+- Every module requires functional, authorization, abuse, accessibility, performance and data-retention tests plus a usable empty/loading/error/offline state.
+- Never market a feature as complete based solely on a UI mockup or a database table. Completion requires end-to-end workflows, tests, operational controls and pilot evidence.
+
+### Revised strategic priority
+
+1. **Student-facing parity foundation:** annual planner, coherent syllabus calendar, student productivity tools, teacher homework workflow and notifications.
+2. **Community and knowledge sharing:** moderated doubt/answer system, note library, quality evaluation, compare/download and teacher oversight.
+3. **Curriculum lab platform:** physics and mathematics graphing labs first, then chemistry, biology and secure ICT coding/SQL environments.
+4. **Learning intelligence:** connect all events to mastery, mistake memory, adaptive revision, plan repair and exam readiness.
+5. **AI layer:** grounded tutor, doubt solver, content authoring and teacher support, introduced only with evaluation and cost/privacy controls.
+6. **Parent, offline and institution scale:** deepen after student workflows and data boundaries are proven.
+
+The product owner may provide app videos/screenshots later. Those should be treated as additional first-hand benchmark evidence and used to refine acceptance criteria. Do not delay the broader architecture waiting for those materials.

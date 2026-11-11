@@ -111,9 +111,9 @@ The system should synthesize independent explanations in its own words, cite the
 This is an initial discovery register, not “every book” yet. No claim is made that all Bangladesh authors, editions, or book contents have been found or reviewed. The programme must measure completeness by subject/cohort/publisher coverage and verified edition records, not by the number of search results.
 
 
-## 9. Subject bibliography expansion — tranches 12–17 (11 November 2026)
+## 9. Subject bibliography expansion — tranches 12–18 (11 November 2026)
 
-The following tranche documents extend the discovery register. Each remains a source-linked bibliography, not proof of NCTB prescription, full-text review, or content quality.
+The following tranche documents extend the discovery register. Each remains a source-linked bibliography, not proof of NCTB prescription, full-text review, or content quality. Chemistry sub-tranches are split by resource type and cross-check purpose to avoid treating practical manuals, solutions and practice books as theory textbooks.
 
 | Tranche | Coverage | Key integrity observations | Record |
 |---|---|---|---|
@@ -121,8 +121,13 @@ The following tranche documents extend the discovery register. Each remains a so
 | 13 | Physics: Metro Publications / Prof. Dr. Gias Uddin Ahmed; ordinary Physics and Mathematical Physics | Ordinary paper textbooks and Mathematical Physics are distinct; source bylines differ; title-page verification remains necessary. | [Tranche 13](JMT_HSC_PHYSICS_AUTHOR_EDITION_REGISTRY_TRANCHE_13_METRO_GIAS_UDDIN_AHMED.md) |
 | 14 | ICT: NCTB boundary, Systech, Akkharpatra, Lecture Creative ICT and Panjeree | Official NCTB textbook is the curriculum anchor; commercial textbooks, practice books and historical Q&A resources must not be conflated; some language/byline/page conflicts remain. | [Tranche 14](JMT_HSC_ICT_RESOURCE_AUTHOR_REGISTRY_TRANCHE_14_NCTB_SYSTECH_AKKHARPATRA_LECTURE_PANJEREE.md) |
 | 15 | Higher Mathematics: Akkharpatra, SKL and Alpha | Bengali/English and textbook/solution editions are separate; page counts and bylines conflict across publisher/retailer records. | [Tranche 15](JMT_HSC_HIGHER_MATHEMATICS_AUTHOR_EDITION_REGISTRY_TRANCHE_15_AKKHARPATRA_SKL_ALPHA.md) |
-| 16 | Chemistry: Abacus, Akkharpatra, Hasan Book House and Lecture | Abacus identifier 9789843376725 appears against two different products; Akkharpatra page counts conflict; Hasan author lists vary by edition/source; Lecture identifiers shown as ISBNs are 22 digits and are not valid ISBN lengths. | [Tranche 16](JMT_HSC_CHEMISTRY_AUTHOR_EDITION_REGISTRY_TRANCHE_16_ABACUS_AKKHARPATRA_HASAN_LECTURE.md) |
-| 17 | Chemistry practice/supplement resources: Panjeree and historical Colour Web / Swapan Kumar Mistry | Practice books and supplements are not core textbooks; exam-year labels must be respected; Panjeree identifiers require ISBN validation; Colour Web records are historical. | [Tranche 17](JMT_HSC_CHEMISTRY_PRACTICE_AND_HISTORICAL_REGISTRY_TRANCHE_17_PANJEREE_COLOUR_WEB.md) |
+| 16A | Chemistry theory bibliography: Abacus, Akkharpatra, Hasan Book House and Lecture | Source-specific bylines and page counts preserved; Abacus ISBN collision flagged; Lecture catalogue identifiers require validation. | [Tranche 16A](JMT_HSC_CHEMISTRY_AUTHOR_EDITION_REGISTRY_TRANCHE_16_ABACUS_AKKHARPATRA_HASAN_LECTURE.md) |
+| 16B | Chemistry edition cross-check: Abacus, Hasan Book House and Lecture | Expanded Abacus English/Bengali responsibility evidence and Hasan/Lecture edition observations; physical title-page confirmation remains outstanding. | [Tranche 16B](JMT_HSC_CHEMISTRY_AUTHOR_EDITION_REGISTRY_TRANCHE_16_ABACUS_HASAN_LECTURE.md) |
+| 17A | Hasan Book House Chemistry author/edition deep-dive | Bengali and English bylines vary by edition/source; page counts conflict; practical and solution books are distinct. | [Tranche 17A](JMT_HSC_CHEMISTRY_AUTHOR_EDITION_REGISTRY_TRANCHE_17_HASAN_BOOK_HOUSE_HARADHAN_HAJARI.md) |
+| 17B | Chemistry practical and mathematical resources: Akkharpatra and Abacus | Practical manuals and Mathematical Chemistry are separate resources; Abacus ISBN collision is retained as a data-quality issue. | [Tranche 17B](JMT_HSC_CHEMISTRY_PRACTICAL_MATHEMATICAL_RESOURCES_TRANCHE_17_AKKHARPATRA_ABACUS.md) |
+| 17C | Chemistry practice and historical resources: Panjeree and Colour Web | Practice/supplement books are not theory textbooks; HSC 2026/2027/2028 cohorts remain separate; Colour Web records are historical. | [Tranche 17C](JMT_HSC_CHEMISTRY_PRACTICE_AND_HISTORICAL_REGISTRY_TRANCHE_17_PANJEREE_COLOUR_WEB.md) |
+| 18A | Panjeree Chemistry Supplement++, test papers and Exam 2028 practice books | Paper-specific, combined and cohort-specific resources are separated; raw catalogue identifiers are not accepted as ISBNs without validation. | [Tranche 18A](JMT_HSC_CHEMISTRY_PRACTICE_RESOURCE_REGISTRY_TRANCHE_18_PANJEREE_SUPPLEMENT_TEST_PAPERS.md) |
+| 18B | Official NCTB 2026–27 syllabus notice source verification | NCTB notice-index entry/date verified; attachment URL and syllabus contents remain unretrieved, so no subject/marks claims are inferred. | [Tranche 18B](JMT_OFFICIAL_CURRICULUM_SOURCE_VERIFICATION_TRANCHE_18_NCTB_2026_27.md) |
 
 ### Consolidated author and publisher discovery leads
 
@@ -130,7 +135,7 @@ The following tranche documents extend the discovery register. Each remains a so
 - **Physics:** Professor Dr. Gias Uddin Ahmed and Mathematical Physics co-contributors Prof. Rashidul Hasan, Prof. Mahera Ahmed, Mohammad Alamgeer Hossain and Dr. Md. Mominul Haque; exact bylines vary across editions and retailers.
 - **ICT:** Mahbubur Rahman (Systech); A. Z. M. Asaduzzaman, Dr. Md. Masud Rana and Mohammad Ariful Islam (Akkharpatra Bengali publisher record); Lecture and Panjeree practice resources have separate editorial/publisher attribution.
 - **Higher Mathematics:** Professor Ashim Kumar Saha; Professor Dr. B. M. Ikramul Haque; Md. Nurul Islam; Md. Khalilur Rahman (Akkharpatra editions); Md. Ketab Uddin and Prof. Md. Nazrul Islam (SKL); S. U. Ahmed (Alpha), with older Alpha records also naming A. F. M. Abdur Rahman and M. A. Jabbar.
-- **Chemistry:** Dr. Gazi Md. Ahsanul Kabir; Dr. Rabiul Islam; Mahbub Hasan Linkon/Lingcon; Dr. Md. Abdul Karim; Dr. Md. Nurul Islam; Prof. Haradhan Nag; Dr. Saroj Kanti Singha Hazari (name spelling varies); Sanjit Kumar Guha; Swapan Kumar Mistry (historical Colour Web records).
+- **Chemistry:** Dr. Gazi Md. Ahsanul Kabir; Dr. Rabiul Islam; Mahbub Hasan Linkon/Lingcon; Dr. Md. Abdul Karim; Dr. Md. Nurul Islam; Prof. Haradhan Nag; Dr. Saroj Kanti Singha Hazari (name spelling varies); Sanjit Kumar Guha; Swapan Kumar Mistry (historical Colour Web records). Panjeree practice resources list Panjeree Editorial Board as a collective editorial responsibility body, not an individual author.
 
 ### Bibliography status rules reinforced
 
@@ -141,4 +146,3 @@ The following tranche documents extend the discovery register. Each remains a so
 5. A retailer's Exam 2028 label is a source observation until reconciled with the official cohort/syllabus record.
 6. Physical title/copyright pages and contents pages remain the preferred verification evidence.
 7. Rights review must precede full-text ingestion, storage, indexing for redistribution, or public display.
-

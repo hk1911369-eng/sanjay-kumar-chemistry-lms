@@ -30,4 +30,12 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
     /10000000-0000-4000-8000-00000000000[1-6]/,
     'catalogue seeds must not depend on UUIDs generated in another environment',
   );
+
+  const conflictUpdate = sql.slice(sql.indexOf('ON CONFLICT (lab_key)'));
+  assert.match(conflictUpdate, /DO UPDATE SET\s+subject_id = EXCLUDED\.subject_id,\s+updated_at = now\(\);/);
+  assert.doesNotMatch(
+    conflictUpdate,
+    /SET[\s\S]*\b(is_published|title|summary|principle|simulation_type|sort_order)\s*=/,
+    'rerunning the seed must not overwrite teacher/admin editorial state',
+  );
 });

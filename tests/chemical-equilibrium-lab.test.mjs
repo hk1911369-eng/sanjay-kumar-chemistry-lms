@@ -32,7 +32,7 @@ test('equilibrium template is allowed and published for Chemistry in database mi
   ]);
   assert.match(constraint, /'equilibrium'/);
   assert.match(catalogue, /chemistry-equilibrium-le-chatelier/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000001/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'chemistry'/);
   assert.match(catalogue, /'equilibrium'/);
   assert.match(catalogue, /is_published,[\s\S]*true/);
 });

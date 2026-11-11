@@ -336,3 +336,126 @@ The ACS ecosystem is not a single monolithic app. Its public footprint suggests 
 - a wider marketplace brand.
 
 This is an **inference from public brand/product pages**, not proof of shared account, shared learner database or technical integration between those products. JMT should compete through a genuinely unified learner record and coherent experience while retaining specialized workflows where needed.
+
+
+## 10. Research tranche 2 — official curriculum and admissions source verification (11 November 2026)
+
+This tranche prioritizes primary government and university sources. It is a source-verification pass, not yet a complete subject-by-subject curriculum extraction or a complete admission-specification matrix.
+
+### 10.1 NCTB syllabus archive: versioning is mandatory
+
+The NCTB official archive page reviewed in this tranche is explicitly a collection of **rearranged/revised examination syllabuses**, sample questions and question-pattern/mark-distribution material. Its visible list includes:
+- 2022 SSC and HSC revised syllabuses;
+- 2021 HSC revised syllabus;
+- 2023 SSC and HSC revised syllabuses;
+- 2024 HSC syllabus described as the same as the 2023 revised HSC syllabus;
+- 2025 HSC/equivalent and Alim revised syllabus;
+- a separate 2024–25 academic-year HSC cohort notice for the 2026 HSC Bangla 1st Paper syllabus and English 1st Paper mark distribution.
+
+This page does **not** establish that all subjects in the 2026 HSC cohort use one short syllabus. It demonstrates why JMT must attach every syllabus document to an explicit cohort and examination year, and why subject-specific notices must be stored separately. Do not reuse the 2023/2025 revised syllabus for the 2026 cohort without a current authoritative notice for that subject.
+
+Primary source: https://nctb.gov.bd/site/page/9a90c854-ce5f-4d77-9915-1ecd0953079d/-
+
+### 10.2 NCTB 2026 textbook catalogue: distinguish textbook catalogue from full curriculum
+
+The official NCTB portal has a page titled “২০২৬ শিক্ষাবর্ষের মাধ্যমিক স্তর ও উচ্চ মাধ্যমিক স্তরের পাঠ্যপুস্তকের তালিকা” (textbook list for the 2026 academic year), updated on 28 December 2025. The page links to an “উচ্চ মাধ্যমিক শ্রেণি” (higher-secondary class) list. A separate NCTB official page for 2024–25 lists five higher-secondary textbook entries: সাহিত্যপাঠ, সহপাঠ, English for Today, ICT (Bangla), and ICT (English version).
+
+Important interpretation: the textbook list is not itself a complete subject syllabus. Science, humanities and business subjects can be governed by prescribed curriculum documents, board syllabuses and approved reference materials beyond the small central NCTB textbook list. JMT must not imply that the five titles are the complete HSC learning corpus.
+
+Primary sources:
+- 2026 academic-year textbook list: http://nctb.portal.gov.bd/pages/static-pages/695b98afc4774958d7b7044c
+- 2024–25 higher-secondary textbook list: https://nctb.portal.gov.bd/site/page/fc0e3123-dd21-4cf9-8726-9fb850765a5a
+
+### 10.3 Dhaka University official admission portal: current live cycle and separate units
+
+The official DU admission portal was fetched on 11 November 2026. It exposes separate guidance sections for:
+- Science Unit;
+- Arts, Law and Social Science Unit;
+- Business Studies Unit;
+- Fine Arts Unit;
+- IBA.
+
+The portal's displayed key-date table at retrieval time showed applications and fee payment from 11 November 2026 at 12:00 to 25 November 2026 at 23:59, with separate admit-card and exam dates:
+- IBA: 5 December 2026, 10:00–12:00;
+- Science: 12 December 2026, 11:00–12:30;
+- Arts/Law/Social Science: 19 December 2026, 11:00–12:30;
+- Fine Arts: 22 December 2026, 11:00–12:30;
+- Business Studies: 26 December 2026, 11:00–12:30.
+
+The extracted portal page does not itself show the session label in the visible text captured here, so the date table should be recorded as a time-stamped observation and linked to the corresponding official circular before encoding it as a formal session-specific exam specification. The portal explicitly advises candidates to use the official portal rather than social media for admission information. That is a product requirement for JMT: admission facts need an official source, retrieval date, session, unit, and change history.
+
+Primary source: https://admission.eis.du.ac.bd/
+
+### 10.4 GST 2025–26: official circular facts captured
+
+The 2025–26 GST circular PDF is hosted by a participating public university admission domain. The extracted circular identifies three units: A (Science), B (Humanities) and C (Business Studies), and includes eligibility rules by SSC/HSC cohort and stream. It specifies the following minimum GPA thresholds (including the fourth subject) in the extracted text:
+- Unit A: at least 3.25 in both SSC/equivalent and HSC/equivalent, combined GPA at least 7.00;
+- Unit B: at least 3.00 in both, combined GPA at least 6.00;
+- Unit C: at least 3.00 in both, combined GPA at least 6.25.
+
+The circular states a 0.25-mark deduction per incorrect answer and a pass mark of 30. The published dates in the circular are Unit C on 27 March 2026, Unit B on 3 April 2026, and Unit A on 10 April 2026, each from 11:00 to 12:00; the architecture drawing/practical component is separately scheduled on 10 April 2026 from 15:00 to 16:00.
+
+The source extraction contains OCR/encoding defects in Bengali. The GPA and date values above should be checked against the rendered PDF pages before they become production data. The exact subject-wise marks matrix and question distribution remain an open extraction task; do not infer it from coaching summaries.
+
+Primary source: https://admission.kiu.ac.bd/assets/Circular%20GST%202025-26.pdf
+
+### 10.5 Agriculture cluster 2025–26: official circular and multi-institution scope
+
+The Agriculture Cluster Admission System (ACAS) official domain exposes a 2025–26 admission guideline PDF. The extracted text identifies a cluster of nine public universities and an overall seat count of 3,701, with a stated exam date of 3 January 2026, 14:00–15:00. This source is an official admissions guideline rather than a third-party coaching summary. However, the OCR of the PDF is poor, so the full eligibility, subject weighting, question structure, marks and negative-marking rules must be transcribed from the rendered pages before the JMT exam-spec record is approved.
+
+Primary sources:
+- ACAS official notice portal: https://acas.edu.bd/notice
+- 2025–26 admission guideline PDF: https://acas.edu.bd/api/file/download/notice/f021b80d-d79e-43a0-a9ac-96130ad452ea.pdf
+
+### 10.6 BUET and medical admission: primary-source retrieval remains incomplete
+
+A search for the 2025–26 BUET circular surfaced a third-party-hosted copy of a prospectus and press coverage, but this tranche did not verify the Bangladesh-national circular directly from BUET's official admission portal. Do not use the third-party copy as the canonical source record. The official admission site retrieval timed out in this pass. BUET's exact eligibility, shortlisting, written-test structure, subject marks and drawing requirements remain pending direct primary-source verification.
+
+For medical admission, the DGME official notice archive is accessible, but the exact 2025–26 public MBBS/BDS domestic admission circular was not successfully extracted in this pass. The DGME archive and Ministry notices remain the canonical retrieval targets; third-party coaching summaries are not acceptable as the final specification source.
+
+Primary targets:
+- BUET admission portal: https://admission.buet.ac.bd/
+- DGME notices: https://dgme.gov.bd/site/view/notices/সম্পূর্ণ-নোটিশ-বোর্ড
+
+### 10.7 New curriculum and admission data model requirements
+
+The evidence above requires two separate, versioned registries rather than a single generic “syllabus” table.
+
+**Curriculum registry minimum fields**
+- jurisdiction and authority (NCTB, education board, ministry, technical/madrasa authority);
+- qualification and grade (SSC, HSC, equivalent);
+- academic cohort start/end and examination year;
+- candidate status where relevant (regular, irregular, improvement);
+- board, group/stream, subject, paper and language/medium;
+- curriculum/syllabus version, effective date, publication date and superseded date;
+- included/excluded chapters and learning outcomes;
+- written/MCQ/CQ/practical/viva marks and duration where officially specified;
+- canonical source URL, document checksum, retrieval timestamp, page/section locator, evidence grade and reviewer;
+- change log and explicit compatibility rules with prior years.
+
+**Admission exam registry minimum fields**
+- institution/cluster, academic session, unit/group, programme and candidate category;
+- eligible SSC/HSC cohorts, streams and GPA thresholds;
+- subjects tested, section weights, question types, total marks and duration;
+- negative marking, pass thresholds, drawing/practical components and calculator policy;
+- exam date, application windows, official circular version and addenda;
+- source URL, checksum, page/section locator, retrieval timestamp, OCR confidence, reviewer and status (draft/verified/superseded).
+
+No admission predictor or student eligibility checker should be built from unversioned or third-party-only specifications.
+
+### 10.8 Evidence grading for this tranche
+
+- **A — Primary source directly fetched:** NCTB official revised-syllabus archive; NCTB official textbook pages; DU official admission portal; GST circular hosted by a participating university; ACAS official admission guideline and notice portal.
+- **B — Primary source found but extraction needs visual verification:** GST circular values due OCR/encoding defects; ACAS PDF details due OCR/encoding defects.
+- **C — Secondary lead only:** BUET 2025–26 prospectus copy hosted on an education site and press reporting; not accepted as canonical.
+- **Open / not yet verified:** BUET domestic circular details; 2025–26 domestic MBBS/BDS exam specification; exact GST subject marks matrix; exact ACAS subject marks matrix; current HSC 2026 science-subject syllabuses and practical mark schemes; subject-by-subject SSC curriculum and assessment matrices.
+
+### 10.9 Next research actions
+
+1. Download and visually inspect each official NCTB attachment, including the 2026 cohort-specific Bangla/English notice, and build a subject/paper chapter map for HSC Science + ICT first.
+2. Locate the actual 2026 HSC examination syllabus notices and practical mark schemes from each relevant board/authority; do not assume that an archive page listing historical revised syllabuses is the current syllabus.
+3. Transcribe the GST and ACAS circulars page-by-page from rendered PDF pages; reconcile OCR against the original Bengali text.
+4. Obtain DU 2026–27 session circular PDFs and each unit's formal guidelines, then freeze the specification with a retrieval date.
+5. Retrieve BUET and DGME domestic circulars directly from official domains; record inaccessible pages as a gap, not as evidence.
+6. Expand the same primary-source process to engineering cluster, SUST, JU, CU, RU, IUT, IBA and other major programmes, session by session.
+7. Build a question-paper archive only after rights/provenance and syllabus-version mapping are recorded.

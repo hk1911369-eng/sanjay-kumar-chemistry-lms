@@ -30,7 +30,8 @@ test('student workspace reveals feedback only after server-confirmed submission'
   assert.match(component, /submitStudentPracticeAnswer\(questionId, selectedOption\)/);
   assert.match(component, /result\?\.correctOption/);
   assert.match(component, /result\.explanation/);
-  assert.match(component, /Evidence added to your learning profile/);
+  assert.match(component, /Initial evidence recorded/);
+  assert.match(component, /Retake recorded; this repeat does not inflate mastery evidence/);
   assert.match(component, /disabled=\{Boolean\(result\)/);
 });
 

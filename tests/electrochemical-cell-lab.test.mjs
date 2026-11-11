@@ -88,7 +88,7 @@ test('electrochemical cell migration publishes a Chemistry lab and permits its t
   ]);
   assert.match(constraint, /'electrochemical-cell'/);
   assert.match(catalogue, /chemistry-electrochemical-cell/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000001/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'chemistry'/);
   assert.match(catalogue, /'electrochemical-cell'/);
   assert.match(catalogue, /is_published,[\s\S]*true/);
 });

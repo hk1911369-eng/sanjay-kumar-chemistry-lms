@@ -63,5 +63,5 @@ test('dihybrid lab is integrated into Biology student experience and explains as
   assert.match(migration, /'dihybrid'/);
   assert.match(admin, /\['dihybrid',/);
   assert.ok(action.includes("'dihybrid'"));
-  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'biology'/);
+  assert.match(migration, /(?:subject|s)\.slug\s*=\s*'biology'/);
 });

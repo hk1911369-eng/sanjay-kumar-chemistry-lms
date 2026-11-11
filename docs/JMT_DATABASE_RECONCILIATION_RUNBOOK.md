@@ -443,3 +443,40 @@ The four function bodies were fetched directly from both connected projects, not
 All four inspected definitions pin `search_path` to `pg_catalog, public, pg_temp`. The fact that the advisor reports SECURITY DEFINER execution is not by itself proof of a vulnerability; each RPC needs authorization and output review.
 
 **Important deployment distinction:** the branch contains forward migrations for these differences, but Primary still exposes the older function bodies. Their presence in the Git branch does not mean they are applied to production. The 105-versus-255 migration-ledger mismatch and eight-table schema gap must be reconciled first. No function was changed in either live database.
+
+
+## 11. Missing-table migration provenance — read-only dependency map
+
+The eight JMT Test-only tables were traced to the PR branch's migration family. The table definitions/columns were inspected in JMT Test; Primary does not contain these eight tables.
+
+| Table absent in Primary | PR-branch migration family | JMT Test ledger observation | Key dependencies / caveat |
+|---|---|---|---|
+| `student_practice_questions` | `20261109290000_add_student_practice_question_engine.sql` plus later practice hardening/retry migrations | Engine appears twice in ledger under versions `20261109131758` and `20261109290000` | Requires courses, academic_subjects, learning_concepts, course_subjects, course_assignments, profiles, enrollments and role/RPC foundations. |
+| `student_practice_attempts` | Same engine migration plus `20261111130000_enable_spaced_practice_retries.sql` and history protections | Present in Test with `attempt_number`; uniqueness is per student/question/attempt, not the original one-attempt constraint | Do not apply only the initial table migration; preserve retake and question-history semantics. |
+| `virtual_lab_catalog` | `20261110100000_database_driven_virtual_lab_catalog.sql` plus subsequent subject/course scope and lab-template migrations | Test ledger has same migration name under version `20261109134826` | Depends on `academic_subjects`; seed must resolve subject IDs by stable slug, never environment-specific UUID. |
+| `lab_notebook_entries` | `20261110180000_add_lab_notebook_practical_assessment.sql` plus assignment/rubric/attribution follow-ups | Test ledger has base migration under version `20261109163942` | Depends on virtual lab catalogue, courses, profiles, course assignments, enrollments and later rubric/review history. |
+| `lab_practical_assignments` | `20261110220000_add_teacher_assigned_lab_practicals.sql` and delivery/guard migrations | Test ledger has base migration under version `20261109165343` | Depends on course assignments, virtual labs and notebook linkage; assignment publishing/teacher scope changed in later migrations. |
+| `lab_notebook_evidence` | `20261110233000_add_private_lab_notebook_evidence.sql` plus MIME/path/storage-policy refinements | Test ledger has base migration under version `20261109170918` | Requires private Storage bucket, object policies, notebook ownership, evidence metadata and secure download route. Database-only migration is insufficient. |
+| `lab_notebook_review_history` | `20261110240000_add_lab_notebook_review_history.sql` plus reviewer snapshot and weighted rubric migrations | Test ledger has base migration under version `20261109172125` | Append-only review audit; reviewer identity is RESTRICT-protected and rubric snapshots must agree with score. |
+| `assignment_submission_versions` | `20261111200000_add_assignment_submission_version_history.sql` and `20261111210000_backfill_assignment_submission_history.sql` | Test ledger has base migration under version `20261111133212`; latest Test ledger version observed earlier was `20261111133701` | Requires existing assignment_submissions schema; backfill is data-bearing and trigger must be tested for version ordering, concurrent updates and grading events. |
+
+### Important interpretation
+
+- These tables are genuinely absent from Primary and present in JMT Test as of this read-only inspection.
+- The JMT Test ledger contains earlier/different timestamps for several similarly named migrations. The branch SQL cannot be assumed byte-for-byte equivalent to the SQL previously applied to Test.
+- JMT Test's practice attempt table already has an `attempt_number` column, showing that its live schema includes later retry migrations beyond the initial practice-engine migration.
+- The Test lab notebook table includes later columns such as `assignment_id` and `rubric_scores`; the base migration alone does not reproduce the current Test schema.
+- Private evidence also changes Supabase Storage bucket/object policies. A schema-only diff would miss these dependencies.
+- Assignment submission version history includes a backfill and a trigger on `assignment_submissions`; this must be rehearsed on a realistic fixture and reviewed for concurrent version-number allocation before rollout.
+
+### Reconciliation sequence
+
+1. Export current definitions for every dependent table, function, trigger, policy, grant, index, storage bucket and Storage object policy from both environments.
+2. Compare each Test live object with the complete ordered PR migration family, not just the first CREATE TABLE.
+3. Determine whether any existing Primary table/column/function already implements part of a migration.
+4. Build a forward-only, idempotent reconciliation plan for Primary; do not import Test migration history wholesale.
+5. Rehearse on a disposable copy with representative users, enrollments, submissions, Storage objects and historical attempts.
+6. Verify cross-student, cross-course, paid/expired, assigned/unassigned, inactive-account and anonymous access cases.
+7. Only after successful rehearsal, backup and owner approval, schedule a production migration window with rollback/restore evidence.
+
+No DDL, DML, Storage configuration or migration-ledger change was performed in this investigation.

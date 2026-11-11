@@ -228,3 +228,7 @@ Expand the current simulation catalogue into a reviewed, multi-subject laborator
 6. **Parent, offline and institution scale:** deepen after student workflows and data boundaries are proven.
 
 The product owner may provide app videos/screenshots later. Those should be treated as additional first-hand benchmark evidence and used to refine acceptance criteria. Do not delay the broader architecture waiting for those materials.
+
+## Research-first gate — November 2026
+
+Major feature implementation is paused behind a research gate. The active research programme and first evidence register is maintained in [`docs/DEEP_RESEARCH_PROGRAMME_AND_FIRST_FINDINGS.md`](./DEEP_RESEARCH_PROGRAMME_AND_FIRST_FINDINGS.md). Do not treat its first-wave findings as exhaustive completion. Before building major curriculum, lab, admission or exam-prediction features, complete the relevant evidence, source provenance, rights review, cohort/version mapping and acceptance tests. In particular, no HSC 2026 predictor may be presented as prospective: as of 11 November 2026 it can only be a retrospective blind reconstruction if a valid pre-exam source snapshot can be proven. Otherwise use rolling-origin backtests on earlier years. No major feature should be marketed as ready without measured evidence and real student/teacher validation.

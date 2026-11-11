@@ -51,3 +51,30 @@ test('higher-mathematics quadratic lab resolves its subject by stable slug', asy
   assert.doesNotMatch(sql, /10000000-0000-4000-8000-00000000000[1-9]/);
   assert.match(sql, /simulation_type IN \\('physics','chemistry','biology','maths','ict','quadratic'\\)/);
 });
+
+
+test('follow-on virtual-lab migrations resolve academic subjects by stable slug, not environment UUID', async () => {
+  const cases = [
+    ['20261110120000_add_quadratic_virtual_lab_template.sql', 'higher-mathematics'],
+    ['20261110160000_add_projectile_motion_virtual_lab.sql', 'physics'],
+    ['20261110170000_add_virtual_microscope_lab.sql', 'biology'],
+    ['20261110254000_add_chemistry_reaction_kinetics_lab.sql', 'chemistry'],
+    ['20261110254200_add_physics_wave_interference_lab.sql', 'physics'],
+    ['20261110254400_add_chemistry_equilibrium_lab.sql', 'chemistry'],
+    ['20261110254600_add_biology_cell_division_lab.sql', 'biology'],
+    ['20261110254800_add_chemistry_electrochemical_cell_lab.sql', 'chemistry'],
+    ['20261110254900_add_photosynthesis_lab.sql', 'biology'],
+    ['20261110255200_add_dihybrid_inheritance_lab.sql', 'biology'],
+    ['20261110255201_add_physics_spring_oscillator_lab.sql', 'physics'],
+  ];
+
+  for (const [filename, slug] of cases) {
+    const url = new URL(`../supabase/migrations/${filename}`, import.meta.url);
+    const migration = await readFile(url, 'utf8');
+    assert.match(migration, new RegExp(`where\\s+subject\\.slug\\s*=\\s*'${slug}'`, 'i').test(migration)
+      ? /subject\.slug/
+      : new RegExp(`where\\s+s\\.slug\\s*=\\s*'${slug}'`, 'i'), `${filename} must resolve ${slug} by slug`);
+    assert.doesNotMatch(migration, /10000000-0000-4000-8000-00000000000[1-8]/,
+      `${filename} must not assume a subject UUID from another database`);
+  }
+});

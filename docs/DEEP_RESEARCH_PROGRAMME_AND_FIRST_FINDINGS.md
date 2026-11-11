@@ -459,3 +459,72 @@ No admission predictor or student eligibility checker should be built from unver
 5. Retrieve BUET and DGME domestic circulars directly from official domains; record inaccessible pages as a gap, not as evidence.
 6. Expand the same primary-source process to engineering cluster, SUST, JU, CU, RU, IUT, IBA and other major programmes, session by session.
 7. Build a question-paper archive only after rights/provenance and syllabus-version mapping are recorded.
+
+
+## 11. Research tranche 3 — HSC operational rules and DU 2026–27 live cycle (11 November 2026)
+
+### 11.1 Critical discovery: 2026 regular and irregular HSC candidates were handled against different syllabus years
+
+The Dhaka Education Board's official HSC Corner lists a notice dated 3 July 2026 titled (translated): “Regarding seating regular examinees (2026 syllabus) and irregular examinees (2025 syllabus) in different rooms and taking extra care in question distribution according to syllabus.”
+
+This is direct primary-source evidence that “HSC 2026” is not a sufficient curriculum identifier. Within the same examination year, candidate status changes the applicable syllabus and operational paper distribution. This is a high-priority rule for JMT:
+- identify candidate status before showing syllabus coverage or generating an exam plan;
+- bind each learner to the correct syllabus year/version;
+- prevent a regular candidate's content map from being mixed with an irregular/improvement candidate's map;
+- include status in question-bank filters, mock-exam generation, analytics and predictor evaluation;
+- test the eligibility and syllabus mapping against board notices, not assumptions.
+
+Primary source: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+
+### 11.2 Practical examinations are a governed assessment workflow, not merely a simulation
+
+The same official HSC Corner lists multiple 2026 notices concerning practical examinations:
+- urgent instructions for HSC/equivalent practical examinations (4 August 2026);
+- examiner instructions and examiner lists (6–11 August 2026);
+- extension of the practical examination and marks-submission deadline (8 August 2026);
+- district/city-specific external examiner assignments;
+- practical answer-book and other exam materials distribution notices.
+
+This confirms that the practical component includes examiner assignment, formal instructions, answer-book/material handling, deadlines and marks submission. JMT's virtual labs should support learning and preparation, but must not claim that simulation completion alone equals official practical examination competency. A future lab/report workflow should support teacher/examiner rubrics, observation records, viva questions, practical notebook evidence, review status and mark entry while clearly distinguishing simulated evidence from physical practical assessment.
+
+### 11.3 Board-level exam governance and exam-security evidence
+
+The HSC Corner also lists:
+- a question-setter/moderator training manual (1 February 2026);
+- notices about training question setters and moderators;
+- question-paper receipt, storage, dispatch and distribution security instructions (7 July 2026);
+- calculator and wristwatch-use instructions for candidates (17 June 2026).
+
+These are important source categories for the exam research programme. The public question-setter/moderator training manual may help explain the official assessment construction process and should be reviewed if accessible. Security notices are operational evidence only; they must not be used to infer or seek confidential examination content.
+
+### 11.4 DU 2026–27 is now confirmed as a separate current admission session
+
+The official DU admission portal exposes an item explicitly titled “Admission Circular for Undergraduate Programs for the 2026–2027 Academic Year” and a separate “Admission Prospectus 2026-27”. It also provides distinct guidelines for Science, Arts/Law/Social Science, Business Studies, Fine Arts and IBA. The current portal date table observed on 11 November 2026 lists the application window as 11–25 November 2026 and unit-specific exam dates from 5–26 December 2026.
+
+This upgrades the earlier portal observation: the live admissions data belongs to the 2026–27 academic session. The formal circular/prospectus files must still be extracted and checked page-by-page before encoding exact marks, subject weights, negative marking, eligibility and question format. Each unit is its own exam specification, not one DU-wide predictor.
+
+Primary source: https://admission.eis.du.ac.bd/
+
+### 11.5 HSC source taxonomy and extraction queue refined
+
+For HSC source capture, JMT should treat the following as distinct document classes:
+1. Curriculum/syllabus: included topics and learning outcomes.
+2. Examination pattern/mark distribution: CQ/MCQ/written/practical marks, time and question-choice rules.
+3. Candidate-status notices: regular, irregular, improvement/private candidate applicability.
+4. Practical examination instructions: tasks, examiner responsibilities, marks submission and rubrics.
+5. Exam operations: timetable, centre, calculator rules, answer-book handling and security.
+6. Question construction/moderation guidance: official public manuals and training materials.
+7. Historical question papers and answer keys: separate provenance, rights and confidentiality screening.
+
+This prevents the common mistake of treating a timetable or exam operations notice as a syllabus, or a syllabus PDF as a full assessment blueprint.
+
+Primary source for the live board notice index: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+
+### 11.6 Immediate implementation-independent acceptance requirements
+
+- A candidate with HSC exam year 2026 and status “regular” must resolve to the 2026 syllabus version.
+- A candidate with HSC exam year 2026 and status “irregular” must resolve to the 2025 syllabus version when the applicable board notice says so.
+- The UI must display the syllabus source and effective year visibly, not merely “HSC 2026”.
+- A course, planner, mock exam or predictor must refuse to silently combine incompatible syllabus versions.
+- Practical lab completion must be labelled “simulation practice” unless reviewed and assessed through the institution's physical practical workflow.
+- Every admission test specification must include academic session and unit; DU Science 2026–27 and DU IBA 2026–27 are separate records with separate formal source documents.

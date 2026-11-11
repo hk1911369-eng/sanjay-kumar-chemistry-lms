@@ -47,9 +47,9 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
 
 test('higher-mathematics quadratic lab resolves its subject by stable slug', async () => {
   const sql = await readFile(quadraticMigrationUrl, 'utf8');
-  assert.match(sql, /FROM public\\.academic_subjects subject\\s+WHERE subject\\.slug = 'higher-mathematics'/);
+  assert.match(sql, /FROM public\.academic_subjects subject\s+WHERE subject\.slug = 'higher-mathematics'/);
   assert.doesNotMatch(sql, /10000000-0000-4000-8000-00000000000[1-9]/);
-  assert.match(sql, /simulation_type IN \\('physics','chemistry','biology','maths','ict','quadratic'\\)/);
+  assert.match(sql, /simulation_type IN \('physics','chemistry','biology','maths','ict','quadratic'\)/);
 });
 
 

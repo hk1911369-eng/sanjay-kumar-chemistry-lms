@@ -544,3 +544,14 @@ The 2026 NCTB archive entry for the 2024–25 cohort's Bangla 1st Paper syllabus
 Primary source: Dhaka Education Board HSC Corner, entries dated 28 October 2025, 11 December 2025 and 3 July 2026: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
 
 This supersedes any weaker inference that the 2026 regular syllabus could be assumed to be a carry-forward of the 2025 revised syllabus. The official 2026 regular/full-syllabus and irregular/improvement/2025-revised distinction must be represented explicitly in the Curriculum Registry.
+
+
+### 11.8 Source-resolution warning: the publicly retrievable training-manual page found is an SSC manual, not proof of an HSC manual
+
+The official HSC Corner index lists an HSC/equivalent question-setter and moderator training manual dated 1 February 2026. However, a search for the manual title resolved to an official Dhaka Board CMS page whose page heading and downloadable files are explicitly for **SSC and equivalent** (SSC-25), including subject manuals for Physics, Chemistry, Biology and Higher Mathematics. This is not the HSC manual and must not be cited as such.
+
+The SSC manual itself is potentially useful background on Bangladesh's creative-question item-writing and moderation process, but its grade-level scope must remain explicit. The HSC manual's actual downloadable URL and contents are still unresolved. Do not transfer SSC question design rules to HSC without checking the applicable HSC document and current assessment framework.
+
+Sources:
+- Official HSC Corner index: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+- Official CMS page that was retrieved, explicitly headed for SSC/equivalent: https://dhakaeducationboard.gov.bd/index.php/site/cms/24590?w=on

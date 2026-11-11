@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261111130000_enable_spaced_practice_retries.sql', import.meta.url), 'utf8');
+const followUpMigration = await readFile(new URL('../supabase/migrations/20261111140000_practice_review_fallback.sql', import.meta.url), 'utf8');
 const page = await readFile(new URL('../app/practice/page.tsx', import.meta.url), 'utf8');
 const workspace = await readFile(new URL('../components/student-practice-workspace.tsx', import.meta.url), 'utf8');
 const action = await readFile(new URL('../app/actions/student-practice.ts', import.meta.url), 'utf8');
@@ -21,8 +22,8 @@ test('previously attempted questions return only when their concept review is du
   assert.match(migration, /attempt_count integer/i);
   assert.match(migration, /max\(a\.answered_at\) AS last_attempt_at/i);
   assert.match(migration, /COALESCE\(attempts\.attempt_count, 0\) = 0[\s\S]*mastery\.next_review_at <= now\(\)/i);
-  assert.match(migration, /attempts\.last_attempt_at <= now\(\) - interval '1 day'/i);
-  assert.match(migration, /q\.concept_id IS NULL OR mastery\.next_review_at IS NULL/i);
+  assert.match(followUpMigration, /attempts\.last_attempt_at <= now\(\) - interval '1 day'/i);
+  assert.match(followUpMigration, /q\.concept_id IS NULL OR mastery\.next_review_at IS NULL/i);
   assert.match(page, /attempt_count: Number\(row\.attempt_count \?\? 0\)/i);
   assert.match(workspace, /Review question · previously attempted/i);
 });

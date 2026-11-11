@@ -621,3 +621,10 @@ Because the policy grants row-level access to the entire profile, not a restrict
 
 
 The private `student-avatars` Storage SELECT policy has the same issue: its teacher/staff branch requires a course assignment and a matching enrollment/profile row, but does not require current active paid enrollment or an active student profile. Assigned staff can therefore continue reading private avatar objects for students whose enrollment is historical or whose profile is deactivated. Student-owner and admin access are separate branches. No avatar objects were fetched.
+
+
+## Signed-URL authorization paths reviewed
+
+Lesson resources are signed by `getLessonResourceUrl` using the authenticated server Supabase client: it authenticates with `auth.getUser()`, selects the resource row under normal `lesson_resources` RLS, checks `downloadable` for download mode, and signs the database-derived storage path for 300 seconds. The action accepts a resource ID, not a caller-supplied path, and does not use the service-role key. Lab-notebook evidence downloads similarly authenticate, select the metadata row through `lab_notebook_evidence` RLS, derive the storage path from that row, and issue a 60-second signed URL. The API redirect sets private/no-store, no-referrer and nosniff headers; malformed IDs and inaccessible rows do not disclose object paths.
+
+**Residual limitation:** a signed URL is a bearer credential and remains usable until expiry even if access is revoked immediately after issuance. The short 5-minute lesson-resource and 60-second evidence lifetimes limit this window. Do not log signed URLs; test access revocation at issuance and expiry. Code review only; no URLs were generated and no private objects were read.

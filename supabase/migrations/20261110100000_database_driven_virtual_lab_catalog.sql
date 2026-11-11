@@ -40,14 +40,32 @@ GRANT UPDATE (lab_key, subject_id, title, summary, principle, simulation_type, i
   ON public.virtual_lab_catalog TO authenticated;
 GRANT DELETE ON public.virtual_lab_catalog TO authenticated;
 
+-- The Learning OS foundation only derives subjects from existing course.subjects.
+-- A new/empty production project can therefore have an empty academic_subjects table.
+-- Seed canonical subject slugs idempotently before creating catalogue foreign keys.
+INSERT INTO public.academic_subjects (name, slug, description)
+VALUES
+  ('Physics', 'physics', 'Physics learning and practical simulations'),
+  ('Chemistry', 'chemistry', 'Chemistry learning and practical simulations'),
+  ('Biology', 'biology', 'Biology learning and practical simulations'),
+  ('Mathematics', 'mathematics', 'Mathematics learning and simulations'),
+  ('ICT', 'ict', 'ICT learning and interactive simulations')
+ON CONFLICT (slug) DO NOTHING;
+
+-- Resolve subject IDs from stable slugs; never assume a UUID generated in another
+-- environment. Existing subject IDs and course-subject relationships remain intact.
 INSERT INTO public.virtual_lab_catalog
   (lab_key, subject_id, title, summary, principle, simulation_type, is_published, sort_order)
-VALUES
-  ('physics-ohms-law', '10000000-0000-4000-8000-000000000002', 'Ohm''s law circuit', 'Explore how voltage and resistance affect current.', 'For an ideal resistor, current I = V ÷ R and power P = V × I.', 'physics', true, 10),
-  ('chemistry-acid-base-titration', '10000000-0000-4000-8000-000000000001', 'Acid–base titration', 'Add a simulated base and observe the equivalence point.', 'At equivalence for a strong monoprotic acid and strong base, acid and base moles are equal.', 'chemistry', true, 20),
-  ('biology-inheritance', '10000000-0000-4000-8000-000000000003', 'Inheritance simulator', 'Explore genotype outcomes in a monohybrid cross.', 'A Punnett square shows theoretical allele combinations, not guaranteed outcomes for an individual family.', 'biology', true, 30),
-  ('mathematics-linear-functions', '10000000-0000-4000-8000-000000000004', 'Linear function explorer', 'Change slope and intercept and inspect y = mx + b.', 'The slope m controls the line direction and steepness; b is the y-intercept.', 'maths', true, 40),
-  ('ict-binary-converter', '10000000-0000-4000-8000-000000000006', 'Binary number converter', 'Convert binary digits into a decimal number.', 'Each binary digit represents a power of two, starting with 2⁰ at the right.', 'ict', true, 50)
+SELECT seed.lab_key, subject.id, seed.title, seed.summary, seed.principle,
+       seed.simulation_type, true, seed.sort_order
+FROM (VALUES
+  ('physics-ohms-law', 'physics', 'Ohm''s law circuit', 'Explore how voltage and resistance affect current.', 'For an ideal resistor, current I = V ÷ R and power P = V × I.', 'physics', 10),
+  ('chemistry-acid-base-titration', 'chemistry', 'Acid–base titration', 'Add a simulated base and observe the equivalence point.', 'At equivalence for a strong monoprotic acid and strong base, acid and base moles are equal.', 'chemistry', 20),
+  ('biology-inheritance', 'biology', 'Inheritance simulator', 'Explore genotype outcomes in a monohybrid cross.', 'A Punnett square shows theoretical allele combinations, not guaranteed outcomes for an individual family.', 'biology', 30),
+  ('mathematics-linear-functions', 'mathematics', 'Linear function explorer', 'Change slope and intercept and inspect y = mx + b.', 'The slope m controls the line direction and steepness; b is the y-intercept.', 'maths', 40),
+  ('ict-binary-converter', 'ict', 'Binary number converter', 'Convert binary digits into a decimal number.', 'Each binary digit represents a power of two, starting with 2⁰ at the right.', 'ict', 50)
+) AS seed(lab_key, subject_slug, title, summary, principle, simulation_type, sort_order)
+JOIN public.academic_subjects subject ON subject.slug = seed.subject_slug
 ON CONFLICT (lab_key) DO UPDATE SET
   subject_id = EXCLUDED.subject_id,
   title = EXCLUDED.title,

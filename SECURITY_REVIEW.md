@@ -652,3 +652,15 @@ The admin `updateAccountRole()` action allows role changes among student, teache
 ### Missing staff suspension/reactivation control
 
 The student-management page's activation form calls `set_student_account_active`, whose database implementation deliberately updates only profiles with role `student`. The admin dashboard lists teachers/staff for course assignment but has no staff active-status control, and the live public function inventory contains no staff equivalent. Role demotion to student is the only visible admin control that can remove staff privileges; it does not change `is_active` or revoke course assignments. This creates an avoidable operational gap and compounds the dormant-assignment risk: later role promotion may restore old course access. **Remediation:** implement an admin-only, audited staff suspend/reactivate workflow with explicit course-assignment revocation or reapproval.
+
+
+### Correction — payment duplicate-period finding superseded by live unique indexes (11 November 2026)
+
+A subsequent read-only inspection of the current JMT Test catalog found that the earlier “Manual-payment duplicate-period approval review” conclusion above is stale and must not be treated as a current finding. The live `manual_payment_submissions` table has two valid and ready partial unique indexes:
+
+- `manual_payment_one_initial_per_course`: unique on `(student_id, course_id)` while `payment_kind = 'initial'` and status is `pending_review` or `approved`.
+- `manual_payment_one_monthly_per_period`: unique on `(student_id, course_id, billing_period)` while `payment_kind = 'monthly'` and status is `pending_review` or `approved`.
+
+Both indexes were confirmed with `indisvalid = true` and `indisready = true`. Therefore, distinct provider transaction IDs cannot create concurrent pending/approved duplicate initial claims for the same student/course or monthly claims for the same student/course/billing period in this live database. The application insert path maps unique-constraint errors to a duplicate-payment response. The earlier recommendation to add these period-level partial unique indexes is already satisfied in JMT Test; the duplicate-period finding is withdrawn for the inspected live schema.
+
+This correction is limited to the current JMT Test schema. It does not establish that production has the same indexes, nor does it prove that the branch migration ledger/source history is fully reconciled. Verify both index definitions and validity in the intended release target before relying on this control. No data, schema, application code, or migration state was changed during this correction.

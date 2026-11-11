@@ -530,3 +530,37 @@ The Test ledger contains multiple versions with the same migration name for seve
 **Priority:** `complete_revision_task` is P1 entitlement/learning-evidence integrity; `can_staff_access_student` is P2 privacy minimization; `get_public_course_teachers` is P2 public-profile correctness; `record_simulation_completion` is a feature-contract/schema mismatch that blocks safe practical-learning parity.
 
 No corrective function was deployed to Primary. No migration was applied in this step.
+
+
+## 10. Virtual-lab subject seed preflight — 12 November 2026
+
+### Verified compatibility facts
+
+Read-only inspection of both connected Supabase projects confirms:
+
+- `public.academic_subjects` has the same required columns in both environments: UUID `id`, non-null `name`, non-null `slug`, non-null `description`, non-null `created_at`.
+- Both environments enforce a unique constraint on `slug`.
+- Both environments enforce `name` length 1–100 and the slug regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
+- The primary project currently has zero academic subjects; JMT Test has eight.
+- The primary project currently has `academic_subjects` and `course_subjects`, but none of the eight lab/practice tables inventoried in JMT Test. JMT Test has all eight.
+
+This validates that the canonical seed slugs in the PR migration satisfy the currently observed slug constraint and that `ON CONFLICT (slug) DO NOTHING` has a matching unique constraint in both environments.
+
+### PR-branch corrective change
+
+The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` was amended to seed five canonical subject rows (Physics, Chemistry, Biology, Mathematics and ICT) before inserting virtual-lab catalogue rows. Catalogue foreign keys resolve by stable subject slug rather than UUIDs generated in another environment.
+
+A static test `tests/virtual-lab-catalog-subject-seed.test.mjs` guards:
+- seed-before-catalogue ordering;
+- all five slug mappings;
+- idempotent subject insertion;
+- no hard-coded environment UUID dependency;
+- preservation of teacher/admin editorial fields on a repeated catalogue seed.
+
+The catalogue upsert intentionally only refreshes `subject_id` and `updated_at`; it does not overwrite `is_published`, title, summary, principle, simulation type or sort order on a rerun.
+
+### Important limits and unresolved migration risk
+
+This is **schema-compatibility evidence**, not proof that the entire migration can be applied to Primary. The migration also creates RLS policies, grants, indexes and replaces `record_simulation_completion`; the full dependency graph and function behavior must still be reconciled against the actual Primary schema and grants. The eight missing tables require their complete prerequisite migration chain, not just this catalogue migration.
+
+No production migration was applied. No subjects or catalogue rows were inserted in either live project. Do not run this migration manually in production outside the reviewed migration process.

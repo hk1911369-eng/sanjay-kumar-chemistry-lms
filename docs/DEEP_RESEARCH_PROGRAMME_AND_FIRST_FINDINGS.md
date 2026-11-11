@@ -287,3 +287,52 @@ The experiment remains useful only if we can reconstruct a trustworthy pre-exam 
 ### 8.6 HSC and admission predictor should support multiple output levels
 
 For HSC, create separate subject-paper models, including CQ/creative, MCQ, practical/viva where applicable, and marks distribution. For admissions, create independent models by institution + session + unit/group + subject + exam format. For each, predict syllabus coverage and question archetypes, not just the wording of a question. A forecast can be useful even when no exact question repeats, provided it helps students allocate revision time without abandoning the full syllabus.
+
+
+## 9. ACS ecosystem deepening — first-party brand-site review
+
+The following official brand sites were fetched and reviewed in this pass. This is a public-site inventory, not a usability audit of authenticated student portals.
+
+### 9.1 ASG Shop / Apar's Classroom — HSC and admission engine
+
+The shop page exposes course cycles for HSC 2026, 2027 and 2028, including multiple parallel teacher-led cycles in Physics, Chemistry, Higher Mathematics, Biology, English, Bangla and ICT. It also lists admission products for Varsity/GST, Engineering, Medical, Architecture and IBA, plus second-timer and English-focused batches. The page describes book bundles for selected academic cycles and teacher collaborations.
+
+Strategic implication: JMT needs course and content versioning by cohort, subject, teacher, cycle, language/medium, exam target and batch—not just one course per subject. It should support alternative teaching pathways and clearly show which cycle is appropriate for which learner.
+
+Source: https://aparsclassroom.com/shop
+
+### 9.2 Rhombus Publications — books and question-bank distribution
+
+The official publisher site presents HSC compact series, academic cycles for Physics/Chemistry/Higher Mathematics, university admission books, engineering and medical preparation, IBA, question banks and e-books. The product ecosystem spans printed and digital materials.
+
+Strategic implication: a Learning OS should connect books to versioned chapter/concept maps, practice sets, corrections/errata and source/rights metadata. It must not copy paid book content without a licence. The system should distinguish a book recommendation or reference from content that JMT owns or is licensed to reproduce.
+
+Source: https://www.rhombuspublications.com/
+
+### 9.3 Achieve — offline examination network
+
+Achieve's official site describes offline HSC and admission exam batches, student portal, leaderboard/progress tracking, daily and weekly exams, paper finals, subject finals, model tests, home-practice exams, question banks, solve classes, solve sheets, teacher/top-student guidance, scholarships and Q&A support.
+
+Strategic implication: the benchmark is blended learning. JMT should plan for a digital-to-physical assessment journey: exam scheduling, offline attendance/answer capture, standardized marking, result import, error analysis and a unified learner history. This is a later institutional capability; it should not be faked with a generic online quiz.
+
+Source: https://achievecentre.online/
+
+### 9.4 ACS Engineering School — beyond school and admission
+
+The official engineering site is live and presents courses in electronics, physics, programming, mechanics, mathematics and innovation, with lessons in analytical mechanics, surveying, DC circuits and related engineering concepts. This is notable because the ACS Group hub labels the engineering brand “upcoming”, while its own domain already has a live public course website. Brand-hub status can lag behind actual product status; future ACS research must check each brand domain directly and record observation dates.
+
+Strategic implication: JMT's long-term subject-agnostic architecture should not stop at HSC/admission. It should be able to extend into undergraduate engineering and professional skill pathways without mixing those curricula into school course maps.
+
+Source: https://acsengineeringschool.com/
+
+### 9.5 Competitive architecture inferred from first-party pages
+
+The ACS ecosystem is not a single monolithic app. Its public footprint suggests several specialized products connected by a brand and learner pipeline:
+- school-level digital classes, practice and Curiosity AI;
+- HSC cycles and admission-specific programmes;
+- print/e-book and question-bank publishing;
+- offline model-test centres;
+- engineering learning;
+- a wider marketplace brand.
+
+This is an **inference from public brand/product pages**, not proof of shared account, shared learner database or technical integration between those products. JMT should compete through a genuinely unified learner record and coherent experience while retaining specialized workflows where needed.

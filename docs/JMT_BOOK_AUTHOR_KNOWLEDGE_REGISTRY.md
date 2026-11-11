@@ -148,3 +148,7 @@ The following tranche documents extend the discovery register. Each remains a so
 5. A retailer's Exam 2028 label is a source observation until reconciled with the official cohort/syllabus record.
 6. Physical title/copyright pages and contents pages remain the preferred verification evidence.
 7. Rights review must precede full-text ingestion, storage, indexing for redistribution, or public display.
+
+
+| 18C | NCTB 2026–27 notice plus CESC institution-scoped HSC 2028 Science syllabus | The official notice title/date are verified but its attachment remains unread; CESC's chapter and term schedule is local institutional evidence only. | [Tranche 18C](JMT_HSC_2028_CURRICULUM_EVIDENCE_BOUNDARY_TRANCHE_18_NCTB_CESC.md) |
+

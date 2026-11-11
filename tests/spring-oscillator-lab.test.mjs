@@ -83,7 +83,7 @@ test('spring oscillator template is permitted and published for Physics', async 
   ]);
   assert.match(constraint, /'spring-oscillator'/);
   assert.match(catalogue, /physics-spring-oscillator/);
-  assert.match(catalogue, /10000000-0000-4000-8000-000000000002/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'physics'/);
   assert.match(catalogue, /'spring-oscillator'/);
   assert.match(catalogue, /is_published,[\s\S]*true/);
 });

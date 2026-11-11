@@ -360,3 +360,20 @@ Read-only Supabase security advisor results were refreshed for both projects at 
 4. Plan leaked-password protection as a separate Auth configuration change with user-impact assessment; do not toggle it during this read-only audit.
 
 **Important:** These advisor findings are triage signals, not proof of exploitability. No function was invoked, no grant was changed, no Auth setting was modified, and no data was changed.
+
+
+### Follow-up finding: virtual-lab migration now handles an empty subject catalogue
+
+The PR branch migration `20261110100000_database_driven_virtual_lab_catalog.sql` originally depended on pre-existing academic-subject UUIDs. The primary project currently has zero subject rows, so that seed could not reliably create the virtual-lab catalogue.
+
+The branch migration has now been amended to:
+- insert canonical Physics, Chemistry, Biology, Mathematics and ICT subject slugs before catalogue rows;
+- use `ON CONFLICT (slug) DO NOTHING` so existing subjects and their IDs are preserved;
+- resolve catalogue foreign keys by stable slug rather than cross-environment UUID literals;
+- preserve existing editorial fields when the catalogue seed is rerun, updating only the subject link and timestamp.
+
+Read-only schema inspection confirmed that **both Primary and JMT Test** have the required unique constraint `academic_subjects_slug_key UNIQUE (slug)`, and the `academic_subjects` columns include `id` (generated UUID), `name`, `slug`, `description` (default empty string) and `created_at`. JMT Test already contains the five canonical slugs; Primary currently has zero subject rows. JMT Test also has 24 course-subject links, so preserving existing subject IDs is important.
+
+A new source-level test `tests/virtual-lab-catalog-subject-seed.test.mjs` checks seed ordering, canonical slugs, slug-based foreign-key resolution, idempotency and preservation of editorial fields. The current-head CI run has passed guardrail tests, ESLint and TypeScript; production build and dependency audit were still running at the time of this update.
+
+**Limit:** no SQL was executed against either Supabase project and no migration was applied. The test is a static source test, not a database integration test. The migration still needs a disposable empty-database rehearsal and a populated-database rehearsal before any release.

@@ -81,7 +81,7 @@ test('photosynthesis template is allowed and published for Biology', async () =>
   const migration = await readFile(new URL('../supabase/migrations/20261110254900_add_photosynthesis_lab.sql', import.meta.url), 'utf8');
   assert.match(migration, /'photosynthesis'/);
   assert.match(migration, /biology-photosynthesis-investigation/);
-  assert.match(migration, /10000000-0000-4000-8000-000000000003/);
+  assert.match(catalogue, /(?:subject|s)\.slug\s*=\s*'biology'/);
   assert.match(migration, /is_published,[\s\S]*true/);
 });
 test('photosynthesis chart and controls are responsive and disclose model assumptions', async () => {

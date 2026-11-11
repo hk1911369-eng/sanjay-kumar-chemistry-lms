@@ -5,7 +5,7 @@ import { StudentPracticeWorkspace, type StudentPracticeQuestion } from '@/compon
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 
-type SearchParams = { course?: string; subject?: string; difficulty?: string };
+type SearchParams = { course?: string; subject?: string; difficulty?: string; concept?: string };
 type PracticeQuestionRow = {
   question_id: string;
   concept_id: string | null;
@@ -51,13 +51,19 @@ export default async function StudentPracticePage({
     ? await db.from('course_subjects').select('subject_id').eq('course_id', courseId)
     : { data: [] as { subject_id: string }[] };
   const subjectIds = [...new Set((courseSubjects ?? []).map(item => item.subject_id))];
+  const { data: requestedConcept } = params.concept
+    ? await db.from('learning_concepts').select('id,subject_id,title').eq('id', params.concept).maybeSingle()
+    : { data: null };
+  const concept = requestedConcept && subjectIds.includes(requestedConcept.subject_id) ? requestedConcept : null;
   const { data: subjects } = subjectIds.length
     ? await db.from('academic_subjects').select('id,name').in('id', subjectIds).order('name')
     : { data: [] as { id: string; name: string }[] };
   const availableSubjects = subjects ?? [];
-  const subjectId = availableSubjects.some(subject => subject.id === params.subject)
-    ? params.subject!
-    : (availableSubjects[0]?.id ?? '');
+  const subjectId = concept && availableSubjects.some(subject => subject.id === concept.subject_id)
+    ? concept.subject_id
+    : availableSubjects.some(subject => subject.id === params.subject)
+      ? params.subject!
+      : (availableSubjects[0]?.id ?? '');
 
   const difficulty = ['easy', 'medium', 'hard'].includes(params.difficulty ?? '')
     ? params.difficulty!
@@ -70,7 +76,7 @@ export default async function StudentPracticePage({
       p_course_id: courseId,
       p_subject_id: subjectId,
       p_difficulty: difficulty || null,
-      p_limit: 20,
+      p_limit: 20,\n      p_concept_id: concept?.id ?? null,
     });
     loadError = Boolean(error);
     questions = ((data ?? []) as PracticeQuestionRow[]).flatMap(row => {
@@ -139,6 +145,7 @@ export default async function StudentPracticePage({
       </section> : <>
         <div className="practice-context-line">
           <strong>{selectedCourse?.title}</strong><span>{selectedSubject?.name}</span>
+          {concept && <span>Review focus: {concept.title}</span>}
         </div>
         <StudentPracticeWorkspace questions={questions}/>
       </>}

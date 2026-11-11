@@ -528,3 +528,19 @@ Primary source for the live board notice index: https://dhakaeducationboard.gov.
 - A course, planner, mock exam or predictor must refuse to silently combine incompatible syllabus versions.
 - Practical lab completion must be labelled “simulation practice” unless reviewed and assessed through the institution's physical practical workflow.
 - Every admission test specification must include academic session and unit; DU Science 2026–27 and DU IBA 2026–27 are separate records with separate formal source documents.
+
+
+### 11.7 Corrected and sharpened 2026 HSC syllabus rule: regular candidates use the full syllabus; irregular/improvement candidates use the 2025 revised syllabus
+
+The Dhaka Education Board HSC Corner lists an official notice dated 28 October 2025 titled “২০২৬ সালের এইচএসসি, আলীম ও সমমান পরীক্ষা পূর্ণাঙ্গ পাঠ্যসূচিতে গ্রহণ প্রসঙ্গে” (regarding holding the 2026 HSC, Alim and equivalent examinations on the full syllabus). The same official index lists a separate notice dated 11 December 2025 concerning the syllabus for irregular/improvement candidates in the 2026 HSC/equivalent/Alim examinations. The 3 July 2026 operational notice then explicitly distinguishes regular candidates under the 2026 syllabus from irregular candidates under the 2025 syllabus and instructs centres to seat them separately and distribute papers according to syllabus.
+
+Therefore the high-confidence operational rule supported by the official board index is:
+- HSC 2026 regular candidates: full 2026 syllabus.
+- HSC 2026 irregular/improvement candidates: 2025 rearranged/revised syllabus.
+- Candidate status is part of curriculum identity and must be resolved before content, question papers, mock exams, planner coverage or prediction.
+
+The 2026 NCTB archive entry for the 2024–25 cohort's Bangla 1st Paper syllabus and English 1st Paper mark distribution should be interpreted as a subject-specific notice within the wider full-syllabus framework, not evidence that the entire 2026 regular cohort followed a short syllabus.
+
+Primary source: Dhaka Education Board HSC Corner, entries dated 28 October 2025, 11 December 2025 and 3 July 2026: https://dhakaeducationboard.gov.bd/index.php/site/product/hsccorner?w=on
+
+This supersedes any weaker inference that the 2026 regular syllabus could be assumed to be a carry-forward of the 2025 revised syllabus. The official 2026 regular/full-syllabus and irregular/improvement/2025-revised distinction must be represented explicitly in the Curriculum Registry.

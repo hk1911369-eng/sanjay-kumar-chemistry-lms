@@ -15,6 +15,8 @@ type PracticeQuestionRow = {
   question_text: string;
   options: unknown;
   marks: number;
+  attempt_count: number;
+  last_attempt_at: string | null;
   selection_reason: string;
 };
 
@@ -84,6 +86,8 @@ export default async function StudentPracticePage({
         question_text: row.question_text,
         options,
         marks: Number(row.marks),
+        attempt_count: Number(row.attempt_count ?? 0),
+        last_attempt_at: row.last_attempt_at ?? null,
         selection_reason: row.selection_reason,
       }];
     });

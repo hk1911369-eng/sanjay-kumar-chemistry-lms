@@ -7,7 +7,7 @@ type Goal = {
   period_start: string; period_end: string; course_id: string | null; status: 'active' | 'completed';
 };
 type RevisionTask = {
-  id: string; title: string; scheduled_for: string; priority: number; course_id: string;
+  id: string; title: string; scheduled_for: string; priority: number; course_id: string; source_type: string;
 };
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null };
 type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };
@@ -27,9 +27,9 @@ const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments, priorityActions }: {
+export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments, priorityActions, revisionError }: {
   goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; mistakes: Mistake[]; recommendations: Recommendation[];
-  courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[]; priorityActions: LearningAction[];
+  courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[]; priorityActions: LearningAction[]; revisionError?: string;
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
   const averageMastery = mastery.length
@@ -40,6 +40,9 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
     <span className="auth-kicker">YOUR LEARNING OS</span>
     <h2>Today dashboard</h2>
     <p className="learning-os-muted">A subject-independent view of your study goals, revision queue and topic mastery. Insights improve as you complete lessons and assessments.</p>
+    {revisionError === 'evidence' && <p className="form-error" role="alert">This spaced review needs fresh evidence. Complete a concept-linked practice question or assessment after the review becomes due, then mark it complete.</p>}
+    {revisionError === 'not_due' && <p className="form-error" role="alert">This revision is not due yet. Return when its scheduled review time arrives.</p>}
+    {revisionError === '1' && <p className="form-error" role="alert">The revision could not be completed. Refresh and check your course access.</p>}
     <div className="learning-os-stats">
       <div className="learning-os-stat"><strong>{goals.length}</strong><span>Current goals</span></div>
       <div className="learning-os-stat"><strong>{dueCount}</strong><span>Revision due</span></div>
@@ -111,6 +114,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
           <ul className="learning-os-list">{revisionTasks.map(task => <li key={task.id}>
             <b>{task.title}</b>
             <small className="learning-os-muted"> {courseNames.get(task.course_id) ?? 'Course'} · {new Date(task.scheduled_for).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' })} · Priority {task.priority}/5</small>
+            {task.source_type === 'spaced_repetition' && <p className="learning-os-muted">Evidence-based review: answer a concept-linked practice question or assessment after this review is due, then mark it complete. <Link href={'/practice?course=' + encodeURIComponent(task.course_id)}>Open Practice Studio →</Link></p>}
             <form action={completeRevisionTask}>
               <input type="hidden" name="task_id" value={task.id}/>
               <button type="submit">Mark revision complete</button>

@@ -130,7 +130,7 @@ export function WrittenExamAttempt({
       {instructions && <p>{instructions}</p>}
       <input type="hidden" name="exam_id" value={examId} />
       {questions.map((question) => (
-        <fieldset key={question.id} className="portal-card" disabled={submitting}>
+        <fieldset key={question.id} className="portal-card">
           <legend>{question.position}. {question.question_text} ({question.marks} marks)</legend>
           {question.question_type === 'mcq'
             ? question.options.map((option, index) => (

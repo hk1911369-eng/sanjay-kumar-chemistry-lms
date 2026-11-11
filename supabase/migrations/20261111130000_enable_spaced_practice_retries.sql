@@ -14,7 +14,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
 BEGIN
   IF ROW(
     NEW.course_id, NEW.subject_id, NEW.concept_id, NEW.chapter_label,
@@ -33,7 +33,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$$;
 REVOKE ALL ON FUNCTION public.prevent_practice_question_history_rewrite() FROM PUBLIC, anon, authenticated;
 DROP TRIGGER IF EXISTS prevent_practice_question_history_rewrite ON public.student_practice_questions;
 CREATE TRIGGER prevent_practice_question_history_rewrite

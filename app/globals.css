@@ -1221,3 +1221,62 @@ input,select,textarea,button{max-width:100%}
 .lab-graph-analysis input:focus-visible,.lab-graph-analysis textarea:focus-visible,.lab-graph-analysis button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 @media(max-width:620px){.lab-graph-labels,.lab-graph-points,.lab-graph-statistics{grid-template-columns:1fr}.lab-graph-point{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr)}}
 @media(max-width:360px){.lab-graph-point{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.lab-graph-point-number{grid-column:1/-1}}
+
+
+/* JMT-2026-11 mobile public-header and hero overflow correction.
+   Keep the login action fully inside narrow viewports and scale the hero wordmark. */
+@media(max-width:700px){
+  .jmt-home nav{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+    padding-inline:12px;
+  }
+  .jmt-home .brand{
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+  }
+  .jmt-home .brand>span:last-child{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .jmt-home .brand small{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .jmt-home .navlinks{
+    min-width:0;
+    max-width:none;
+    width:auto;
+    justify-self:end;
+  }
+  .jmt-home .navlinks .btn{
+    max-width:100%;
+    white-space:nowrap;
+    padding:9px 10px;
+    font-size:11px;
+  }
+  .jmt-hero-art span{
+    max-width:100%;
+    font-size:clamp(38px,12vw,58px);
+    letter-spacing:clamp(2px,1vw,4px);
+    line-height:1;
+    overflow-wrap:anywhere;
+  }
+  .jmt-hero-art b{
+    max-width:100%;
+    font-size:clamp(8px,2.4vw,10px);
+    letter-spacing:clamp(1px,.5vw,2px);
+    overflow-wrap:anywhere;
+  }
+}
+@media(max-width:360px){
+  .jmt-home nav{padding-inline:9px;gap:6px}
+  .jmt-home .logo{padding:6px 8px}
+  .jmt-home .navlinks .btn{padding:8px 7px;font-size:10px}
+}

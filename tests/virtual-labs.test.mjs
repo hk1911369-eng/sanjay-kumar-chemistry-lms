@@ -83,7 +83,7 @@ test('higher mathematics has an interactive quadratic simulation template', asyn
   assert.match(admin, /\['quadratic',/);
   assert.match(migration, /higher-maths-quadratic/);
   assert.match(migration, /higher-maths-quadratic/);
-  assert.match(migration, /10000000-0000-4000-8000-000000000008/);
+  assert.match(migration, /(?:subject|s)\.slug\s*=\s*'higher-mathematics'/);
 });
 
 test('science simulations include safe, consequence-aware what-if challenges', async () => {

@@ -42,6 +42,7 @@ test('retakes do not increase mastery evidence count or mastery score', () => {
 
 test('verified mastery schedules one pending review task and updates only spaced-repetition tasks', () => {
   assert.match(migration, /schedule_revision_after_mastery_update/i);
+  assert.match(migration, /'Review: ' \\|\\| left\\(v_title, 172\\)/i);
   assert.match(migration, /AFTER INSERT OR UPDATE OF mastery_score, next_review_at/i);
   assert.match(migration, /ON CONFLICT \(student_id, concept_id\)[\s\S]*source_type = 'spaced_repetition'/i);
 });

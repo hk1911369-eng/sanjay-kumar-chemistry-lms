@@ -113,6 +113,7 @@ export default async function StudentPracticePage({
       </header>
 
       <form method="get" className="practice-filter-form portal-card">
+        {concept && <input type="hidden" name="concept" value={concept.id}/>}
         <label>Course
           <select name="course" defaultValue={courseId} required>
             {availableCourses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}

@@ -642,3 +642,8 @@ Live JMT Test teacher/staff RLS predicates for `student_attendance` and `student
 The admin Course Studio candidate query and save-action validation filter teacher/staff role but omit `profiles.is_active`. The live JMT Test `validate_course_assignment_teacher()` trigger likewise accepts any profile with teacher/staff role, including inactive profiles. The restrictive active-account policy and `current_role()` prevent an inactive assignee from using the assignment while deactivated, so this is not a direct inactive-account access bypass. However, the assignment remains dormant and can automatically restore course access if the profile is reactivated later; the admin UI also presents inactive users as assignable.
 
 **Remediation:** require active profiles in the UI, server action, and database trigger/RPC. Define whether deactivation should revoke existing assignments or whether reactivation must explicitly reapprove them. **Limits:** source code and live JMT Test trigger inspected; no data modified.
+
+
+### Role demotion also leaves course assignments dormant
+
+The admin `updateAccountRole()` action allows role changes among student, teacher and staff but only updates the profile role. It does not delete or suspend `course_assignments`. The database assignment-validation trigger is attached to assignment INSERT/UPDATE, not profile role changes. Staff-only access is denied while the profile is demoted to student because `current_role()` changes, but promotion back to teacher/staff can restore access through the stale assignment rows. **Remediation:** transactionally revoke assignments on staff demotion or require explicit reapproval on promotion.

@@ -401,3 +401,29 @@ Security Advisor was queried read-only on both connected projects.
 4. **P2:** Enable leaked-password protection after an approved auth-configuration window and verify recovery/signup flows.
 
 No advisor remediation, grant change, function replacement or Auth setting change was performed.
+
+
+### Security-advisor and privilege recheck — 11 November 2026
+
+Read-only Supabase Security Advisor results were refreshed for Primary and JMT Test.
+
+| Finding | Primary | JMT Test | Interpretation |
+|---|---:|---:|---|
+| RLS enabled but no policy | 2 | 2 | Rate-limit event tables appear intended for server/service-only access; verify grants and server write path. |
+| SECURITY DEFINER callable by anon | 1 | 1 | `get_public_course_teachers(uuid)`; likely intentional public discovery, but returned rows must exclude inactive/private teacher profiles. |
+| SECURITY DEFINER callable by authenticated | 18 | 23 | Expected for some guarded RPCs, but each function needs caller/ownership/role/entitlement review. Linter warning alone does not establish exploitability. |
+| Leaked-password protection disabled | 1 | 1 | Auth configuration hardening remains outstanding. |
+
+Primary's `information_schema.role_table_grants` also currently reports authenticated grants of `TRIGGER`, `TRUNCATE` and `REFERENCES` on 33 public tables. This remains a high-priority privilege-hardening item. The exact object set and future-object default ACLs must be reviewed before a controlled revocation migration is proposed.
+
+**Do not blanket-revoke SECURITY DEFINER execution.** The app uses SECURITY DEFINER RPCs as guarded API boundaries. For every function, inspect:
+- whether unauthenticated invocation is intentional;
+- whether `auth.uid()`, `current_role()`, ownership and assignment are validated;
+- whether paid access, active status, expiry and course publication are enforced;
+- whether output is minimized and private rows are inaccessible;
+- whether `search_path` is pinned and dynamic SQL is safe;
+- exact EXECUTE grants for PUBLIC, anon, authenticated and service_role.
+
+The two RLS-enabled/no-policy rate-limit tables should be confirmed as server-only and inaccessible to anon/authenticated direct reads/writes. Do not add broad policies simply to silence the advisor.
+
+The leaked-password setting should be enabled through an approved Auth configuration change after confirming user-facing password-reset/support behavior. No Auth setting, grant, policy or database object was changed during this recheck.

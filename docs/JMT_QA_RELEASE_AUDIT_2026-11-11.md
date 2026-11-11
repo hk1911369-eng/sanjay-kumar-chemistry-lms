@@ -517,3 +517,17 @@ All checks in this section were read-only. No database mutation, project setting
 ### Limits
 
 This was a bounded public-page smoke check, not a full Playwright suite or an authenticated student/teacher journey. No visual pixel comparison, accessibility audit, authenticated workflow, private data check, database query, deployment, or mutation was performed. No claim is made that all routes work.
+
+
+### Follow-up: mobile overflow correction prepared on PR branch
+
+Commit `c34245e30f3da952cc77432adac32d1c6429be17` adds narrow-screen CSS overrides in `app/globals.css`:
+- Reflows the public header into a two-column grid so the brand can shrink without pushing the Student login action off-screen.
+- Keeps the login action non-wrapping and constrains its width.
+- Reduces the hero wordmark and supporting label sizing on mobile.
+
+**Verification status:** code change is committed on the unmerged PR branch. It has **not** been re-tested against the live site because the public Render deployment does not include this unmerged branch change. The current-head CI workflow run `43073837628` was still installing dependencies at the time of this report update; no test/lint/typecheck/build/audit result is claimed yet. Re-run mobile measurements at 320, 360, 390 and 430px after an authorized preview deployment or release.
+
+### Public catalogue operational dependency
+
+The live public course catalogue currently reports 0 of 0 available courses. This is a production content/readiness dependency, not a reason to insert demo records. The authorized academy operator must confirm the real course offering and publish the approved catalogue through the supported admin workflow before public enrolment launch.

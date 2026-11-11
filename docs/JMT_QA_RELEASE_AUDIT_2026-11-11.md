@@ -244,3 +244,33 @@ The Web App QA & Release Copilot skill and its `audit-release`, `map-critical-jo
 ### Updated release decision
 
 **NOT READY for production merge/deploy.** The exact current-head CI is green, but the live database comparison confirms eight missing tables, 25 missing functions, 47 fewer public policies, 30 fewer triggers, 82 fewer constraints, 40 fewer indexes and one fewer storage bucket in the primary project relative to JMT Test. The inactive-teacher public RPC mismatch and disabled leaked-password protection also remain open. Reconcile these deliberately in a controlled staging/release process; do not blindly replay migrations or change production/Auth settings as part of this audit.
+
+
+## Latest PR-head verification and focused source review
+
+**Latest PR head checked:** `ac217af815df289d8a7c53e97ad4341b9c4e03fa`  
+**GitHub Actions:** [Quality checks #1117](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43065916384) — completed successfully. All job steps reported success: checkout, Node setup, dependency install, guardrail tests, ESLint, TypeScript, production build and production dependency audit.
+
+This run is associated with the current PR head observed during this review. It confirms the configured CI workflow passes; it does not establish live database or browser behavior.
+
+### Focused source review — positive controls observed
+
+The following controls were inspected in the PR source and corresponding tests:
+
+- **Authentication/role lifecycle:** public registration does not accept a role; database provisioning assigns the student role; profile role and student identity fields are guarded; inactive profiles are rejected across privileged actions and workspaces.
+- **Payment reconciliation:** reconciliation is restricted to active admins; CSV rows are bounded and validated; approval matching checks provider, transaction ID, amount and sender; duplicate/repeated-sender cases are flagged; bulk approval reuses the database approval RPC and the UI asks for confirmation.
+- **Lab notebook evidence:** uploads are student-owner scoped, size-limited to 8 MiB, checked against binary signatures, stored under server-generated paths, and linked to notebook metadata. The database trigger checks path ownership, MIME/extension agreement, storage metadata and an eight-file limit. Download requires an authenticated RLS-visible metadata row and issues a 60-second signed URL with private/no-store and no-referrer headers.
+- **Lesson completion:** a single database RPC validates student role, published lesson/course relationship and active paid enrollment before atomically recording progress and a learning event.
+- **Written-exam drafts:** the draft table is not directly exposed for client CRUD; load/save RPCs enforce active paid access, course publication/archive state and exam schedule; answer keys are checked against exam question IDs; optimistic version checks prevent silent concurrent overwrites; final submission clears the draft.
+
+### Evidence-quality limitation
+
+The inspected tests include useful executable helper tests (for example, CSV parsing and MIME signature validation), but many security and database tests assert source/migration text patterns. They do **not** execute PostgreSQL RLS policies, triggers, RPCs, concurrent transactions, signed-URL authorization, or real user journeys. Those behaviors remain unverified until run against a disposable, representative Supabase staging environment and a real browser test harness.
+
+### CSP hardening follow-up
+
+The current `next.config.ts` applies a CSP with `script-src 'self' 'unsafe-inline'`, and broad scheme-wide `https:`/ `wss:` allowances for connections, frames, images and media. These allowances may be needed for current Next.js/Supabase integrations, so this review does not label them a demonstrated exploit. They do reduce origin-level restriction and inline-script protection. A nonce/hash-based script policy and explicit host allowlists should be evaluated in staging with hydration, auth redirects, storage uploads and virtual-lab embeds before tightening.
+
+### Updated conclusion
+
+The latest PR head has a green configured CI pipeline and the inspected source contains several meaningful server-side controls. The release verdict remains **NOT READY**: no browser E2E execution, no representative staging database test, and no fresh production schema/privilege reconciliation or restore/rollback rehearsal have been evidenced.

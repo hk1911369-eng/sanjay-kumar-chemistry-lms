@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261111130000_enable_spaced_practice_retries.sql', import.meta.url), 'utf8');
-const followUpMigration = await readFile(new URL('../supabase/migrations/20261111140000_practice_review_fallback.sql', import.meta.url), 'utf8');
+const followUpMigration = await readFile(new URL('../supabase/migrations/20261111140100_practice_review_fallback.sql', import.meta.url), 'utf8');
 const page = await readFile(new URL('../app/practice/page.tsx', import.meta.url), 'utf8');
 const workspace = await readFile(new URL('../components/student-practice-workspace.tsx', import.meta.url), 'utf8');
 const action = await readFile(new URL('../app/actions/student-practice.ts', import.meta.url), 'utf8');
@@ -38,8 +38,9 @@ test('retakes do not increase mastery evidence count or mastery score', () => {
   assert.match(migration, /prevent_practice_question_history_rewrite/i);
   assert.match(migration, /create a new question version instead/i);
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SET search_path = ''/i);
-  assert.match(migration, /FUNCTION public\.schedule_revision_after_mastery_update\(\)[\s\S]*?SET search_path = ''/i);
-  assert.doesNotMatch(migration, /FUNCTION public\.schedule_revision_after_mastery_update\(\)[\s\S]*?SECURITY DEFINER/i);
+  const scheduler = migration.split('CREATE OR REPLACE FUNCTION public.schedule_revision_after_mastery_update()')[1]?.split('$$;')[0] ?? '';
+  assert.match(scheduler, /SET search_path = ''/i);
+  assert.doesNotMatch(scheduler, /SECURITY DEFINER/i);
   assert.match(migration, /FUNCTION public\.prevent_practice_question_history_rewrite\(\)[\s\S]*?SECURITY DEFINER[\s\S]*?SET search_path = ''/i);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.schedule_revision_after_mastery_update\(\) FROM PUBLIC, anon, authenticated/i);
 });

@@ -114,7 +114,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
           <ul className="learning-os-list">{revisionTasks.map(task => <li key={task.id}>
             <b>{task.title}</b>
             <small className="learning-os-muted"> {courseNames.get(task.course_id) ?? 'Course'} · {new Date(task.scheduled_for).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' })} · Priority {task.priority}/5</small>
-            {task.source_type === 'spaced_repetition' && <p className="learning-os-muted">Evidence-based review: answer a concept-linked practice question or assessment after this review is due, then mark it complete. <Link href={'/practice?course=' + encodeURIComponent(task.course_id)}>Open Practice Studio →</Link></p>}
+            {task.source_type === 'spaced_repetition' && <p className="learning-os-muted">Evidence-based review: answer a concept-linked practice question or assessment after this review is due, then mark it complete. <Link href={'/practice?course=' + encodeURIComponent(task.course_id) + '&concept=' + encodeURIComponent(task.concept_id ?? '')}>Open Practice Studio →</Link></p>}
             <form action={completeRevisionTask}>
               <input type="hidden" name="task_id" value={task.id}/>
               <button type="submit">Mark revision complete</button>

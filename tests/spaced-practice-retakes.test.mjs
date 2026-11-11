@@ -32,6 +32,8 @@ test('retakes do not increase mastery evidence count or mastery score', () => {
   assert.match(retake, /next_review_at = now\(\)/i);
   assert.doesNotMatch(retake, /mastery_score\s*=|evidence_count\s*=/i);
   assert.match(migration, /occurrence_count = existing\.occurrence_count \+ 1/i);
+  assert.match(migration, /prevent_practice_question_history_rewrite/i);
+  assert.match(migration, /create a new question version instead/i);
 });
 
 test('verified mastery schedules one pending review task and updates only spaced-repetition tasks', () => {

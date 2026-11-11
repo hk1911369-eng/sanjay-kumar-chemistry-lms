@@ -20,6 +20,9 @@ test('practice page validates a requested concept against the selected course su
   assert.match(page, /subjectIds\.includes\(requestedConcept\.subject_id\)/i);
   assert.match(page, /p_concept_id: concept\?\.id \?\? null/i);
   assert.match(page, /Review focus: \{concept\.title\}/i);
+  assert.match(page, /conceptUnavailable = Boolean\\(params\\.concept\\) && !concept/i);
+  assert.match(page, /if \\(courseId && subjectId && !conceptUnavailable\\)/i);
+  assert.match(page, /Revision topic unavailable/i);
 });
 
 test('revision queue links directly to the exact concept practice set', () => {

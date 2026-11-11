@@ -357,6 +357,7 @@ GRANT EXECUTE ON FUNCTION public.submit_student_practice_answer(uuid, integer) T
 CREATE OR REPLACE FUNCTION public.schedule_revision_after_mastery_update()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE

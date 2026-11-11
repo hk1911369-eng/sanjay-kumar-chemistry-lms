@@ -28,7 +28,7 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
     assert.match(sql, new RegExp(`'[^']+', '${slug}', '[^']+'`), `missing catalogue mapping for ${slug}`);
   }
 
-  assert.match(sql, /ON CONFLICT \(slug\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(slug\) DO NOTHING/);\n  assert.match(sql, /'Higher Mathematics', 'higher-mathematics',/);
   assert.doesNotMatch(
     sql.slice(catalogueInsert, sql.indexOf('ON CONFLICT (lab_key)', catalogueInsert)),
     /10000000-0000-4000-8000-00000000000[1-6]/,

@@ -205,6 +205,85 @@ CREATE TRIGGER clear_written_exam_draft_after_submission
 AFTER INSERT ON public.written_exam_submissions
 FOR EACH ROW EXECUTE FUNCTION public.clear_written_exam_draft_after_submission();
 
+-- Prevent student Data API reads of exam questions when the parent course
+-- has been unpublished or archived. Staff assignment and administrator access remain.
+DROP POLICY IF EXISTS "written exams scoped read" ON public.written_exams;
+CREATE POLICY "written exams scoped read"
+ON public.written_exams FOR SELECT TO authenticated
+USING (
+  (SELECT public.current_role()) = 'admin'::public.app_role
+  OR (
+    (SELECT public.current_role())::text IN ('teacher','staff')
+    AND EXISTS (
+      SELECT 1 FROM public.course_assignments a
+      WHERE a.course_id = written_exams.course_id
+        AND a.teacher_id = (SELECT auth.uid())
+    )
+  )
+  OR (
+    (SELECT public.current_role()) = 'student'::public.app_role
+    AND published IS TRUE
+    AND EXISTS (
+      SELECT 1
+      FROM public.enrollments e
+      JOIN public.courses c ON c.id = e.course_id
+      WHERE e.course_id = written_exams.course_id
+        AND e.student_id = (SELECT auth.uid())
+        AND e.status = 'active'
+        AND e.admission_fee_paid IS TRUE
+        AND e.paid_through >= (
+          date_trunc('month', now() AT TIME ZONE 'Asia/Dhaka')::date
+          + interval '1 month - 1 day'
+        )::date
+        AND c.is_published IS TRUE
+        AND c.archived_at IS NULL
+    )
+  )
+);
+
+DROP POLICY IF EXISTS "written exam questions scoped read" ON public.written_exam_questions;
+CREATE POLICY "written exam questions scoped read"
+ON public.written_exam_questions FOR SELECT TO authenticated
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.written_exams x
+    JOIN public.courses c ON c.id = x.course_id
+    WHERE x.id = written_exam_questions.exam_id
+      AND (
+        (SELECT public.current_role()) = 'admin'::public.app_role
+        OR (
+          (SELECT public.current_role())::text IN ('teacher','staff')
+          AND EXISTS (
+            SELECT 1 FROM public.course_assignments ca
+            WHERE ca.course_id = x.course_id
+              AND ca.teacher_id = (SELECT auth.uid())
+          )
+        )
+        OR (
+          (SELECT public.current_role()) = 'student'::public.app_role
+          AND x.published IS TRUE
+          AND (x.starts_at IS NULL OR now() >= x.starts_at)
+          AND (x.ends_at IS NULL OR now() <= x.ends_at)
+          AND c.is_published IS TRUE
+          AND c.archived_at IS NULL
+          AND EXISTS (
+            SELECT 1
+            FROM public.enrollments e
+            WHERE e.course_id = x.course_id
+              AND e.student_id = (SELECT auth.uid())
+              AND e.status = 'active'
+              AND e.admission_fee_paid IS TRUE
+              AND e.paid_through >= (
+                date_trunc('month', now() AT TIME ZONE 'Asia/Dhaka')::date
+                + interval '1 month - 1 day'
+              )::date
+          )
+        )
+      )
+  )
+);
+
 -- Preserve answer-shape, paid-enrolment, and server-time checks while also
 -- requiring the parent course itself to remain published and unarchived.
 DROP POLICY IF EXISTS "students submit written exams" ON public.written_exam_submissions;

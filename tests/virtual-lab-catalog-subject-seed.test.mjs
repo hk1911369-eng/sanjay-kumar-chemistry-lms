@@ -6,6 +6,10 @@ const migrationUrl = new URL(
   '../supabase/migrations/20261110100000_database_driven_virtual_lab_catalog.sql',
   import.meta.url,
 );
+const quadraticMigrationUrl = new URL(
+  '../supabase/migrations/20261110120000_add_quadratic_virtual_lab_template.sql',
+  import.meta.url,
+);
 
 test('virtual-lab catalogue seeds required subjects before resolving catalogue foreign keys', async () => {
   const sql = await readFile(migrationUrl, 'utf8');
@@ -19,7 +23,7 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
   assert.ok(subjectSeed < catalogueInsert, 'subject seed must precede catalogue FK insertion');
   assert.ok(catalogueInsert < catalogueJoin, 'catalogue insert must use slug-resolved subjects');
 
-  for (const slug of ['physics', 'chemistry', 'biology', 'mathematics', 'ict']) {
+  for (const slug of ['physics', 'chemistry', 'biology', 'mathematics', 'ict', 'higher-mathematics']) {
     assert.match(sql, new RegExp(`'[^']+', '${slug}',`), `missing idempotent seed for ${slug}`);
     assert.match(sql, new RegExp(`'[^']+', '${slug}', '[^']+'`), `missing catalogue mapping for ${slug}`);
   }
@@ -38,4 +42,12 @@ test('virtual-lab catalogue seeds required subjects before resolving catalogue f
     /SET[\s\S]*\b(is_published|title|summary|principle|simulation_type|sort_order)\s*=/,
     'rerunning the seed must not overwrite teacher/admin editorial state',
   );
+});
+
+
+test('higher-mathematics quadratic lab resolves its subject by stable slug', async () => {
+  const sql = await readFile(quadraticMigrationUrl, 'utf8');
+  assert.match(sql, /FROM public\\.academic_subjects subject\\s+WHERE subject\\.slug = 'higher-mathematics'/);
+  assert.doesNotMatch(sql, /10000000-0000-4000-8000-00000000000[1-9]/);
+  assert.match(sql, /simulation_type IN \\('physics','chemistry','biology','maths','ict','quadratic'\\)/);
 });

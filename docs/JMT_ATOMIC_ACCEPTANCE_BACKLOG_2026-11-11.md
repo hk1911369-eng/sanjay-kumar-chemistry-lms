@@ -27,7 +27,7 @@ A source-regex Node test is a static guardrail. It is not a PostgreSQL integrati
 | P0-09 | Payment approval is authorized, idempotent and cannot grant incorrect/duplicate access. | `app/actions/payments.ts`; payment guard/reconciliation migrations and tests | Partially evidenced | Synthetic end-to-end payment submission/review/replay and entitlement assertions. |
 | P0-10 | Written exam answers survive refresh/retry and concurrent edits without silent overwrite; final submission is immutable. | `app/student/exam-war-room/page.tsx`; written-exam actions/migrations/tests | Partially evidenced | Live DB + browser tests including network failure, stale version, deadline and duplicate submit. |
 | P0-11 | Question edits/deletes cannot rewrite prior practice attempt history. | `20261111170100_preserve_deleted_practice_history.sql`; `tests/practice-question-delete-history.test.mjs` | Implemented — static evidence | Execute trigger behavior in PostgreSQL; test archive, metadata, versioning and historical scoring. |
-| P0-12 | Database migrations are safe on an empty database and on the actual production data shape. | `supabase/migrations/*`; QA report notes fixed-UUID virtual-lab subject seed dependency | Blocked | Empty-db and representative-data migration rehearsal; idempotent subject seed/preflight. |
+| P0-12 | Database migrations are safe on an empty database and on the actual production data shape. | `supabase/migrations/*`; virtual-lab catalogue migration now seeds canonical subject slugs before resolving generated IDs; `tests/virtual-lab-catalog-subject-seed.test.mjs` | Partially evidenced | Empty-db and representative-data PostgreSQL migration rehearsal; test idempotency, existing subject preservation, foreign keys and rollback. |
 | P0-13 | Backup restore and application rollback can be completed within declared recovery objectives. | `scripts/backup-db.sh`, `scripts/restore-db.sh`, deployment docs | Partially evidenced | Timed restore drill, integrity comparison, credential handling and rollback rehearsal. |
 
 ## P1 — Core learner, teacher and assessment workflows
@@ -120,3 +120,16 @@ A source-regex Node test is a static guardrail. It is not a PostgreSQL integrati
 - Re-score the whole-project scorecard only when atomic criterion evidence changes.
 - Record exact commit SHA, workflow/test run, environment and fixture manifest for every pass.
 - The current whole-project 36% remains a **low-confidence provisional estimate** until this backlog is fully weighted and each criterion is scored from evidence.
+
+
+## Update — virtual-lab catalogue empty-database guard
+
+The earlier P0-12 note about a fixed-UUID virtual-lab subject dependency is superseded. The PR branch now:
+- Seeds five canonical subject slugs idempotently (Physics, Chemistry, Biology, Mathematics, ICT).
+- Resolves generated subject IDs by slug rather than assuming UUIDs from another environment.
+- Upserts catalogue records by `lab_key`, preserving editorial fields such as publication state, title, summary and principle on rerun.
+- Adds `tests/virtual-lab-catalog-subject-seed.test.mjs` to guard seed order, slug resolution, UUID independence and non-destructive reruns.
+
+This improves the empty-database migration path but does **not** establish runtime PostgreSQL success. The criterion remains Partially evidenced until the migration runs against a disposable database and an existing-data fixture, with idempotency and rollback checks.
+
+The current-head CI run has passed the guardrail test suite, ESLint and TypeScript; production build and dependency audit were still running at the time this update was prepared. See the GitHub Actions run linked from PR #42 for final status.

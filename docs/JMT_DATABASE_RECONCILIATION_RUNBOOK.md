@@ -548,13 +548,13 @@ This validates that the canonical seed slugs in the PR migration satisfy the cur
 
 ### PR-branch corrective change
 
-The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` was amended to seed five canonical subject rows (Physics, Chemistry, Biology, Mathematics and ICT) before inserting virtual-lab catalogue rows. Catalogue foreign keys resolve by stable subject slug rather than UUIDs generated in another environment.
+The PR migration `20261110100000_database_driven_virtual_lab_catalog.sql` was amended to seed six canonical subject rows (Physics, Chemistry, Biology, Mathematics, Higher Mathematics and ICT) before inserting virtual-lab catalogue rows. Catalogue foreign keys resolve by stable subject slug rather than UUIDs generated in another environment.
 
 A static test `tests/virtual-lab-catalog-subject-seed.test.mjs` guards:
 - seed-before-catalogue ordering;
-- all five slug mappings;
+- all six canonical subject slugs;
 - idempotent subject insertion;
-- no hard-coded environment UUID dependency;
+- no hard-coded environment UUID dependency in the catalogue seed;
 - preservation of teacher/admin editorial fields on a repeated catalogue seed.
 
 The catalogue upsert intentionally only refreshes `subject_id` and `updated_at`; it does not overwrite `is_published`, title, summary, principle, simulation type or sort order on a rerun.
@@ -564,3 +564,34 @@ The catalogue upsert intentionally only refreshes `subject_id` and `updated_at`;
 This is **schema-compatibility evidence**, not proof that the entire migration can be applied to Primary. The migration also creates RLS policies, grants, indexes and replaces `record_simulation_completion`; the full dependency graph and function behavior must still be reconciled against the actual Primary schema and grants. The eight missing tables require their complete prerequisite migration chain, not just this catalogue migration.
 
 No production migration was applied. No subjects or catalogue rows were inserted in either live project. Do not run this migration manually in production outside the reviewed migration process.
+
+
+## 11. Follow-on virtual-lab migration UUID dependency removed — 12 November 2026
+
+A deeper clean-database review found that fixing only the first catalogue migration was insufficient. Eleven later lab migrations still used fixed subject UUIDs. On an empty Primary database, those IDs are not guaranteed to match the generated IDs from the canonical subject seed. Some INSERT ... SELECT migrations would silently insert zero rows when the UUID did not exist; direct VALUES inserts could fail their foreign key.
+
+The PR branch now resolves subjects by stable slug in all eleven affected migrations:
+
+| Migration | Subject slug |
+|---|---|
+| `20261110120000_add_quadratic_virtual_lab_template.sql` | `higher-mathematics` |
+| `20261110160000_add_projectile_motion_virtual_lab.sql` | `physics` |
+| `20261110170000_add_virtual_microscope_lab.sql` | `biology` |
+| `20261110254000_add_chemistry_reaction_kinetics_lab.sql` | `chemistry` |
+| `20261110254200_add_physics_wave_interference_lab.sql` | `physics` |
+| `20261110254400_add_chemistry_equilibrium_lab.sql` | `chemistry` |
+| `20261110254600_add_biology_cell_division_lab.sql` | `biology` |
+| `20261110254800_add_chemistry_electrochemical_cell_lab.sql` | `chemistry` |
+| `20261110254900_add_photosynthesis_lab.sql` | `biology` |
+| `20261110255200_add_dihybrid_inheritance_lab.sql` | `biology` |
+| `20261110255201_add_physics_spring_oscillator_lab.sql` | `physics` |
+
+The first catalogue migration now seeds six canonical subjects (including Higher Mathematics) with `ON CONFLICT (slug) DO NOTHING`. This preserves existing subject IDs in JMT Test while generating new IDs safely on a clean database. The eleven follow-on migrations resolve by slug, so both database shapes use the same stable mapping.
+
+Nine legacy static tests that asserted fixed UUIDs were updated to assert slug-based resolution. The new guard test also verifies the seed and follow-on migration contract.
+
+### Verification status
+
+Exact-head CI run [#1177](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43077140765), commit `17fe13dd75dfe728535b7bb67c49e6f70e38f40e`, passed all configured checks: 451 tests, ESLint, TypeScript, production build and production dependency audit.
+
+**Still not proven:** no migration was applied to either live Supabase project; no disposable PostgreSQL clean-install or upgrade rehearsal was run. CI tests inspect migration source and application code, not actual PostgreSQL execution. Keep P0-12 partially evidenced until clean-database and existing-data migration rehearsals pass, including idempotency, FK integrity, RLS/ACL behavior and rollback.

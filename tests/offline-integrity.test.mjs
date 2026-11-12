@@ -74,7 +74,7 @@ test('rejects a package whose whole-file digest does not match', async () => {
 
 test('rejects missing Web Crypto rather than skipping integrity checks', async () => {
   const result = await verifyAndAssembleOfflinePackage({
-    manifest: makeManifest(), chunks: [first, second], cryptoProvider: undefined,
+    manifest: makeManifest(), chunks: [first, second], cryptoProvider: null,
   });
   assert.equal(result.reason, 'web_crypto_unavailable');
 });

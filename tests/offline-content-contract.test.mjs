@@ -121,29 +121,28 @@ test('offline access requires the same authenticated account and a verified comp
   const packageRecord = {
     userId: 'student-a',
     state: 'complete',
-    checksumVerified: true,
     entitlementExpiresAt: '2026-11-19T00:00:00.000Z',
     manifest: manifest(),
   };
-  assert.equal(canOpenOfflinePackage({ packageRecord, currentUserId: 'student-a', now: NOW }), true);
-  assert.equal(canOpenOfflinePackage({ packageRecord, currentUserId: 'student-b', now: NOW }), false);
-  assert.equal(canOpenOfflinePackage({ packageRecord: { ...packageRecord, checksumVerified: false }, currentUserId: 'student-a', now: NOW }), false);
-  assert.equal(canOpenOfflinePackage({ packageRecord: { ...packageRecord, state: 'downloading' }, currentUserId: 'student-a', now: NOW }), false);
+  assert.equal(canOpenOfflinePackage({ packageRecord, currentUserId: 'student-a', actualSha256: HASH_A, now: NOW }), true);
+  assert.equal(canOpenOfflinePackage({ packageRecord, currentUserId: 'student-b', actualSha256: HASH_A, now: NOW }), false);
+  assert.equal(canOpenOfflinePackage({ packageRecord, currentUserId: 'student-a', actualSha256: HASH_B, now: NOW }), false);
+  assert.equal(canOpenOfflinePackage({ packageRecord: { ...packageRecord, state: 'downloading' }, currentUserId: 'student-a', actualSha256: HASH_A, now: NOW }), false);
 });
 
 test('offline access fails closed after either offline or entitlement lease expiry', () => {
   const base = {
     userId: 'student-a',
     state: 'complete',
-    checksumVerified: true,
     entitlementExpiresAt: '2026-11-19T00:00:00.000Z',
     manifest: manifest(),
   };
-  assert.equal(canOpenOfflinePackage({ packageRecord: base, currentUserId: 'student-a', now: NOW }), true);
-  assert.equal(canOpenOfflinePackage({ packageRecord: base, currentUserId: 'student-a', now: Date.parse('2026-11-21T00:00:00.000Z') }), false);
+  assert.equal(canOpenOfflinePackage({ packageRecord: base, currentUserId: 'student-a', actualSha256: HASH_A, now: NOW }), true);
+  assert.equal(canOpenOfflinePackage({ packageRecord: base, currentUserId: 'student-a', actualSha256: HASH_A, now: Date.parse('2026-11-21T00:00:00.000Z') }), false);
   assert.equal(canOpenOfflinePackage({
     packageRecord: { ...base, entitlementExpiresAt: '2026-11-12T00:00:00.000Z' },
     currentUserId: 'student-a',
+    actualSha256: HASH_A,
     now: NOW,
   }), false);
 });

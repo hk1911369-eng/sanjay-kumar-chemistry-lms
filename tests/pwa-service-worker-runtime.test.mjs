@@ -114,6 +114,17 @@ test('offline navigation returns the cached explanation after a network failure'
   assert.deepEqual(await response, { body: 'offline explanation' });
 });
 
+test('network failure without a precached offline page returns a safe error response', async () => {
+  const worker = createWorker({ fetchImpl: async () => { throw new Error('offline'); } });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/', { mode: 'navigate' }),
+    respondWith(value) { response = value; },
+  });
+
+  assert.deepEqual(await response, { error: true });
+});
+
 test('HTTP server errors remain visible instead of being disguised as offline mode', async () => {
   const serverError = { ok: false, status: 503, marker: 'server-unavailable' };
   const worker = createWorker({ fetchImpl: async () => serverError });

@@ -12,6 +12,7 @@ function lesson(overrides = {}) {
     id: '7d8c5c4a-1e2b-4f3a-8a9b-0123456789ab',
     course_id: '8d8c5c4a-1e2b-4f3a-8a9b-0123456789ab',
     is_published: true,
+    offline_allowed: true,
     updated_at: '2026-11-12T10:00:00.000Z',
     content: 'JMT Chemistry lesson: atomic structure.',
     ...overrides,

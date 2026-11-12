@@ -24,7 +24,7 @@ function serverPayload(overrides = {}) {
   const result = buildOfflineLessonPackage({
     lesson: {
       id: lessonId, course_id: '8d8c5c4a-1e2b-4f3a-8a9b-0123456789ab',
-      is_published: true, updated_at: '2026-11-12T10:00:00.000Z',
+      is_published: true, offline_allowed: true, updated_at: '2026-11-12T10:00:00.000Z',
       content: 'JMT offline lesson content',
     },
     entitlementExpiresAt: '2026-11-30T17:59:59.999Z',

@@ -42,7 +42,13 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       const response = await fetch(request);
       if (response.ok && response.type === 'basic') {
-        await cache.put(request, response.clone());
+        // Cache Storage can fail under quota pressure; never let that break
+        // an otherwise successful online asset response.
+        try {
+          await cache.put(request, response.clone());
+        } catch {
+          // The browser can still use the network response for this request.
+        }
       }
       return response;
     })());

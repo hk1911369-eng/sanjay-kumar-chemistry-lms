@@ -11,6 +11,7 @@ test('PWA manifest declares the JMT installable learning workspace', async () =>
   assert.equal(manifest.scope, '/');
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.lang, 'bn');
+  assert.ok(manifest.icons.some((icon) => icon.src === '/jmt-academy-icon.svg'));
 });
 
 test('root layout exposes the manifest and registers the progressive enhancement', async () => {

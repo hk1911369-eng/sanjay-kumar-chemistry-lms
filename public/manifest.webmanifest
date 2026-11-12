@@ -10,5 +10,15 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#173f70",
-  "categories": ["education"]
+  "categories": [
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "/jmt-academy-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }

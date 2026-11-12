@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { buildOfflineLessonPackage } from '../lib/offline/server-manifest.mjs';
+import { buildOfflineLessonPackage, resolveOfflineEntitlement } from '../lib/offline/server-manifest.mjs';
 import { validateOfflineManifest } from '../lib/offline/contracts.mjs';
 
 const NOW = Date.parse('2026-11-13T06:00:00.000Z');
@@ -79,4 +79,47 @@ test('rejects unpublished, empty, oversized and unentitled lesson packages', () 
     lesson: lesson(),
     entitlementExpiresAt: '2026-11-12T00:00:00.000Z', now: NOW,
   }), /Active paid entitlement/);
+});
+
+test('server entitlement requires active student, published course and paid current month', () => {
+  const profile = { role: 'student', is_active: true };
+  const course = { is_published: true, archived_at: null };
+  const enrollment = { status: 'active', admission_fee_paid: true, paid_through: '2026-11-30' };
+  assert.equal(
+    resolveOfflineEntitlement({ profile, course, enrollment, now: NOW }),
+    '2026-11-30T17:59:59.999Z',
+  );
+  assert.equal(resolveOfflineEntitlement({
+    profile: { ...profile, is_active: false }, course, enrollment, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile: { ...profile, role: 'teacher' }, course, enrollment, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile, course: { ...course, is_published: false }, enrollment, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile, course: { ...course, archived_at: '2026-11-01T00:00:00.000Z' }, enrollment, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile, course, enrollment: { ...enrollment, status: 'inactive' }, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile, course, enrollment: { ...enrollment, admission_fee_paid: false }, now: NOW,
+  }), null);
+  assert.equal(resolveOfflineEntitlement({
+    profile, course, enrollment: { ...enrollment, paid_through: '2026-10-31' }, now: NOW,
+  }), null);
+});
+
+test('rejects invalid or malformed paid-through dates', () => {
+  const profile = { role: 'student', is_active: true };
+  const course = { is_published: true, archived_at: null };
+  for (const paidThrough of ['2026-02-30', '2026/11/30', '', null]) {
+    assert.equal(resolveOfflineEntitlement({
+      profile, course,
+      enrollment: { status: 'active', admission_fee_paid: true, paid_through: paidThrough },
+      now: NOW,
+    }), null);
+  }
 });

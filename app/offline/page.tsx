@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export const metadata = {
   title: 'You are offline',
   description: 'JMT Academy connection help',
@@ -18,7 +20,7 @@ export default function OfflinePage() {
           This page is the first offline foundation. Downloaded lessons and
           synchronisation will become available as those features are completed.
         </p>
-        <a className="button button-primary" href="/">Try again</a>
+        <Link className="button button-primary" href="/">Try again</Link>
       </section>
     </main>
   );

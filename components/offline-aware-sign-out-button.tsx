@@ -29,7 +29,12 @@ export function OfflineAwareSignOutButton() {
           const registry = createOfflineRegistry({
             storage: createIndexedDbOfflineStorage(),
           });
-          await registry.clearAccount(user.id);\n          const downloadJobs = createOfflineDownloadJobs({\n            storage: createIndexedDbDownloadJobStorage(),\n          });\n          await downloadJobs.clearAccount(user.id);
+          await registry.clearAccount(user.id);
+
+          const downloadJobs = createOfflineDownloadJobs({
+            storage: createIndexedDbDownloadJobStorage(),
+          });
+          await downloadJobs.clearAccount(user.id);
         }
       } catch {
         // Cleanup is best-effort; it must never trap the user in an active session.

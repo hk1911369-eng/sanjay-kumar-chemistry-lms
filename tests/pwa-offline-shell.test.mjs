@@ -39,5 +39,5 @@ test('service worker caches only offline fallback and immutable Next static asse
   assert.doesNotMatch(worker, /caches\.open\([^)]*\)\.then\([^)]*request\.url/);
   assert.doesNotMatch(worker, /url\.pathname\.startsWith\('\/api\//);
   assert.match(worker, /Never cache navigations or authenticated HTML/);
-  assert.match(worker, /tokens, payment data and learner submissions\s*\* are never placed in Cache Storage/);
+  assert.match(worker, /tokens, payment data and private student submissions\s*\* are never placed in Cache Storage/);
 });

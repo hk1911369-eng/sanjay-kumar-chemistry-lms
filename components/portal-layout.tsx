@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { signOut } from '@/app/actions/auth';
+import { OfflineAwareSignOutButton } from '@/components/offline-aware-sign-out-button';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { PortalIcon, type PortalIconName } from '@/components/portal-icon';
 
@@ -140,7 +140,7 @@ export function PortalLayout({
           </details>}
           <div className="portal-topbar-actions">
             <LocaleSwitcher returnTo={returnTo} />
-            <form action={signOut}><button className="quiet-button" type="submit">Sign out</button></form>
+            <OfflineAwareSignOutButton />
           </div>
         </header>
         {children}

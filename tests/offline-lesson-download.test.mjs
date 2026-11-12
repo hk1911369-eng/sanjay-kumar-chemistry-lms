@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { buildOfflineLessonPackage } from '../lib/offline/server-manifest.mjs';
 import { createOfflineDownloadJobs } from '../lib/offline/download-jobs.mjs';
 import { downloadOfflineLesson } from '../lib/offline/lesson-download.mjs';

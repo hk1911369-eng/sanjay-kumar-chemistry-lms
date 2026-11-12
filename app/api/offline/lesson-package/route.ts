@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { buildOfflineLessonPackage } from '@/lib/offline/server-manifest.mjs';
+import { buildOfflineLessonPackage, resolveOfflineEntitlement } from '@/lib/offline/server-manifest.mjs';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,21 +10,6 @@ const unavailable = () => NextResponse.json(
   { error: 'Offline lesson package is unavailable for this account.' },
   { status: 404, headers: noStore },
 );
-
-function currentDhakaMonthEnd(now: Date) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit',
-  }).formatToParts(now);
-  const year = Number(parts.find((part) => part.type === 'year')?.value);
-  const month = Number(parts.find((part) => part.type === 'month')?.value);
-  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
-}
-
-function entitlementExpiryFromDhakaDate(value: string) {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return NaN;
-  const expiry = Date.parse(`${value}T23:59:59.999+06:00`);
-  return Number.isFinite(expiry) ? expiry : NaN;
-}
 
 export async function GET(request: NextRequest) {
   const lessonId = request.nextUrl.searchParams.get('lessonId')?.trim() ?? '';
@@ -42,7 +27,7 @@ export async function GET(request: NextRequest) {
       .select('role,is_active')
       .eq('id', user.id)
       .maybeSingle();
-    if (profileError || profile?.role !== 'student' || profile.is_active !== true) return unavailable();
+    if (profileError || !profile) return unavailable();
 
     const { data: lesson, error: lessonError } = await supabase
       .from('lessons')
@@ -66,21 +51,17 @@ export async function GET(request: NextRequest) {
       .eq('student_id', user.id)
       .eq('course_id', lesson.course_id)
       .maybeSingle();
-    const now = new Date();
-    const paidThrough = typeof enrollment?.paid_through === 'string' ? enrollment.paid_through : '';
-    if (enrollmentError || enrollment?.status !== 'active' ||
-        enrollment.admission_fee_paid !== true ||
-        paidThrough < currentDhakaMonthEnd(now)) {
-      return unavailable();
-    }
-
-    const entitlementExpiry = entitlementExpiryFromDhakaDate(paidThrough);
-    if (!Number.isFinite(entitlementExpiry) || entitlementExpiry <= now.getTime()) return unavailable();
+    if (enrollmentError || !enrollment) return unavailable();
+    const now = Date.now();
+    const entitlementExpiresAt = resolveOfflineEntitlement({
+      profile, course, enrollment, now,
+    });
+    if (!entitlementExpiresAt) return unavailable();
 
     const result = buildOfflineLessonPackage({
       lesson,
-      entitlementExpiresAt: new Date(entitlementExpiry).toISOString(),
-      now: now.getTime(),
+      entitlementExpiresAt,
+      now,
     });
 
     return NextResponse.json(result, { headers: noStore });

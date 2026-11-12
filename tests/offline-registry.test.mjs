@@ -30,6 +30,92 @@ function manifest(overrides = {}) {
   };
 }
 
+
+class FakeRequest {
+  constructor() { this.result = undefined; this.error = null; }
+  succeed(result) { this.result = result; this.onsuccess?.(); }
+  fail(error) { this.error = error; this.onerror?.(); }
+}
+
+class FakeIndexedDb {
+  constructor() { this.databases = new Map(); }
+  open(name) {
+    const request = new FakeRequest();
+    queueMicrotask(() => {
+      let db = this.databases.get(name);
+      if (!db) {
+        db = new FakeDatabase();
+        this.databases.set(name, db);
+        request.result = db;
+        request.onupgradeneeded?.();
+      } else {
+        request.result = db;
+      }
+      request.onsuccess?.();
+    });
+    return request;
+  }
+}
+
+class FakeDatabase {
+  constructor() {
+    this.stores = new Map();
+    this.objectStoreNames = { contains: (name) => this.stores.has(name) };
+  }
+  createObjectStore(name) {
+    const records = new Map();
+    this.stores.set(name, records);
+    return { createIndex() {} };
+  }
+  transaction(name) { return new FakeTransaction(this.stores.get(name)); }
+  close() {}
+}
+
+class FakeTransaction {
+  constructor(records) { this.records = records; this.error = null; }
+  objectStore() {
+    const records = this.records;
+    return {
+      put: (record) => this.run(() => records.set(record.key, structuredClone(record))),
+      get: (key) => this.request(() => records.get(key)),
+      delete: (key) => this.run(() => records.delete(key)),
+      index: () => ({
+        getAll: (userId) => this.request(() => [...records.values()]
+          .filter((record) => record.userId === userId).map((record) => structuredClone(record))),
+        openCursor: (userId) => {
+          const request = new FakeRequest();
+          const entries = [...records.entries()].filter(([, record]) => record.userId === userId);
+          let index = 0;
+          const advance = () => queueMicrotask(() => {
+            if (index >= entries.length) {
+              request.succeed(null);
+              this.complete();
+              return;
+            }
+            const [key, value] = entries[index];
+            request.succeed({
+              value,
+              delete: () => records.delete(key),
+              continue: () => { index += 1; advance(); },
+            });
+          });
+          advance();
+          return request;
+        },
+      }),
+    };
+  }
+  request(read) {
+    const request = new FakeRequest();
+    queueMicrotask(() => { request.succeed(read()); this.complete(); });
+    return request;
+  }
+  run(write) {
+    queueMicrotask(() => { write(); this.complete(); });
+  }
+  complete() { queueMicrotask(() => this.oncomplete?.()); }
+}
+
 function memoryStorage() {
   const records = new Map();
   return {
@@ -159,4 +245,34 @@ test('clears all and only metadata belonging to the signed-out account', async (
   assert.equal((await registry.listForUser('student-a')).length, 0);
   assert.equal((await registry.listForUser('student-b')).length, 1);
   await assert.rejects(registry.clearAccount(''), /valid authenticated user ID/);
+});
+
+test('IndexedDB adapter persists, queries and deletes records by account', async () => {
+  const indexedDB = new FakeIndexedDb();
+  const storage = createIndexedDbOfflineStorage({ indexedDB });
+  const registry = createOfflineRegistry({ storage, now: () => NOW });
+
+  await registry.save({
+    userId: 'student-a',
+    manifest: manifest(),
+    entitlementExpiresAt: '2026-11-19T00:00:00.000Z',
+  });
+  await registry.save({
+    userId: 'student-b',
+    manifest: manifest(),
+    entitlementExpiresAt: '2026-11-19T00:00:00.000Z',
+  });
+
+  assert.equal((await registry.listForUser('student-a')).length, 1);
+  assert.equal((await registry.listForUser('student-b')).length, 1);
+  assert.equal(await registry.remove({
+    userId: 'student-a',
+    resourceId: 'lesson-123',
+    resourceVersion: 3,
+  }), true);
+  assert.equal((await registry.listForUser('student-a')).length, 0);
+  assert.equal((await registry.listForUser('student-b')).length, 1);
+
+  await registry.clearAccount('student-b');
+  assert.equal((await registry.listForUser('student-b')).length, 0);
 });

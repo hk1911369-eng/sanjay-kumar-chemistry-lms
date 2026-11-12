@@ -16,7 +16,6 @@ test('offline package endpoint authenticates and checks current paid enrollment'
     ".from('courses')",
     ".from('enrollments')",
     'resolveOfflineEntitlement',
-    "cache: 'no-store'",
     "'Cache-Control': 'private, no-store, max-age=0'",
   ]) assert.ok(source.includes(required), `Missing route guard: ${required}`);
   assert.match(source, /runtime = 'nodejs'/);

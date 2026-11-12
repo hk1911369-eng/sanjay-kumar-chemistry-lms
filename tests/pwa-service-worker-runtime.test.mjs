@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const workerSource = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
 
-function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clone() { return this; } }) } = {}) {
+function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clone() { return this; } }), cachePutImpl } = {}) {
   const listeners = new Map();
   const stores = new Map();
   const deleted = [];
@@ -16,7 +16,10 @@ function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clon
       const store = stores.get(name);
       return {
         async match(key) { return store.get(typeof key === 'string' ? key : key.url); },
-        async put(key, value) { store.set(typeof key === 'string' ? key : key.url, value); },
+        async put(key, value) {
+          if (cachePutImpl) return cachePutImpl(store, key, value);
+          store.set(typeof key === 'string' ? key : key.url, value);
+        },
       };
     },
     async keys() { return [...stores.keys()]; },
@@ -160,6 +163,23 @@ test('same-origin Next static assets use cache-first and cache successful networ
   assert.equal(await response, assetResponse);
   assert.equal(worker.calls.fetch.length, 1);
   assert.ok(worker.stores.get('jmt-shell-v1').has('https://academy.example/_next/static/chunks/app.js'));
+});
+
+test('static asset remains available when Cache Storage rejects a write', async () => {
+  const assetResponse = { ok: true, type: 'basic', clone() { return this; }, marker: 'network-asset' };
+  const worker = createWorker({
+    fetchImpl: async () => assetResponse,
+    cachePutImpl: async () => { throw new Error('quota exceeded'); },
+  });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/_next/static/chunks/app.js'),
+    respondWith(value) { response = value; },
+  });
+
+  assert.equal(await response, assetResponse);
+  assert.equal(worker.calls.fetch.length, 1);
+  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
 });
 
 test('cached Next static assets are served without a network request', async () => {

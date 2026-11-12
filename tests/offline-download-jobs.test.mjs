@@ -76,12 +76,12 @@ test('rejects malformed job metadata and duplicate job IDs', async () => {
 test('enforces the download lifecycle and records bounded byte progress', async () => {
   const { jobs } = fixture();
   await jobs.enqueue(input());
+  let job = await jobs.transition({ id: 'job-1', userId: 'student-a', nextState: 'downloading', bytesReceived: 256 });
+  assert.equal(job.bytesReceived, 256);
   await assert.rejects(
     jobs.transition({ id: 'job-1', userId: 'student-a', nextState: 'verifying', bytesReceived: 256 }),
     /complete byte count/
   );
-  let job = await jobs.transition({ id: 'job-1', userId: 'student-a', nextState: 'downloading', bytesReceived: 256 });
-  assert.equal(job.bytesReceived, 256);
   job = await jobs.transition({ id: 'job-1', userId: 'student-a', nextState: 'verifying', bytesReceived: 1024 });
   assert.equal(job.bytesReceived, 1024);
   await assert.rejects(

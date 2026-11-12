@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
 
     const { data: lesson, error: lessonError } = await supabase
       .from('lessons')
-      .select('id,course_id,is_published,content,updated_at')
+      .select('id,course_id,is_published,offline_allowed,content,updated_at')
       .eq('id', lessonId)
       .maybeSingle();
-    if (lessonError || !lesson || lesson.is_published !== true) return unavailable();
+    if (lessonError || !lesson || lesson.is_published !== true || lesson.offline_allowed !== true) return unavailable();
 
     const { data: course, error: courseError } = await supabase
       .from('courses')

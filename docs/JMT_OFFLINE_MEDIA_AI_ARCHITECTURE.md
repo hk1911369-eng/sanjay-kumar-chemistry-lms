@@ -305,3 +305,17 @@ A green build or static test is not acceptance. Require database/RLS tests, API/
 - No silent conflict overwrite or duplicate side effects.
 - No real student data in synthetic QA fixtures.
 - No paid media provider, new cloud service or production migration until the cost/security/release gates are satisfied.
+
+
+## 12. Implemented first vertical slice — app-shell fallback only
+
+The current implementation branch adds:
+- `public/manifest.webmanifest` and a JMT Academy SVG app icon.
+- Production/secure-context service-worker registration from the root layout.
+- A static `/offline` explanation route.
+- A versioned service worker that caches the offline fallback and immutable `/_next/static/` assets only.
+- A static guardrail test for the manifest, registration and cache boundary.
+
+This is intentionally a **small, safe first slice**, not full offline learning. It does not yet provide installability proof on target Android devices, authenticated lesson downloads, IndexedDB content storage, encryption/key lifecycle, offline practice, mutation outbox, sync RPCs, conflict resolution, entitlement leases, video offline playback or background sync. Those capabilities remain not implemented/not evidenced until separately built and tested.
+
+The service worker does not cache authenticated HTML or API responses. It must not be described as making the student dashboard, courses or exams available offline. The offline page explicitly tells learners that downloaded lessons and synchronisation are future capabilities.

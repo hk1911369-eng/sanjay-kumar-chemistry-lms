@@ -36,7 +36,7 @@ function memoryStorage() {
     records,
     async put(record) { records.set(record.key, structuredClone(record)); },
     async listByUser(userId) {
-      return [...records.values()].filter((record) => record.userId === userId).map(structuredClone);
+      return [...records.values()].filter((record) => record.userId === userId).map((record) => structuredClone(record));
     },
     async get(key) { return records.has(key) ? structuredClone(records.get(key)) : null; },
     async delete(key) { records.delete(key); },

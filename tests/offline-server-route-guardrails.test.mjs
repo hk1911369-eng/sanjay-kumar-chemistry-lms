@@ -26,6 +26,7 @@ test('offline permission defaults closed and only active admins may change it', 
   assert.match(source, /offline_allowed boolean not null default false/i);
   assert.match(source, /new\.offline_allowed is distinct from old\.offline_allowed/i);
   assert.match(source, /public\.current_role\(\).*'admin'/s);
-  assert.match(source, /before update of offline_allowed on public\.lessons/i);
+  assert.match(source, /before insert or update on public\.lessons/i);
+  assert.match(source, /tg_op = 'INSERT' and new\.offline_allowed is true/i);
   assert.match(source, /revoke all on function public\.enforce_lesson_offline_permission_admin\(\) from public, anon, authenticated/i);
 });

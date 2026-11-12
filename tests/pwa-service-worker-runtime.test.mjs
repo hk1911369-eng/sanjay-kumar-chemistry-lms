@@ -79,6 +79,16 @@ test('failed offline fallback fetch rejects installation instead of activating a
   assert.equal(worker.calls.skipWaiting, 0);
 });
 
+test('install does not activate when Cache Storage cannot persist the offline fallback', async () => {
+  const worker = createWorker({
+    cachePutImpl: async () => { throw new Error('quota exceeded'); },
+  });
+  const lifecycle = lifecycleEvent();
+  await worker.dispatch('install', lifecycle.event);
+  await assert.rejects(lifecycle.finish(), /quota exceeded/);
+  assert.equal(worker.calls.skipWaiting, 0);
+});
+
 test('activation removes only obsolete JMT shell caches', async () => {
   const worker = createWorker();
   worker.stores.set('jmt-shell-v0', new Map());
@@ -102,6 +112,19 @@ test('offline navigation returns the cached explanation after a network failure'
   });
 
   assert.deepEqual(await response, { body: 'offline explanation' });
+});
+
+test('HTTP server errors remain visible instead of being disguised as offline mode', async () => {
+  const serverError = { ok: false, status: 503, marker: 'server-unavailable' };
+  const worker = createWorker({ fetchImpl: async () => serverError });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/student/dashboard', { mode: 'navigate' }),
+    respondWith(value) { response = value; },
+  });
+
+  assert.equal(await response, serverError);
+  assert.equal(worker.stores.size, 0);
 });
 
 test('online navigation remains network-only and does not cache authenticated HTML', async () => {

@@ -138,6 +138,19 @@ test('POST requests and API reads are never intercepted or cached', async () => 
   assert.equal(worker.stores.size, 0);
 });
 
+test('ordinary same-origin GET resources are not intercepted or cached', async () => {
+  const worker = createWorker();
+  let intercepted = false;
+  await worker.dispatch('fetch', {
+    request: request('/storage/v1/object/private/student-work.pdf'),
+    respondWith() { intercepted = true; },
+  });
+
+  assert.equal(intercepted, false);
+  assert.equal(worker.calls.fetch.length, 0);
+  assert.equal(worker.stores.size, 0);
+});
+
 test('cross-origin requests are left to the browser and are not cached', async () => {
   const worker = createWorker();
   let intercepted = false;
@@ -178,6 +191,20 @@ test('static asset remains available when Cache Storage rejects a write', async 
   });
 
   assert.equal(await response, assetResponse);
+  assert.equal(worker.calls.fetch.length, 1);
+  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
+});
+
+test('unsuccessful Next static asset responses are not cached', async () => {
+  const missingAsset = { ok: false, type: 'basic', status: 404, clone() { return this; } };
+  const worker = createWorker({ fetchImpl: async () => missingAsset });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/_next/static/chunks/missing.js'),
+    respondWith(value) { response = value; },
+  });
+
+  assert.equal(await response, missingAsset);
   assert.equal(worker.calls.fetch.length, 1);
   assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
 });

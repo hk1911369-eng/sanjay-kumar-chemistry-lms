@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const routePath = new URL('../app/api/offline/lesson-package/route.ts', import.meta.url);
-const migrationPath = new URL('../supabase/migrations/20261113120000_lesson_offline_permission.sql', import.meta.url);
+const migrationPath = new URL('../supabase/migrations/20261113120000_lesson_offline_permission.sql', import.meta.url);\nconst actionPath = new URL('../app/actions/learning.ts', import.meta.url);\nconst editorPath = new URL('../app/teacher/page.tsx', import.meta.url);
 
 test('offline package endpoint authenticates and checks current paid enrollment', async () => {
   const source = await readFile(routePath, 'utf8');
@@ -29,4 +29,13 @@ test('offline permission defaults closed and only active admins may change it', 
   assert.match(source, /before insert or update on public\.lessons/i);
   assert.match(source, /tg_op = 'INSERT' and new\.offline_allowed is true/i);
   assert.match(source, /revoke all on function public\.enforce_lesson_offline_permission_admin\(\) from public, anon, authenticated/i);
+});
+
+test('lesson editor exposes offline approval only to admins and server action ignores staff input', async () => {
+  const action = await readFile(actionPath, 'utf8');
+  const editor = await readFile(editorPath, 'utf8');
+  assert.match(action, /profile\.role === 'admin'[\s\S]*offline_allowed/);
+  assert.match(action, /profile\.role === 'admin'[\s\S]*formData\.get\('offline_allowed'\)/);
+  assert.match(editor, /profile\.role==='admin'&&<label[^>]*>[\s\S]*name="offline_allowed"/);
+  assert.match(editor, /is_published,offline_allowed/);
 });

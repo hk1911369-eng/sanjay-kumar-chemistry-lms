@@ -64,6 +64,10 @@ test('splits larger lesson content into bounded chunks in manifest order', () =>
 
 test('rejects unpublished, empty, oversized and unentitled lesson packages', () => {
   assert.throws(() => buildOfflineLessonPackage({
+    lesson: lesson({ offline_allowed: false }),
+    entitlementExpiresAt: '2026-11-30T17:59:59.999Z', now: NOW,
+  }), /not approved for offline use/);
+  assert.throws(() => buildOfflineLessonPackage({
     lesson: lesson({ is_published: false }),
     entitlementExpiresAt: '2026-11-30T17:59:59.999Z', now: NOW,
   }), /not published/);

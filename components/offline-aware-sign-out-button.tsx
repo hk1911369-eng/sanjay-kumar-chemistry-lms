@@ -11,6 +11,10 @@ import {
   createIndexedDbDownloadJobStorage,
   createOfflineDownloadJobs,
 } from '@/lib/offline/download-jobs.mjs';
+import {
+  createIndexedDbOfflineVaultStorage,
+  createEncryptedOfflineVault,
+} from '@/lib/offline/encrypted-vault.mjs';
 
 export function OfflineAwareSignOutButton() {
   const [busy, setBusy] = useState(false);
@@ -21,20 +25,33 @@ export function OfflineAwareSignOutButton() {
 
     try {
       // Read the authenticated identity before the server action clears cookies.
-      // If local storage is unavailable, sign-out must still proceed.
+      // Each cleanup is independent so one unavailable database cannot block
+      // attempts to clear the other account-scoped offline stores.
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
-          const registry = createOfflineRegistry({
-            storage: createIndexedDbOfflineStorage(),
-          });
-          await registry.clearAccount(user.id);
-
-          const downloadJobs = createOfflineDownloadJobs({
-            storage: createIndexedDbDownloadJobStorage(),
-          });
-          await downloadJobs.clearAccount(user.id);\n\n          const vault = createEncryptedOfflineVault({\n            storage: createIndexedDbOfflineVaultStorage(),\n          });\n          await vault.clearAccount(user.id);
+          const cleanups = [
+            async () => {
+              const registry = createOfflineRegistry({
+                storage: createIndexedDbOfflineStorage(),
+              });
+              await registry.clearAccount(user.id);
+            },
+            async () => {
+              const downloadJobs = createOfflineDownloadJobs({
+                storage: createIndexedDbDownloadJobStorage(),
+              });
+              await downloadJobs.clearAccount(user.id);
+            },
+            async () => {
+              const vault = createEncryptedOfflineVault({
+                storage: createIndexedDbOfflineVaultStorage(),
+              });
+              await vault.clearAccount(user.id);
+            },
+          ];
+          await Promise.allSettled(cleanups.map((cleanup) => cleanup()));
         }
       } catch {
         // Cleanup is best-effort; it must never trap the user in an active session.

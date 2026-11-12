@@ -7,6 +7,10 @@ import {
   createIndexedDbOfflineStorage,
   createOfflineRegistry,
 } from '@/lib/offline/registry.mjs';
+import {
+  createIndexedDbDownloadJobStorage,
+  createOfflineDownloadJobs,
+} from '@/lib/offline/download-jobs.mjs';
 
 export function OfflineAwareSignOutButton() {
   const [busy, setBusy] = useState(false);

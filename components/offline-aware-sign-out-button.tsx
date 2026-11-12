@@ -34,7 +34,7 @@ export function OfflineAwareSignOutButton() {
           const downloadJobs = createOfflineDownloadJobs({
             storage: createIndexedDbDownloadJobStorage(),
           });
-          await downloadJobs.clearAccount(user.id);
+          await downloadJobs.clearAccount(user.id);\n\n          const vault = createEncryptedOfflineVault({\n            storage: createIndexedDbOfflineVaultStorage(),\n          });\n          await vault.clearAccount(user.id);
         }
       } catch {
         // Cleanup is best-effort; it must never trap the user in an active session.

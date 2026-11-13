@@ -13,21 +13,22 @@ test('restrictive parent-course publication guards cover all student course-cont
   assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 11);
 });
 
-test('student access requires active student role and a published, unarchived parent course', async () => {
+test('student content access requires published and unarchived parent courses', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 10);
-  assert.equal((sql.match(/c\.is_published IS TRUE/g) ?? []).length, 10);
-  assert.equal((sql.match(/c\.archived_at IS NULL/g) ?? []).length, 10);
-  assert.match(sql, /ON public\\.courses AS RESTRICTIVE FOR SELECT TO authenticated[\\s\\S]*?AND is_published IS TRUE[\\s\\S]*?AND archived_at IS NULL/);
+  assert.equal((sql.match(/\\(SELECT public\\.current_role\\(\\)\\) = 'student'::public\\.app_role/g) ?? []).length, 10);
+  assert.equal((sql.match(/c\\.is_published IS TRUE/g) ?? []).length, 10);
+  assert.equal((sql.match(/c\\.archived_at IS NULL/g) ?? []).length, 10);
+  assert.ok(sql.includes('ON public.courses AS RESTRICTIVE FOR SELECT TO authenticated'));
+  assert.ok(sql.includes('AND is_published IS TRUE\n    AND archived_at IS NULL'));
 });
 
 test('admin and teaching-staff roles remain allowed by the restrictive guard and existing policies retain row scope', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal((sql.match(/'admin'::public\.app_role, 'teacher'::public\.app_role, 'staff'::public\.app_role/g) ?? []).length, 11);
+  assert.equal((sql.match(/'admin'::public\\.app_role, 'teacher'::public\\.app_role, 'staff'::public\\.app_role/g) ?? []).length, 11);
   assert.match(sql, /Existing permissive policies continue to decide which assigned staff and paid/);
 });
 
 test('migration is read-policy-only and does not rewrite course or learner records', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.doesNotMatch(sql, /\b(INSERT\s+INTO|UPDATE\s+public\.|DELETE\s+FROM|TRUNCATE\s+TABLE|DROP\s+TABLE)\b/i);
+  assert.doesNotMatch(sql, /\\b(INSERT\\s+INTO|UPDATE\\s+public\\.|DELETE\\s+FROM|TRUNCATE\\s+TABLE|DROP\\s+TABLE)\\b/i);
 });

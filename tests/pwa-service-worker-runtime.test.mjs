@@ -341,7 +341,7 @@ test('install rejects redirected Next assets instead of caching unrelated HTML',
   });
   const lifecycle = lifecycleEvent();
   await worker.dispatch('install', lifecycle.event);
-  await assert.rejects(lifecycle.finish(), /resolved outside immutable Next assets/);
+  await assert.rejects(lifecycle.finish(), /valid static asset/);
   assert.equal(worker.calls.skipWaiting, 0);
   assert.equal(worker.stores.get('jmt-shell-v2').has('/_next/static/chunks/offline-library.js'), false);
 });

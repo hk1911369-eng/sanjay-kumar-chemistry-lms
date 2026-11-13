@@ -37,6 +37,9 @@ test('offline route exposes the encrypted account-scoped library without renderi
 test('service worker caches only offline fallback and immutable Next static assets', async () => {
   const worker = await read('../public/sw.js');
   assert.match(worker, /const OFFLINE_URL = '\/offline'/);
+  assert.match(worker, /const CACHE_NAME = 'jmt-shell-v2'/);
+  assert.match(worker, /await caches\.delete\(CACHE_NAME\)/);
+  assert.match(worker, /Start with a clean versioned cache/);
   assert.match(worker, /url\.pathname\.startsWith\('\/_next\/static\/'\)/);
   assert.match(worker, /request\.mode === 'navigate'/);
   assert.match(worker, /cache\.match\(OFFLINE_URL\)/);

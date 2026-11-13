@@ -78,6 +78,47 @@ test('stores only authenticated ciphertext and opens a verified package for its 
   assert.deepEqual(opened.bytes, f.full);
 });
 
+test('concurrent first downloads reuse one atomic account key across tabs', async () => {
+  const storage = memoryStorage();
+  const originalGetKey = storage.getKey.bind(storage);
+  let reads = 0;
+  let releaseReads;
+  const bothReads = new Promise((resolve) => { releaseReads = resolve; });
+  storage.getKey = async (userId) => {
+    reads += 1;
+    if (reads === 2) releaseReads();
+    await bothReads;
+    return originalGetKey(userId);
+  };
+  storage.putKey = async (userId, key) => {
+    if (storage.keys.has(userId)) throw new Error('ConstraintError');
+    storage.keys.set(userId, key);
+  };
+
+  const vaultA = makeVault(storage);
+  const vaultB = makeVault(storage);
+  const f = fixture();
+  const manifestB = { ...f.manifest, resourceId: 'lesson-43' };
+  await Promise.all([
+    vaultA.savePackage({
+      userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+      entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    }),
+    vaultB.savePackage({
+      userId: 'student-a', manifest: manifestB, chunks: f.chunks,
+      entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    }),
+  ]);
+
+  assert.equal(storage.keys.size, 1);
+  assert.equal((await vaultA.openPackage({
+    userId: 'student-a', resourceId: 'lesson-42', resourceVersion: 3,
+  })).ok, true);
+  assert.equal((await vaultB.openPackage({
+    userId: 'student-a', resourceId: 'lesson-43', resourceVersion: 3,
+  })).ok, true);
+});
+
 test('does not allow another account to open or remove a package', async () => {
   const storage = memoryStorage();
   const vault = makeVault(storage);

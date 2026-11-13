@@ -26,6 +26,11 @@ ALTER TABLE public.assignment_submission_versions ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.assignment_submission_versions FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.assignment_submission_versions TO authenticated;
 
+-- Recreate the policy safely when schema effects exist but the migration version
+-- is missing from the ledger. This avoids a duplicate-policy failure on replay.
+DROP POLICY IF EXISTS "assignment submission versions visible to owner and assigned staff"
+  ON public.assignment_submission_versions;
+
 CREATE POLICY "assignment submission versions visible to owner and assigned staff"
 ON public.assignment_submission_versions
 FOR SELECT TO authenticated

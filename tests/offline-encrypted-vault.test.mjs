@@ -151,3 +151,21 @@ test('account cleanup removes its key, metadata and encrypted chunks only', asyn
   assert.equal(storage.packages.size, 0);
   assert.equal(storage.chunks.size, 0);
 });
+
+test('does not generate a replacement key when an existing package key is missing', async () => {
+  const storage = memoryStorage();
+  const vault = makeVault(storage);
+  const f = fixture();
+  await vault.savePackage({
+    userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+    entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+  });
+  storage.keys.delete('student-a');
+
+  const opened = await vault.openPackage({
+    userId: 'student-a', resourceId: 'lesson-42', resourceVersion: 3,
+  });
+  assert.deepEqual(opened, { ok: false, reason: 'encryption_key_missing' });
+  assert.equal(storage.keys.has('student-a'), false);
+  assert.equal(storage.packages.size, 1);
+});

@@ -806,3 +806,9 @@ JMT Test's migration ledger ends at `20261111133701`, while the audit branch has
 The live quiz-attempt insert column grants are deliberately limited to the four fields used by the application and are not a defect. The lesson-material Storage read policy's lesson lookup is subject to lesson RLS, so the branch's restrictive lesson read guard is expected to close its parent-course publication gap once safely installed; it does not currently exist in JMT Test.
 
 No database changes were made. Do not bulk replay the newer migrations: reconcile each effect and ledger version first, and preserve the previously identified duplicate-policy migration hazard. The isolated test project is read-only for this audit; production is untouched.
+
+## Additional database control checks — 13 November 2026
+
+Further live catalog review found several important baseline controls already working: RLS is enabled on all ordinary tables in the inspected exposed `public` schema; no UPDATE policy lacks `WITH CHECK`; the lab practical analytics view uses `security_invoker=true` and its underlying review-history/notebook policies scope staff to assigned courses; and no inspected SECURITY DEFINER function has default PUBLIC EXECUTE. The intentionally public course-teacher lookup is explicitly granted to anon/authenticated and is narrowly scoped to published courses. The public schema is not CREATE-writable by anon, authenticated, or service_role.
+
+These are positive controls, not evidence that all policies are correct. The outstanding parent-course publication and payment/grading migration gaps remain. The Auth leaked-password protection advisor finding cannot be independently verified or changed through the currently available read-only connector actions.

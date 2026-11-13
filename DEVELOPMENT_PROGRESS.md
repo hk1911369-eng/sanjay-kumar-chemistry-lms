@@ -63,3 +63,9 @@ The verification bullets above record an earlier development checkpoint. They mu
 - Reconciled the thirteen 13-November security migrations against live JMT Test catalog state. Several are genuinely absent; others are already represented in schema despite ledger gaps. See `AUDIT_REPORT.md` for the object-by-object reconciliation.
 - No Supabase migration was applied. No Auth, Storage, production, payment, enrollment or profile data was changed.
 - PR #42 remains open and draft. The next safe phase is migration-history reconciliation plus authenticated PostgreSQL integration tests in the isolated test project, only after explicit authorization to mutate that test database.
+
+## Latest verification extension — 13 November 2026
+
+- Confirmed CI run `43436664528` passed on exact PR head `291791250f4eb9ff2a868ba19ea740b83cfaf3a5`; check-run conclusion is success. The combined commit-status API still has zero entries and reports pending, so only the Actions check-run is described as passed.
+- Additional live checks: all inspected exposed public tables have RLS enabled; no UPDATE policy lacks WITH CHECK; the practical analytics view is security-invoker and underlying RLS scopes staff to assigned courses; no inspected SECURITY DEFINER function is PUBLIC-executable; public schema CREATE is unavailable to anon/authenticated/service_role.
+- No database or Auth settings changed. The Auth leaked-password-protection advisor finding remains open because no read-only Auth settings action is exposed.

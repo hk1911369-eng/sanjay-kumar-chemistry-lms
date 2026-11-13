@@ -992,3 +992,17 @@ The isolated JMT Test project's migration ledger currently ends at `202611111337
 - `20261113250000`: the monthly-payment approval-time enrollment recheck trigger is not present in JMT Test.
 
 **Safety boundary:** These findings were obtained from catalog, function, policy, trigger, privilege and migration-ledger reads only. No migration was applied; no database rows, Auth settings, Storage objects, production resources, or payment/enrollment records were changed. Before any test-database application, reconcile already-present effects and migration-version records individually, and resolve the duplicate-policy hazard previously identified in the assignment-submission-history migration. Production remains out of scope.
+
+## Additional RLS and privileged-object checks — 13 November 2026
+
+A further catalog pass checked exposed public-schema tables, UPDATE policies, views, function EXECUTE ACLs and schema privileges.
+
+**Positive controls verified in JMT Test**
+- Every ordinary table returned by the public-schema inventory has RLS enabled. No exposed ordinary table was found with RLS disabled.
+- No public UPDATE policy was found without a corresponding `WITH CHECK` expression.
+- The `lab_practical_analytics` view is explicitly `security_invoker=true`, not an owner-privileged view. Its underlying notebook and review-history RLS policies scope teacher/staff reads to assigned courses; its aggregate also suppresses groups smaller than five students.
+- No public-schema SECURITY DEFINER function in the inspected inventory has EXECUTE granted to `PUBLIC`. The public course-teacher lookup is explicitly granted to `anon` and `authenticated` and returns only the intended public teacher listing for published courses.
+- `anon`, `authenticated`, and `service_role` do not have CREATE privilege on schema `public`; only the database owner does. This reduces the practical search-path object-shadowing risk for the one SECURITY INVOKER trigger function whose configured path is `public`.
+
+**Interpretation**
+These checks reduce concern about blanket RLS disablement, missing UPDATE postconditions, unsafe public view execution, and default PUBLIC function execution. They do not prove every row-level policy correct, nor do they clear the already documented parent-course publication gaps or payment/grading migration gaps. The leaked-password protection advisor finding remains unresolved because no read-only Auth configuration endpoint was available in the connected tool set.

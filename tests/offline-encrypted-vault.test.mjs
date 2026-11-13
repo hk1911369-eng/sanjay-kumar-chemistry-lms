@@ -42,7 +42,7 @@ function memoryStorage() {
       packages.set(record.key, structuredClone(record));
       chunks.set(record.key, structuredClone(encrypted));
     },
-    async getPackage(key) { return structuredClone(packages.get(key) ?? null); },
+    async getPackage(key) { return structuredClone(packages.get(key) ?? null); },\n    async listPackages(userId) { return structuredClone([...packages.values()].filter((record) => record.userId === userId)); },
     async getChunks(key) { return structuredClone(chunks.get(key) ?? []); },
     async deletePackage(key) { packages.delete(key); chunks.delete(key); },
     async deleteAccount(userId) {
@@ -168,4 +168,28 @@ test('does not generate a replacement key when an existing package key is missin
   assert.deepEqual(opened, { ok: false, reason: 'encryption_key_missing' });
   assert.equal(storage.keys.has('student-a'), false);
   assert.equal(storage.packages.size, 1);
+});
+
+test('offline library lists only safe metadata for the requested account', async () => {
+  const storage = memoryStorage();
+  const vault = makeVault(storage);
+  const f = fixture();
+  await vault.savePackage({
+    userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+    entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    title: 'Atomic Structure',
+  });
+  await vault.savePackage({
+    userId: 'student-b', manifest: { ...f.manifest, resourceId: 'lesson-43' },
+    chunks: f.chunks, entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    title: 'Other student lesson',
+  });
+
+  const listed = await vault.listForUser('student-a');
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].title, 'Atomic Structure');
+  assert.equal(listed[0].resourceId, 'lesson-42');
+  assert.equal('manifest' in listed[0], false);
+  assert.equal('bytes' in listed[0], false);
+  assert.deepEqual(await vault.listForUser('student-b').then((items) => items.map((item) => item.title)), ['Other student lesson']);
 });

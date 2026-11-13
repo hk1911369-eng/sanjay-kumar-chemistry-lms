@@ -24,11 +24,14 @@ test('root layout exposes the manifest and registers the progressive enhancement
   assert.match(registration, /window\.isSecureContext/);
 });
 
-test('offline route is a static explanation and does not imply that private content is available', async () => {
+test('offline route exposes the encrypted account-scoped library without rendering untrusted HTML', async () => {
   const page = await read('../app/offline/page.tsx');
-  assert.match(page, /currently offline/i);
-  assert.match(page, /Downloaded lessons and\s+synchr(on|oniz)isation will become available/);
-  assert.doesNotMatch(page, /createClient\(|supabase|service_role/i);
+  assert.match(page, /Offline lessons/);
+  assert.match(page, /auth\\.getSession\\(\\)/);
+  assert.match(page, /listForUser\\(currentUserId\\)/);
+  assert.match(page, /openPackage\\(/);
+  assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
+  assert.doesNotMatch(page, /service_role/i);
 });
 
 test('service worker caches only offline fallback and immutable Next static assets', async () => {

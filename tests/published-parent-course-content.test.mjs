@@ -6,16 +6,16 @@ const migrationPath = '../supabase/migrations/20261113160000_require_published_p
 
 test('restrictive parent-course publication guards cover all student course-content read paths', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  const tables = ['assignments','chapters','lessons','lesson_resources','live_classes','quizzes','written_exams','quiz_questions','written_exam_questions','course_subjects'];
+  const tables = ['assignments','chapters','lessons','lesson_resources','live_classes','quizzes','written_exams','quiz_questions','written_exam_questions','course_subjects','courses'];
   for (const table of tables) {
     assert.match(sql, new RegExp('CREATE POLICY "published parent course read guard"\\s+ON public\\.' + table + ' AS RESTRICTIVE FOR SELECT TO authenticated'));
   }
-  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 10);
+  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 11);
 });
 
 test('student access requires active student role and a published, unarchived parent course', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 9);
+  assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.is_published IS TRUE/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.archived_at IS NULL/g) ?? []).length, 10);
 });

@@ -188,3 +188,21 @@ USING (
       AND c.archived_at IS NULL
   )
 );
+
+
+-- The student course catalogue must apply the same archive boundary as the
+-- public catalogue. Without this restrictive policy, authenticated students
+-- could still read metadata for published courses after they are archived.
+DROP POLICY IF EXISTS "published parent course read guard" ON public.courses;
+CREATE POLICY "published parent course read guard"
+ON public.courses AS RESTRICTIVE FOR SELECT TO authenticated
+USING (
+  (SELECT public.current_role()) IN (
+    'admin'::public.app_role, 'teacher'::public.app_role, 'staff'::public.app_role
+  )
+  OR (
+    (SELECT public.current_role()) = 'student'::public.app_role
+    AND is_published IS TRUE
+    AND archived_at IS NULL
+  )
+);

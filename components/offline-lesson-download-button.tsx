@@ -16,11 +16,9 @@ import {
 export function OfflineLessonDownloadButton({
   userId,
   lessonId,
-  lessonTitle,
 }: {
   userId: string;
   lessonId: string;
-  lessonTitle: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');

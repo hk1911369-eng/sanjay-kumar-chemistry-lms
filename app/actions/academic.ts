@@ -82,7 +82,11 @@ export async function gradeAssignment(formData:FormData) {
  const {data:submission}=await supabase.from('assignment_submissions').select('id,assignment_id,assignment:assignments(course_id,max_marks)').eq('id',submissionId).maybeSingle();
  const a:any=submission?.assignment;
  if(!submission||!a||!await canTeach(supabase,user.id,role,a.course_id)||!Number.isFinite(marks)||marks<0||marks>a.max_marks||feedback.length>4000) redirect('/academic?error=grading');
- const {error}=await supabase.from('assignment_submissions').update({marks,teacher_feedback:feedback,graded_by:user.id,graded_at:new Date().toISOString()}).eq('id',submissionId);
+ const {error}=await supabase.rpc('grade_assignment_submission',{
+  p_submission_id:submissionId,
+  p_marks:marks,
+  p_feedback:feedback,
+ });
  redirect(error?'/academic?error=grading':'/academic?saved=grade');
 }
 

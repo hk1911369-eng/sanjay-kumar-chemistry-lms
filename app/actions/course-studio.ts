@@ -6,7 +6,7 @@ const modes=['live_recorded','recorded_only','offline'];
 const money=(v:FormDataEntryValue|null)=>{if(v===null||String(v).trim()==='')return null;const n=Number(v);return Number.isSafeInteger(n)&&n>=0?n:-1};
 export async function saveAcademyCourse(fd:FormData){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
- const {data:me}=await db.from('profiles').select('role').eq('id',user.id).single();if(me?.role!=='admin')redirect('/portal');
+ const {data:me}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();if (me?.is_active !== true || me.role !== 'admin') redirect('/portal');
  const id=String(fd.get('course_id')??'');const title=String(fd.get('title')??'').trim();const group=String(fd.get('programme_group')??'');
  const subjects=[...new Set(String(fd.get('subjects')??'').split(',').map(x=>x.trim()).filter(Boolean))].slice(0,20);
  const selected=fd.getAll('delivery_modes').map(String).filter(x=>modes.includes(x));
@@ -60,8 +60,8 @@ export async function setCourseArchived(formData: FormData) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
-  const { data: me } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin') redirect('/portal');
+  const { data: me } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (me?.is_active !== true || me.role !== 'admin') redirect('/portal');
 
   const courseId = String(formData.get('course_id') ?? '');
   const archivedValue = String(formData.get('archived') ?? '');

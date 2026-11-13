@@ -171,7 +171,7 @@ test('the broad student learning-event insert policy is removed', async () => {
 test('student dashboard completes revision tasks through the guarded database RPC', async () => {
   const action = await readFile(new URL('../app/actions/learning.ts', import.meta.url), 'utf8');
   assert.ok(action.includes("rpc('complete_revision_task', { p_task_id: taskId })"));
-  assert.ok(action.includes("profile?.role !== 'student'"));
+  assert.ok(action.includes("profile?.is_active !== true || profile.role !== 'student'"));
   const dashboard = await readFile(new URL('../components/learning-os-dashboard.tsx', import.meta.url), 'utf8');
   assert.ok(dashboard.includes('completeRevisionTask'));
   assert.ok(dashboard.includes('Mark revision complete'));

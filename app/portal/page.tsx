@@ -9,7 +9,7 @@ export default async function PortalRouter() {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role,is_active')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -17,6 +17,7 @@ export default async function PortalRouter() {
   // the student dashboard correctly rejects non-student accounts, which
   // previously sent the browser straight back here and caused a redirect loop.
   if (error || !profile?.role) redirect('/account-pending');
+  if (profile.is_active !== true) redirect('/account-disabled');
 
   switch (profile.role) {
     case 'admin':

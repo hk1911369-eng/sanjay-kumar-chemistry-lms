@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import './responsive.css';
 import { LocaleDocumentLanguage } from '@/components/locale-document-language';
 import { Inter, Noto_Sans_Bengali } from 'next/font/google';
 

@@ -17,7 +17,7 @@ JMT Academy is a multi-subject Learning Operating System. Chemistry is a subject
 - Added indexes for the new Learning OS foreign-key relationships.
 - Added a complete subject-agnostic roadmap covering adaptive learning, AI tutoring, prediction, social learning, virtual labs, parent access, offline-first delivery and SaaS tenancy.
 
-## Verification
+## Verification — historical snapshot; recheck before release
 
 - Supabase migrations for the foundation, event integrity, subject-scoped staff visibility and foreign-key indexes have been applied.
 - All Learning OS tables have RLS enabled and anonymous table access revoked.
@@ -33,3 +33,61 @@ JMT Academy is a multi-subject Learning Operating System. Chemistry is a subject
 - HSC/admission predictions must wait for sufficient historical outcomes and calibration; no unsupported admission probabilities or guaranteed results will be shown.
 - Tenant isolation must be implemented across every table, storage path, background job and query before exposing white-label institute workspaces.
 - Supabase Auth leaked-password protection remains a dashboard-only setting; it has not been enabled through the available project controls.
+
+
+## Verification status clarification — 11 November 2026
+
+The verification bullets above record an earlier development checkpoint. They must not be read as proof of the current live database state or as a complete verification of the current 218-migration branch.
+
+- The latest previously verified successful CI run was for commit `a1085ca334ff7a5d7423383ee50ede79af5e2fd4` (guardrail tests, ESLint, TypeScript, production build, production dependency audit). The latest audit check found no workflow run for the then-current PR head. The current head must not be described as CI-green until a workflow run completes successfully.
+- The current repository does not contain a visible Supabase local configuration, pgTAP suite, or PostgreSQL integration-test workflow. The CI checks source and application build behavior, not live RLS policies under distinct database roles.
+- Statements above about migrations being applied, all Learning OS tables having RLS, and production having no courses describe the state reported at the earlier checkpoint. Reconfirm against the actual Supabase project's migration history and schema before relying on them.
+- Do not infer that the full current migration set has been applied to either test or production from the source tree. The private lab evidence migration specifically comments that it was applied to the isolated JMT Test project and not production at that time.
+- Production deployment remains gated on database-history reconciliation, runtime role/Storage tests, and the remaining release checks documented in `AUDIT_REPORT.md`.
+
+
+## Security remediation checkpoint — 13 November 2026
+
+- Added a guarded assignment-grading RPC and routed the server action through it; source regression test added.
+- Added approval-time revalidation for monthly-payment enrollment status, admission-paid state, and delivery-mode consistency; source regression test added.
+- These migrations are pushed to the audit branch but have not been applied to JMT Test or production.
+- Latest verified CI at commit 'c3e6c8859d428381b503716de65a7bbec9e925c5' passed the test, lint, TypeScript, build, and production dependency-audit steps. Recheck CI on the next branch head before release decisions.
+- Outstanding: reconcile migration history before applying any migration, add PostgreSQL role-level integration tests, resolve the legacy NULL-mode initial-payment policy using a verified grandfathering rule, and complete the remaining live Auth/Storage/RLS checks.
+
+
+## Latest audit continuation — 13 November 2026
+
+- Rechecked PR #42 against its exact current head, `c5252ad5ff4334ce8a909a4cb3ad6d1483e2cb23`.
+- CI run `43435615640` completed successfully on that exact SHA: guardrail tests, ESLint, TypeScript, production build and production dependency audit all passed.
+- Combined commit-status endpoint still reports `pending` with zero status entries; the successful GitHub Actions check-run is the verified CI result.
+- Reconciled the thirteen 13-November security migrations against live JMT Test catalog state. Several are genuinely absent; others are already represented in schema despite ledger gaps. See `AUDIT_REPORT.md` for the object-by-object reconciliation.
+- No Supabase migration was applied. No Auth, Storage, production, payment, enrollment or profile data was changed.
+- PR #42 remains open and draft. The next safe phase is migration-history reconciliation plus authenticated PostgreSQL integration tests in the isolated test project, only after explicit authorization to mutate that test database.
+
+## Latest verification extension — 13 November 2026
+
+- Confirmed CI run `43436664528` passed on exact PR head `291791250f4eb9ff2a868ba19ea740b83cfaf3a5`; check-run conclusion is success. The combined commit-status API still has zero entries and reports pending, so only the Actions check-run is described as passed.
+- Additional live checks: all inspected exposed public tables have RLS enabled; no UPDATE policy lacks WITH CHECK; the practical analytics view is security-invoker and underlying RLS scopes staff to assigned courses; no inspected SECURITY DEFINER function is PUBLIC-executable; public schema CREATE is unavailable to anon/authenticated/service_role.
+- No database or Auth settings changed. The Auth leaked-password-protection advisor finding remains open because no read-only Auth settings action is exposed.
+
+
+## Latest exact-head verification — 13 November 2026
+
+- Pushed combined source/test commit `0a68792cc8de1518c2dc90e2ccd3aced2f781385` to `audit/jmt-master-prompt-follow-through`.
+- CI run `43439956582` passed on that exact SHA: guardrail tests, ESLint, TypeScript, production build and production dependency audit. The audit reported zero production dependency vulnerabilities.
+- The content-read migration now covers eleven tables, including student course metadata and course-subject metadata; the student role branch is explicit in both.
+- PR #42 remains open and draft. Its current review surface is 1,348 commits, 394 changed files, 34,407 additions and 682 deletions. This is a significant review/scope risk; green CI is not approval to merge.
+- The combined commit-status endpoint reports pending with zero entries; the successful Actions check-run above is the verified CI result.
+- No database migration, Auth setting, Storage object, production resource, PR merge or deployment was changed.
+
+
+## Current exact-head verification — 13 November 2026
+
+- Current PR #42 head: `80254c4d08d42b5d39be88471fdc879bf037d752`.
+- GitHub Actions run `43440477477` passed on that exact SHA: guardrail tests, ESLint, TypeScript, production build, and production dependency audit.
+- Source branch includes parent-course publication/archive read guards for eleven tables, a guarded assignment-grading RPC, quiz/learning/exam access guards, active-student payment approval validation, role-change audit, and monthly-payment approval-time enrollment revalidation. These source migrations have not been applied to JMT Test.
+- Read-only JMT Test review found several of those effects absent and other migration effects already present despite missing ledger versions. The ledger ends at `20261111133701`; do not bulk-replay. A duplicate-policy hazard must be resolved before any migration application.
+- Remaining live gaps include quiz attempt start/submission, lesson/simulation completion, exam-plan creation, active-student payment approval, profile role-change audit, grading RPC, and monthly-payment approval-time recheck.
+- Positive controls: inspected public tables have RLS enabled; no inspected UPDATE policy lacks WITH CHECK; practical analytics is security-invoker; no inspected SECURITY DEFINER function has PUBLIC EXECUTE; anon/authenticated/service_role cannot CREATE in public.
+- Auth leaked-password protection remains an unresolved advisor finding; the connected tools do not expose a read-only Auth configuration setting.
+- PR #42 remains open and draft (1,349 commits, 394 changed files). No database, Auth, Storage, production, merge, or deployment changes were made. Source CI does not replace database role-matrix testing.

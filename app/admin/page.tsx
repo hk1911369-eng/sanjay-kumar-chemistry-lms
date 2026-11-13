@@ -5,14 +5,15 @@ import { createClient } from '@/lib/supabase/server';
 import { updatePaymentSettings } from '@/app/actions/payments';
 import { assignTeacher, publishAnnouncement, setCoursePublication } from '@/app/actions/learning';
 import { PaymentReviewForm } from '@/components/payment-review-form';
+import { PaymentReconciliation } from '@/components/payment-reconciliation';
 
 export default async function AdminDashboard({ searchParams }: { searchParams: Promise<{ review_error?: string; review_success?: string; settings_error?: string; settings_success?: string; assignment_error?: string; assignment_success?: string; announcement_error?: string; announcement_success?: string; course_error?: string; course_success?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('full_name,role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
   const [studentsResult,pendingResult,enrollmentResult,coursesResult,submissionResult,settingsResult,teachersResult,assignmentsResult,noticesResult,auditResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
     supabase.from('manual_payment_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending_review'),
@@ -64,6 +65,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       <h2 id="audit-log">Recent admin audit log</h2>
       {(auditLogs??[]).length===0?<p className="muted">No recorded admin actions yet.</p>:<div className="table-scroll"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Record</th><th>Details</th></tr></thead><tbody>{(auditLogs??[]).map(row=><tr key={row.id}><td>{new Date(row.created_at).toLocaleString('en-GB',{timeZone:'Asia/Dhaka'})}</td><td>{auditActorNames.get(row.actor_id)||'System'}</td><td>{row.action.replaceAll('_',' ')}</td><td>{row.target_type} · {row.target_id||'—'}</td><td>{row.metadata?.amount_bdt?('৳'+Number(row.metadata.amount_bdt).toLocaleString('en-BD')):row.metadata?.course_id?courseNames.get(row.metadata.course_id)||'Course action':'—'}</td></tr>)}</tbody></table></div>}
       <p className="muted small-note">Financial and payment actions are recorded for administrator review. This log is read-only.</p>
+      <PaymentReconciliation />
       <h2 id="payment-reviews">Pending payment reviews</h2>
       {(submissions ?? []).length === 0 ? <p className="muted">No pending payment submissions.</p> : <div className="portal-grid review-grid">{submissions!.map(p => <article className="portal-card" key={p.id}>
         <span className="auth-kicker">{p.provider.toUpperCase()} · {p.payment_kind === 'initial' ? 'ADMISSION + FIRST MONTH' : p.payment_kind === 'monthly' ? 'MONTHLY TUITION' : 'PREVIOUS PAYMENT'} · PENDING REVIEW</span><h3>{courseNames.get(p.course_id) ?? 'JMT Academy course'}</h3>

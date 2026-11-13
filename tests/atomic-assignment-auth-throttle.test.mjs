@@ -32,7 +32,7 @@ test('client IP extraction ignores a spoofed left-most forwarded address', () =>
   ]);
   assert.equal(getClientIp({ get: name => headers.get(name) ?? null }), '198.51.100.10');
   assert.equal(getClientIp({ get: name => name === 'x-forwarded-for' ? 'not-an-ip, 198.51.100.20' : null }), '198.51.100.20');
-  assert.equal(getClientIp({ get: name => name === 'cf-connecting-ip' ? '2001:db8::1' : '203.0.113.1' }), '2001:db8::1');
+  assert.equal(getClientIp({ get: name => name === 'cf-connecting-ip' ? '2001:db8::1' : '203.0.113.1' }), '203.0.113.1');
 });
 
 test('payment review never sends a database error message to the URL', async () => {

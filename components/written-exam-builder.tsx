@@ -6,7 +6,7 @@ import { createWrittenExam } from '@/app/actions/academic';
 type Question = { question_type:'mcq'|'short_answer'|'long_answer'; question_text:string; marks:number; options:string[]; correct_option:number; model_answer:string };
 const fresh = ():Question => ({question_type:'mcq',question_text:'',marks:1,options:['','','',''],correct_option:0,model_answer:''});
 
-export function WrittenExamBuilder({courses}:{courses:{id:string;title:string}[]}) {
+export function WrittenExamBuilder({courses,canPublish=false}:{courses:{id:string;title:string}[];canPublish?:boolean}) {
  const [questions,setQuestions]=useState<Question[]>([fresh()]);
  const update=(index:number,patch:Partial<Question>)=>setQuestions(current=>current.map((q,i)=>i===index?{...q,...patch}:q));
  return <form action={createWrittenExam} className="auth-form portal-card">
@@ -26,7 +26,7 @@ export function WrittenExamBuilder({courses}:{courses:{id:string;title:string}[]
    {questions.length>1&&<button type="button" className="quiet-button" onClick={()=>setQuestions(current=>current.filter((_,j)=>j!==i))}>Remove question</button>}
   </fieldset>)}
   {questions.length<30&&<button type="button" className="quiet-button" onClick={()=>setQuestions(current=>[...current,fresh()])}>+ Add another question</button>}
-  <label className="toggle-label"><input type="checkbox" name="published"/> Publish exam immediately</label>
+  {canPublish?<label className="toggle-label"><input type="checkbox" name="published"/> Publish exam immediately</label>:<p className="muted">Written exams are saved as drafts. An administrator must publish them.</p>}
   <button className="auth-submit">Save written exam</button>
  </form>;
 }

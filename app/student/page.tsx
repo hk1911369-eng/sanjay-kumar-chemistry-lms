@@ -7,6 +7,7 @@ import { submitManualPayment } from '@/app/actions/payments';
 import { LearningOSDashboard } from '@/components/learning-os-dashboard';
 import { updateStudentDetails } from '@/app/actions/student-management';
 import { MONTHLY_FEE_BDT, currentBangladeshBillingPeriod, billingMonthEnd } from '@/lib/pricing';
+import { rankLearningActions } from '@/lib/learning-action-ranking.mjs';
 
 const paymentErrors: Record<string, string> = {
   invalid: 'তথ্যগুলো যাচাই করুন। Transaction ID কমপক্ষে ৫ অক্ষরের হতে হবে।',
@@ -21,13 +22,13 @@ const paymentErrors: Record<string, string> = {
   migration_required: 'The academy is preparing the new learning-format payment system. Please try again after the database update is complete.',
 };
 
-export default async function StudentDashboard({ searchParams }: { searchParams: Promise<{ payment_error?: string; payment_success?: string; profile_error?: string; profile_success?: string; learning_error?: string; application_submitted?: string }> }) {
+export default async function StudentDashboard({ searchParams }: { searchParams: Promise<{ payment_error?: string; payment_success?: string; profile_error?: string; profile_success?: string; learning_error?: string; revision_error?: string; application_submitted?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role,student_code,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact').eq('id', user.id).single();
-  if (profile?.role !== 'student') redirect('/portal');
+  const { data: profile } = await supabase.from('profiles').select('full_name,phone,role,is_active,student_code,guardian_name,guardian_phone,college_name,location,avatar_path,admission_date,date_of_birth,gender,blood_group,emergency_contact').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'student') redirect('/portal');
   const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from('student-avatars').createSignedUrl(profile.avatar_path, 1800) : { data: null };
   const avatarUrl = avatarData?.signedUrl ?? null;
 
@@ -69,7 +70,7 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   const attendanceSummary={present:attendanceRows.filter(a=>a.status==='present').length,absent:attendanceRows.filter(a=>a.status==='absent').length,late:attendanceRows.filter(a=>a.status==='late').length,excused:attendanceRows.filter(a=>a.status==='excused').length};
   const [goalResult, revisionResult, masteryResult, mistakeResult] = await Promise.all([
     supabase.from('learner_study_goals').select('id,goal_type,target_value,current_value,period_start,period_end,course_id,status').eq('student_id',user.id).in('status',['active','completed']).order('period_end',{ascending:true}).limit(8),
-    supabase.from('revision_tasks').select('id,title,scheduled_for,priority,course_id,concept_id').eq('student_id',user.id).eq('status','pending').order('scheduled_for',{ascending:true}).limit(8),
+    supabase.from('revision_tasks').select('id,title,scheduled_for,priority,course_id,concept_id,source_type').eq('student_id',user.id).eq('status','pending').order('scheduled_for',{ascending:true}).limit(8),
     supabase.from('learner_concept_mastery').select('concept_id,mastery_score,confidence,evidence_count,next_review_at,learning_concepts(title,academic_subjects(name))').eq('student_id',user.id).order('mastery_score',{ascending:true}).limit(12),
     supabase.from('learner_mistake_memory').select('id,course_id,source_type,mistake_type,prompt_snapshot,response_snapshot,correct_answer_snapshot,explanation_snapshot,occurrence_count,last_seen_at').eq('student_id',user.id).is('resolved_at',null).order('last_seen_at',{ascending:false}).limit(8),
   ]);
@@ -181,6 +182,38 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
   ].sort((a:any,b:any)=>new Date(a.starts_at).getTime()-new Date(b.starts_at).getTime()).slice(0,8);
   const upcomingAssignments = upcomingAssignmentResult.data ?? [];
 
+  const dueReviewConcepts = conceptMastery.filter((item:any) => item.next_review_at && new Date(item.next_review_at).getTime() <= Date.now() && Number(item.evidence_count) >= 1);
+  let dueReviewRecommendations: { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; next_review_at:string }[] = [];
+  if (dueReviewConcepts.length && eligibleCourseIds.length) {
+    const { data: dueMappings } = await supabase.from('lesson_concepts').select('lesson_id,concept_id')
+      .in('concept_id',dueReviewConcepts.map((item:any)=>item.concept_id)).limit(200);
+    const dueLessonIds = [...new Set((dueMappings ?? []).map((item:any)=>item.lesson_id))];
+    if (dueLessonIds.length) {
+      const { data: dueLessons } = await supabase.from('lessons').select('id,title,course_id')
+        .in('id',dueLessonIds).in('course_id',eligibleCourseIds).eq('is_published',true).limit(100);
+      const lessonById = new Map((dueLessons ?? []).map((lesson:any)=>[lesson.id,lesson]));
+      const masteryByConcept = new Map(dueReviewConcepts.map((item:any)=>[item.concept_id,item]));
+      const seenReviewLessons = new Set<string>();
+      for (const mapping of dueMappings ?? []) {
+        const lesson:any = lessonById.get(mapping.lesson_id);
+        const mastery:any = masteryByConcept.get(mapping.concept_id);
+        if (!lesson || !mastery || seenReviewLessons.has(lesson.id)) continue;
+        seenReviewLessons.add(lesson.id);
+        const relation = Array.isArray(mastery.learning_concepts) ? mastery.learning_concepts[0] : mastery.learning_concepts;
+        dueReviewRecommendations.push({lessonId:lesson.id,lessonTitle:lesson.title,courseId:lesson.course_id,conceptTitle:relation?.title ?? 'Learning topic',masteryScore:Number(mastery.mastery_score),next_review_at:mastery.next_review_at});
+      }
+    }
+  }
+
+  const priorityLearningActions = rankLearningActions({
+    revisionTasks,
+    mistakes: mistakeMemory,
+    recommendations: learningRecommendations,
+    dueReviews: dueReviewRecommendations,
+    upcomingExams,
+    upcomingAssignments,
+  });
+
   function PaymentForm({ courseId, kind, amount, deliveryMode }: { courseId: string; kind: 'initial' | 'monthly'; amount: number; deliveryMode?: string }) {
     return <form action={submitManualPayment} className="auth-form payment-form">
       <input type="hidden" name="course_id" value={courseId}/>
@@ -205,7 +238,8 @@ export default async function StudentDashboard({ searchParams }: { searchParams:
       {params.learning_error && <p className="form-error">{params.learning_error==='payment_due'?'Your current month tuition must be approved before opening lessons. Offline students receive the recorded library as part of their paid offline course.':'Course access is available only after payment approval.'}</p>}
       {params.profile_success && <p className="form-success">Profile updated.</p>}{params.profile_error && <p className="form-error">Profile could not be updated. Check your name and Bangladesh mobile number.</p>}
       <div className="portal-stats"><article><b>{activeCount}</b><span>Active courses</span></article><article><b>{pendingCount}</b><span>Payments under review</span></article><article><b>{applications?.length ?? 0}</b><span>Course applications</span></article></div>
-      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} mistakes={mistakeMemory} recommendations={learningRecommendations} courseNames={courseNames} upcomingExams={upcomingExams} upcomingAssignments={upcomingAssignments} />
+      <p><Link className="btn" href="/student/lab-notebook">My practical lab notebook</Link> <Link className="btn" href="/labs">Virtual laboratories</Link></p>
+      <LearningOSDashboard goals={learningGoals} revisionTasks={revisionTasks} mastery={conceptMastery} mistakes={mistakeMemory} recommendations={learningRecommendations} courseNames={courseNames} upcomingExams={upcomingExams} upcomingAssignments={upcomingAssignments} priorityActions={priorityLearningActions} revisionError={params.revision_error} />
       <h2 id="profile">Student profile</h2>
       {avatarUrl&&<p><Image src={avatarUrl} alt="Your profile" width={100} height={100} unoptimized style={{width:100,height:100,objectFit:'cover',borderRadius:16}}/></p>}
       <form action={updateStudentDetails} className="auth-form portal-card" encType="multipart/form-data">

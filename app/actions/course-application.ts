@@ -29,7 +29,7 @@ export async function submitCourseApplication(fd:FormData){
 
 export async function reviewCourseApplication(fd:FormData){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
- const {data:profile}=await db.from('profiles').select('role').eq('id',user.id).single();if(profile?.role!=='admin')redirect('/portal');
+ const {data:profile}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
  const id=String(fd.get('application_id')??'');const status=String(fd.get('status')??'');const note=String(fd.get('admin_note')??'').trim();
  if(!id||!['submitted','reviewing','accepted','rejected'].includes(status)||note.length>1000)redirect('/admin/applications?error=invalid');
  const {error}=await db.from('course_applications').update({status,admin_note:note||null,reviewed_by:user.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);

@@ -7,8 +7,8 @@ export async function GET(request: Request) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { data: actor } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (actor?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const { data: actor } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (actor?.role !== 'admin' || actor.is_active !== true) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const url = new URL(request.url);
   const requestedMonth = url.searchParams.get('month') ?? '';

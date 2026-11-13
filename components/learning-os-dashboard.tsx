@@ -1,17 +1,18 @@
 import Link from 'next/link';
 import { completeRevisionTask, createStudyGoal } from '@/app/actions/learning';
+import type { LearningAction } from '@/lib/learning-action-ranking.mjs';
 
 type Goal = {
   id: string; goal_type: string; target_value: number; current_value: number;
   period_start: string; period_end: string; course_id: string | null; status: 'active' | 'completed';
 };
 type RevisionTask = {
-  id: string; title: string; scheduled_for: string; priority: number; course_id: string;
+  id: string; title: string; scheduled_for: string; priority: number; course_id: string; concept_id: string | null; source_type: string;
 };
 type Recommendation = { lessonId:string; lessonTitle:string; courseId:string; conceptTitle:string; masteryScore:number|null; rootCauseFor:string|null };
 type Mistake = { id:string; course_id:string; source_type:string; mistake_type:string; prompt_snapshot:string; response_snapshot:string; correct_answer_snapshot:string; explanation_snapshot:string; occurrence_count:number; last_seen_at:string };
 type Mastery = {
-  concept_id: string; mastery_score: number; confidence: number; evidence_count: number;
+  concept_id: string; mastery_score: number; confidence: number; evidence_count: number; next_review_at?: string | null;
   learning_concepts?: { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null } | { title?: string; academic_subjects?: { name?: string } | { name?: string }[] | null }[] | null;
 };
 type UpcomingExam = {
@@ -26,9 +27,9 @@ const goalLabels: Record<string, string> = {
   lesson_completions: 'Lesson completions',
 };
 
-export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments }: {
+export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, recommendations, courseNames, upcomingExams, upcomingAssignments, priorityActions, revisionError }: {
   goals: Goal[]; revisionTasks: RevisionTask[]; mastery: Mastery[]; mistakes: Mistake[]; recommendations: Recommendation[];
-  courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[];
+  courseNames: Map<string, string>; upcomingExams: UpcomingExam[]; upcomingAssignments: UpcomingAssignment[]; priorityActions: LearningAction[]; revisionError?: string;
 }) {
   const dueCount = revisionTasks.filter(task => new Date(task.scheduled_for) <= new Date()).length;
   const averageMastery = mastery.length
@@ -39,6 +40,9 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
     <span className="auth-kicker">YOUR LEARNING OS</span>
     <h2>Today dashboard</h2>
     <p className="learning-os-muted">A subject-independent view of your study goals, revision queue and topic mastery. Insights improve as you complete lessons and assessments.</p>
+    {revisionError === 'evidence' && <p className="form-error" role="alert">This spaced review needs fresh evidence. Complete a concept-linked practice question or assessment after the review becomes due, then mark it complete.</p>}
+    {revisionError === 'not_due' && <p className="form-error" role="alert">This revision is not due yet. Return when its scheduled review time arrives.</p>}
+    {revisionError === '1' && <p className="form-error" role="alert">The revision could not be completed. Refresh and check your course access.</p>}
     <div className="learning-os-stats">
       <div className="learning-os-stat"><strong>{goals.length}</strong><span>Current goals</span></div>
       <div className="learning-os-stat"><strong>{dueCount}</strong><span>Revision due</span></div>
@@ -46,6 +50,25 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
       <div className="learning-os-stat"><strong>{mistakes.length}</strong><span>Mistakes to revisit</span></div>
       <div className="learning-os-stat"><strong>{averageMastery === null ? '—' : averageMastery + '%'}</strong><span>Average mastery</span></div>
     </div>
+
+    <h3>Priority learning queue</h3>
+    <p className="learning-os-muted">A single ranked queue combines due revision, repeated mistakes, evidence-backed weak topics and upcoming academic deadlines. Priority is a transparent rule-based ranking, not an AI-generated readiness prediction.</p>
+    {priorityActions.length === 0
+      ? <p className="learning-os-muted">Your priority queue will appear as soon as verified study or assessment activity is available.</p>
+      : <ol className="learning-os-list">{priorityActions.map((action, index) => <li key={action.id}>
+          <b>{index + 1}. {action.title}</b> <span className="learning-os-muted">· {action.kind.replace('_', ' ')}</span>
+          <small className="learning-os-muted">{action.detail}{action.courseId ? ' · ' + (courseNames.get(action.courseId) ?? 'Your course') : ''}</small>
+          {action.kind === 'revision' ? <form action={completeRevisionTask}>
+            <input type="hidden" name="task_id" value={action.sourceId}/>
+            <button type="submit">Complete this revision</button>
+          </form> : (action.kind === 'lesson' || action.kind === 'review') && action.courseId
+            ? <p><Link href={`/learn/${action.courseId}#lesson-${action.sourceId}`}>{action.kind === 'review' ? 'Open spaced review →' : 'Open recommended lesson →'}</Link></p>
+            : action.kind === 'mistake'
+              ? <p><Link href={`#mistake-${action.sourceId}`}>Review saved mistake →</Link></p>
+              : action.kind === 'assignment'
+                ? <p><Link href="/academic#assignments">Open assignments →</Link></p>
+                : <p><Link href="/academic">Open academic centre →</Link></p>}
+        </li>)}</ol>}
 
     <h3>Set a 7-day study target</h3>
     <form action={createStudyGoal} className="auth-form learning-os-goal-form">
@@ -91,6 +114,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
           <ul className="learning-os-list">{revisionTasks.map(task => <li key={task.id}>
             <b>{task.title}</b>
             <small className="learning-os-muted"> {courseNames.get(task.course_id) ?? 'Course'} · {new Date(task.scheduled_for).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' })} · Priority {task.priority}/5</small>
+            {task.source_type === 'spaced_repetition' && <p className="learning-os-muted">Evidence-based review: answer a concept-linked practice question or assessment after this review is due, then mark it complete. <Link href={'/practice?course=' + encodeURIComponent(task.course_id) + '&concept=' + encodeURIComponent(task.concept_id ?? '')}>Open Practice Studio →</Link></p>}
             <form action={completeRevisionTask}>
               <input type="hidden" name="task_id" value={task.id}/>
               <button type="submit">Mark revision complete</button>
@@ -123,7 +147,7 @@ export function LearningOSDashboard({ goals, revisionTasks, mastery, mistakes, r
     <h3>My mistake memory</h3>
     {mistakes.length === 0
       ? <p className="learning-os-muted">Your quiz mistakes will be saved here after concept-mapped quizzes are completed. Repeated patterns help target revision; they do not reduce your grade.</p>
-      : <div className="learning-os-columns">{mistakes.map(mistake => <details className="learning-os-stat" key={mistake.id}>
+      : <div className="learning-os-columns">{mistakes.map(mistake => <details className="learning-os-stat" id={`mistake-${mistake.id}`} key={mistake.id}>
           <summary><b>{mistake.prompt_snapshot}</b><small className="learning-os-muted"> · {mistake.occurrence_count} occurrence{mistake.occurrence_count===1?'':'s'} · {courseNames.get(mistake.course_id)??'Course'}</small></summary>
           <p><b>Your answer:</b> {mistake.response_snapshot}</p>
           <p><b>Correct answer:</b> {mistake.correct_answer_snapshot||'Review the answer with your teacher.'}</p>

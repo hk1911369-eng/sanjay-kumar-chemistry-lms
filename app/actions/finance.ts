@@ -11,8 +11,8 @@ export async function saveFinanceEntry(formData: FormData) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/portal');
+  const { data: profile } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || profile.role !== 'admin') redirect('/portal');
 
   const entryType = String(formData.get('entry_type') ?? '') as typeof types[number];
   const category = String(formData.get('category') ?? '').trim();

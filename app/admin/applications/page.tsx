@@ -6,7 +6,7 @@ import {reviewCourseApplication} from '@/app/actions/course-application';
 const labels:Record<string,string>={live_recorded:'Live + recorded',recorded_only:'Recorded only',offline:'Offline'};
 export default async function ApplicationsPage({searchParams}:{searchParams:Promise<{saved?:string;error?:string}>}){
  const p=await searchParams;const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');
- const {data:me}=await db.from('profiles').select('role').eq('id',user.id).single();if(me?.role!=='admin')redirect('/portal');
+ const {data:me}=await db.from('profiles').select('role,is_active').eq('id',user.id).single();if (me?.is_active !== true || me.role !== 'admin') redirect('/portal');
  const {data:apps}=await db.from('course_applications').select('id,student_id,course_id,delivery_mode,full_name,phone,guardian_name,guardian_phone,college_name,location,student_note,status,admin_note,created_at').order('created_at',{ascending:false}).limit(150);
  const studentIds=[...new Set((apps??[]).map(a=>a.student_id))];const courseIds=[...new Set((apps??[]).map(a=>a.course_id))];
  const [{data:students},{data:courses}]=await Promise.all([studentIds.length?db.from('profiles').select('id,full_name,phone').in('id',studentIds):Promise.resolve({data:[] as {id:string;full_name:string|null;phone:string|null}[]}),courseIds.length?db.from('courses').select('id,title').in('id',courseIds):Promise.resolve({data:[] as {id:string;title:string}[]})]);

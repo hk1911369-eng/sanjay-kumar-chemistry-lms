@@ -19,9 +19,9 @@ export default async function TeacherLearningInsights({ searchParams }: { search
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
-  const { data: actor } = await db.from('profiles').select('role').eq('id', user.id).single();
+  const { data: actor } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
   const role = actor?.role ?? '';
-  if (!['admin','teacher','staff'].includes(role)) redirect('/portal');
+  if (actor?.is_active !== true || !['admin','teacher','staff'].includes(role)) redirect('/portal');
 
   const assignedResult = role === 'admin'
     ? await fetchAllPages((from, to) => db.from('courses').select('id,title')

@@ -1,7 +1,7 @@
--- JMT Academy database update: migrations 0017 through 0020
--- Prerequisite: migrations 0001 through 0016 have already been applied.
--- Run this entire script once in the Supabase SQL Editor.
--- It is transactional: if any statement fails, the changes are rolled back.
+-- ARCHIVED LEGACY BUNDLE — DO NOT RUN against production or the current timestamped migration chain.
+-- This one-off script belongs to an earlier 0001–0020 migration sequence.
+-- Canonical schema source is supabase/migrations/*.sql; validate changes on local/test first.
+-- Retained for historical reference only; it is not a replacement for current migrations.
 
 begin;
 

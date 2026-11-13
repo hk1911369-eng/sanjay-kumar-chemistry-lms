@@ -39,7 +39,7 @@ test('public pages have route-specific canonical URLs and caching', async () => 
 test('portal has a consistent icon set, student bottom navigation and staff menu', async () => {
   const layout = await read('components/portal-layout.tsx');
   const icons = await read('components/portal-icon.tsx');
-  const css = await read('app/responsive.css');
+  const css = await read('app/globals.css');
   assert.ok(layout.includes('student-bottom-nav'));
   assert.ok(layout.includes('portal-mobile-drawer'));
   assert.ok(layout.includes('PortalIcon'));
@@ -53,7 +53,7 @@ test('home hero has original SVG artwork and accessible motion defaults', async 
   const css = await read('app/globals.css');
   assert.ok(home.includes('JmtHeroGraphic'));
   assert.ok(art.includes('<svg'));
-  assert.ok(art.includes('benzene molecule'));
+  assert.ok(art.includes('open book and learning symbols'));
   assert.ok(css.includes(':focus-visible'));
   assert.ok(css.includes('prefers-reduced-motion'));
 });

@@ -18,8 +18,8 @@ export async function assignTeacherRevisionTask(formData: FormData) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single();
-  if (!['admin', 'teacher', 'staff'].includes(profile?.role ?? '')) redirect('/portal');
+  const { data: profile } = await db.from('profiles').select('role,is_active').eq('id', user.id).single();
+  if (profile?.is_active !== true || !['admin', 'teacher', 'staff'].includes(profile.role ?? '')) redirect('/portal');
 
   const studentId = String(formData.get('student_id') ?? '').trim();
   const courseId = String(formData.get('course_id') ?? '').trim();

@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "JMT Academy",
+  "short_name": "JMT Academy",
+  "description": "JMT Academy learning workspace",
+  "lang": "bn",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#173f70",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "/jmt-academy-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

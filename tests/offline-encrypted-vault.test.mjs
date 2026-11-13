@@ -119,6 +119,30 @@ test('concurrent first downloads reuse one atomic account key across tabs', asyn
   })).ok, true);
 });
 
+test('rejects a locally inconsistent manifest resource identity or version', async () => {
+  for (const mutate of [
+    (record) => { record.manifest.resourceId = 'different-lesson'; },
+    (record) => { record.manifest.resourceVersion += 1; },
+  ]) {
+    const storage = memoryStorage();
+    const vault = makeVault(storage);
+    const f = fixture();
+    await vault.savePackage({
+      userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+      entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    });
+    const key = [...storage.packages.keys()][0];
+    const record = storage.packages.get(key);
+    mutate(record);
+    storage.packages.set(key, record);
+
+    const opened = await vault.openPackage({
+      userId: 'student-a', resourceId: 'lesson-42', resourceVersion: 3,
+    });
+    assert.deepEqual(opened, { ok: false, reason: 'offline_access_denied' });
+  }
+});
+
 test('does not allow another account to open or remove a package', async () => {
   const storage = memoryStorage();
   const vault = makeVault(storage);

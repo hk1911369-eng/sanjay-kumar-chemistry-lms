@@ -112,7 +112,7 @@ export default async function LearningPage({
                 <span className="auth-kicker">{l.chapter_id ? chapterNames.get(l.chapter_id) ?? 'LESSON' : 'LESSON'} · {l.position}</span>
                 <h2>{l.title}</h2>
                 {l.description && <p>{l.description}</p>}
-                {l.content && <div className="lesson-content">{l.content.split('\\n').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
+                {l.content && <div className="lesson-content">{l.content.split('\n').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
                 {l.video_url && <div className="lesson-video jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video controls playsInline preload="metadata" src={l.video_url}>Your browser does not support video playback.</video></div>}
 
                 {!!lessonResources.length && <section className="lesson-materials">

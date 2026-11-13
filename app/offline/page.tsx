@@ -181,6 +181,17 @@ export default function OfflineLibraryPage() {
         resourceId: item.resourceId,
         resourceVersion: item.resourceVersion,
       });
+      // The account may change while IndexedDB deletion is in flight. The
+      // deletion remains scoped to the original user, but never let its
+      // completion mutate the newly signed-in account's visible library.
+      const { data: { session: confirmedSession } } = await createClient().auth.getSession();
+      if (confirmedSession?.user?.id !== userId) {
+        setUserId(confirmedSession?.user?.id ?? '');
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed while removing the saved lesson. Refresh the library.');
+        return;
+      }
       setLessons((current) => current.filter((lesson) => lesson.key !== item.key));
       if (opened && opened.resourceId === item.resourceId) setOpened(null);
     } catch {
@@ -200,7 +211,6 @@ export default function OfflineLibraryPage() {
         <span className="auth-kicker">JMT ACADEMY · PERSONAL LEARNING LIBRARY</span>
         <h1>Offline lessons</h1>
         <p className="muted">Only lessons saved on this device for the currently signed-in account appear here. Each lesson is decrypted and integrity-checked before it is displayed.</p>
-        {userId && <p className="offline-account">Current device account · {userId.slice(0, 8)}…</p>}
         {message && <p className="form-error" role="status">{message}</p>}
         <div className="offline-library-actions">
           <button className="quiet-button" type="button" onClick={() => void refresh()} disabled={loading || !userId}>Refresh library</button>

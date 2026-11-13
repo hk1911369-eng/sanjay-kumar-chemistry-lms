@@ -42,7 +42,8 @@ function memoryStorage() {
       packages.set(record.key, structuredClone(record));
       chunks.set(record.key, structuredClone(encrypted));
     },
-    async getPackage(key) { return structuredClone(packages.get(key) ?? null); },\n    async listPackages(userId) { return structuredClone([...packages.values()].filter((record) => record.userId === userId)); },
+    async getPackage(key) { return structuredClone(packages.get(key) ?? null); },
+    async listPackages(userId) { return structuredClone([...packages.values()].filter((record) => record.userId === userId)); },
     async getChunks(key) { return structuredClone(chunks.get(key) ?? []); },
     async deletePackage(key) { packages.delete(key); chunks.delete(key); },
     async deleteAccount(userId) {

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const workerSource = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
 
-function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clone() { return this; }, async text() { return ''; } }), cachePutImpl } = {}) {
+function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', url: 'https://academy.example/offline', clone() { return this; }, async text() { return ''; } }), cachePutImpl } = {}) {
   const listeners = new Map();
   const stores = new Map();
   const deleted = [];
@@ -75,7 +75,7 @@ test('install precaches only immutable Next assets referenced by offline library
   const html = '<script src="/_next/static/chunks/offline-library.js"></script><link href="/_next/static/css/offline.css" rel="stylesheet">';
   const worker = createWorker({
     fetchImpl: async (url) => url === '/offline'
-      ? { ok: true, type: 'basic', clone() { return this; }, async text() { return html; } }
+      ? { ok: true, type: 'basic', url: 'https://academy.example/offline', clone() { return this; }, async text() { return html; } }
       : { ok: true, type: 'basic', clone() { return this; } },
   });
   const lifecycle = lifecycleEvent();
@@ -90,6 +90,22 @@ test('install precaches only immutable Next assets referenced by offline library
     '/_next/static/chunks/offline-library.js',
     '/_next/static/css/offline.css',
   ]);
+});
+
+test('install rejects a redirected offline fallback instead of caching a different page', async () => {
+  const worker = createWorker({
+    fetchImpl: async () => ({
+      ok: true,
+      type: 'basic',
+      url: 'https://academy.example/login',
+      clone() { return this; },
+      async text() { return '<html>login</html>'; },
+    }),
+  });
+  const lifecycle = lifecycleEvent();
+  await worker.dispatch('install', lifecycle.event);
+  await assert.rejects(lifecycle.finish(), /unexpected page/);
+  assert.equal(worker.calls.skipWaiting, 0);
 });
 
 test('failed offline fallback fetch rejects installation instead of activating a broken shell', async () => {

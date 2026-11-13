@@ -787,3 +787,13 @@ The live payment-submission trigger has a NULL-`delivery_mode` compatibility bra
 `notify_course_audience()` sends course notifications to every enrollment row with `status = 'active'`, without checking current Dhaka billing-period payment eligibility or admission-fee state. Assignment/quiz publication and live-class creation triggers call this helper. The own-notification read policy checks only that `current_role()` is non-null and the recipient matches the authenticated user; `current_role()` checks profile activity, not paid enrollment. An active-profile student whose course payment has expired can therefore continue receiving and reading new course-specific notification titles and links. This does not bypass separate content-access policies for the underlying course resources.
 
 **Recommended remediation (not applied):** If notifications are part of paid course access, filter the audience by the same active, admission-fee-paid, currently paid enrollment predicate used by student content access. Decide explicitly how archived/unpublished courses and historical notices should behave. No notification rows were read or changed.
+
+
+## Code remediation checkpoint — 13 November 2026
+
+Two additional database-enforced remediations have been committed to the audit branch, pending migration reconciliation and test-database application:
+
+- Assignment grading now uses 'public.grade_assignment_submission(uuid,numeric,text)'. The authenticated caller must have an active admin/teacher/staff role; non-admin teaching staff must be assigned to the submission's course. The function bounds marks and feedback, locks the submission, and writes grader identity/time server-side. 'app/actions/academic.ts' calls the RPC. This resolves the application-vs-column-grant mismatch in branch source, but is not live until its migration is applied.
+- Monthly payment approval now has an additional trigger guard that re-locks the matching enrollment and requires active status plus 'admission_fee_paid = true'; a non-NULL delivery mode must still match. This closes the approval-time stale-admission-state gap in branch source, but is not live until its migration is applied.
+
+The source tests assert the SQL guardrails and application call sites; they are not substitutes for PostgreSQL integration tests under authenticated roles. The isolated JMT Test database and production remain unchanged. The NULL-mode initial-payment compatibility exception remains open pending a safe way to identify grandfathered accounts.

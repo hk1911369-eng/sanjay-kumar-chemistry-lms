@@ -44,3 +44,12 @@ The verification bullets above record an earlier development checkpoint. They mu
 - Statements above about migrations being applied, all Learning OS tables having RLS, and production having no courses describe the state reported at the earlier checkpoint. Reconfirm against the actual Supabase project's migration history and schema before relying on them.
 - Do not infer that the full current migration set has been applied to either test or production from the source tree. The private lab evidence migration specifically comments that it was applied to the isolated JMT Test project and not production at that time.
 - Production deployment remains gated on database-history reconciliation, runtime role/Storage tests, and the remaining release checks documented in `AUDIT_REPORT.md`.
+
+
+## Security remediation checkpoint — 13 November 2026
+
+- Added a guarded assignment-grading RPC and routed the server action through it; source regression test added.
+- Added approval-time revalidation for monthly-payment enrollment status, admission-paid state, and delivery-mode consistency; source regression test added.
+- These migrations are pushed to the audit branch but have not been applied to JMT Test or production.
+- Latest verified CI at commit 'c3e6c8859d428381b503716de65a7bbec9e925c5' passed the test, lint, TypeScript, build, and production dependency-audit steps. Recheck CI on the next branch head before release decisions.
+- Outstanding: reconcile migration history before applying any migration, add PostgreSQL role-level integration tests, resolve the legacy NULL-mode initial-payment policy using a verified grandfathering rule, and complete the remaining live Auth/Storage/RLS checks.

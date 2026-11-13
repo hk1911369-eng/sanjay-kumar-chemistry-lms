@@ -36,3 +36,11 @@ test('existing notebook reads and private evidence reads are not replaced by the
   assert.doesNotMatch(migration, /drop policy if exists "notebook owners and assigned teachers read evidence objects"/i);
   assert.match(migration, /Existing object reads and deletion of unreferenced uploads are intentionally unchanged/i);
 });
+
+test('evidence metadata filename policy uses one literal-dot escape under standard PostgreSQL strings', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261113140000_require_published_course_for_notebook_evidence.sql', import.meta.url), 'utf8');
+  const expected = "\\\\.(jpg|png|webp|pdf)$";
+  const incorrect = "\\\\\\\\.(jpg|png|webp|pdf)$";
+  assert.ok(migration.includes(expected));
+  assert.equal(migration.includes(incorrect), false);
+});

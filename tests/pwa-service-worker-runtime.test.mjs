@@ -66,7 +66,7 @@ test('install precaches the offline library shell and activates after success', 
   await worker.dispatch('install', lifecycle.event);
   await lifecycle.finish();
 
-  assert.ok(worker.stores.get('jmt-shell-v1').has('/offline'));
+  assert.ok(worker.stores.get('jmt-shell-v2').has('/offline'));
   assert.equal(worker.calls.skipWaiting, 1);
   assert.deepEqual(worker.calls.fetch[0][0], '/offline');
 });
@@ -82,7 +82,7 @@ test('install precaches only immutable Next assets referenced by offline library
   await worker.dispatch('install', lifecycle.event);
   await lifecycle.finish();
 
-  const cached = worker.stores.get('jmt-shell-v1');
+  const cached = worker.stores.get('jmt-shell-v2');
   assert.ok(cached.has('/offline'));
   assert.ok(cached.has('/_next/static/chunks/offline-library.js'));
   assert.ok(cached.has('/_next/static/css/offline.css'));
@@ -106,6 +106,42 @@ test('install rejects a redirected offline fallback instead of caching a differe
   await worker.dispatch('install', lifecycle.event);
   await assert.rejects(lifecycle.finish(), /unexpected page/);
   assert.equal(worker.calls.skipWaiting, 0);
+});
+
+test('new worker installation never mutates the active worker cache', async () => {
+  const previousShell = new Map([['/offline', { marker: 'active-shell' }]]);
+  const worker = createWorker({
+    fetchImpl: async () => ({ ok: false, type: 'basic' }),
+  });
+  worker.stores.set('jmt-shell-v1', previousShell);
+  const lifecycle = lifecycleEvent();
+  await worker.dispatch('install', lifecycle.event);
+  await assert.rejects(lifecycle.finish(), /Unable to precache offline fallback/);
+
+  assert.equal(worker.stores.get('jmt-shell-v1'), previousShell);
+  assert.equal(previousShell.get('/offline').marker, 'active-shell');
+  assert.equal(worker.calls.skipWaiting, 0);
+});
+
+test('retrying a failed install starts with a clean versioned cache', async () => {
+  let fail = true;
+  const worker = createWorker({
+    fetchImpl: async () => {
+      if (fail) return { ok: false, type: 'basic' };
+      return { ok: true, type: 'basic', url: 'https://academy.example/offline', clone() { return this; }, async text() { return ''; } };
+    },
+  });
+  worker.stores.set('jmt-shell-v2', new Map([['/stale-asset.js', { marker: 'stale' }]]));
+  const failed = lifecycleEvent();
+  await worker.dispatch('install', failed.event);
+  await assert.rejects(failed.finish(), /Unable to precache offline fallback/);
+  fail = false;
+  const retry = lifecycleEvent();
+  await worker.dispatch('install', retry.event);
+  await retry.finish();
+
+  assert.equal(worker.stores.get('jmt-shell-v2').has('/stale-asset.js'), false);
+  assert.equal(worker.stores.get('jmt-shell-v2').has('/offline'), true);
 });
 
 test('failed offline fallback fetch rejects installation instead of activating a broken shell', async () => {
@@ -141,7 +177,7 @@ test('activation removes only obsolete JMT shell caches', async () => {
 
 test('offline navigation returns the cached explanation after a network failure', async () => {
   const worker = createWorker({ fetchImpl: async () => { throw new Error('offline'); } });
-  worker.stores.set('jmt-shell-v1', new Map([['/offline', { body: 'offline explanation' }]]));
+  worker.stores.set('jmt-shell-v2', new Map([['/offline', { body: 'offline explanation' }]]));
   let response;
   await worker.dispatch('fetch', {
     request: request('/', { mode: 'navigate' }),
@@ -246,7 +282,7 @@ test('same-origin Next static assets use cache-first and cache successful networ
 
   assert.equal(await response, assetResponse);
   assert.equal(worker.calls.fetch.length, 1);
-  assert.ok(worker.stores.get('jmt-shell-v1').has('https://academy.example/_next/static/chunks/app.js'));
+  assert.ok(worker.stores.get('jmt-shell-v2').has('https://academy.example/_next/static/chunks/app.js'));
 });
 
 test('static asset remains available when Cache Storage rejects a write', async () => {
@@ -263,7 +299,7 @@ test('static asset remains available when Cache Storage rejects a write', async 
 
   assert.equal(await response, assetResponse);
   assert.equal(worker.calls.fetch.length, 1);
-  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
+  assert.equal(worker.stores.get('jmt-shell-v2').size, 0);
 });
 
 test('unsuccessful Next static asset responses are not cached', async () => {
@@ -277,13 +313,13 @@ test('unsuccessful Next static asset responses are not cached', async () => {
 
   assert.equal(await response, missingAsset);
   assert.equal(worker.calls.fetch.length, 1);
-  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
+  assert.equal(worker.stores.get('jmt-shell-v2').size, 0);
 });
 
 test('cached Next static assets are served without a network request', async () => {
   const worker = createWorker({ fetchImpl: async () => { throw new Error('network should not be used'); } });
   const cachedAsset = { marker: 'cached-build-asset' };
-  worker.stores.set('jmt-shell-v1', new Map([
+  worker.stores.set('jmt-shell-v2', new Map([
     ['https://academy.example/_next/static/chunks/app.js', cachedAsset],
   ]));
   let response;
@@ -307,7 +343,7 @@ test('install rejects redirected Next assets instead of caching unrelated HTML',
   await worker.dispatch('install', lifecycle.event);
   await assert.rejects(lifecycle.finish(), /resolved outside immutable Next assets/);
   assert.equal(worker.calls.skipWaiting, 0);
-  assert.equal(worker.stores.get('jmt-shell-v1').has('/_next/static/chunks/offline-library.js'), false);
+  assert.equal(worker.stores.get('jmt-shell-v2').has('/_next/static/chunks/offline-library.js'), false);
 });
 
 test('runtime static asset redirect is returned but never cached under the asset URL', async () => {
@@ -327,5 +363,5 @@ test('runtime static asset redirect is returned but never cached under the asset
 
   assert.equal(await response, redirectedPage);
   assert.equal(worker.calls.fetch.length, 1);
-  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
+  assert.equal(worker.stores.get('jmt-shell-v2').size, 0);
 });

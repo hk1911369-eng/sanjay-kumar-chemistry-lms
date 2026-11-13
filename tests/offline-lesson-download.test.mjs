@@ -64,7 +64,8 @@ test('downloads server-authorized lesson content into the encrypted vault and co
   });
   assert.equal(result.jobId, 'job-1');
   assert.equal(f.saved.length, 1);
-  assert.equal(f.saved[0].userId, 'student-a');\n  assert.equal(f.saved[0].title, 'Atomic Structure');
+  assert.equal(f.saved[0].userId, 'student-a');
+  assert.equal(f.saved[0].title, 'Atomic Structure');
   assert.equal(f.saved[0].chunks[0].bytes instanceof Uint8Array, true);
   assert.match(f.requests[0].url, /lessonId=/);
   assert.equal(f.requests[0].options.credentials, 'same-origin');

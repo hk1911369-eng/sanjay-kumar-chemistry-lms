@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const workerSource = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
 
-function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clone() { return this; } }), cachePutImpl } = {}) {
+function createWorker({ fetchImpl = async () => ({ ok: true, type: 'basic', clone() { return this; }, async text() { return ''; } }), cachePutImpl } = {}) {
   const listeners = new Map();
   const stores = new Map();
   const deleted = [];
@@ -60,7 +60,7 @@ function request(url, { method = 'GET', mode = 'no-cors' } = {}) {
   return { url: new URL(url, 'https://academy.example').href, method, mode };
 }
 
-test('install precaches only the offline explanation and activates after success', async () => {
+test('install precaches the offline library shell and activates after success', async () => {
   const worker = createWorker();
   const lifecycle = lifecycleEvent();
   await worker.dispatch('install', lifecycle.event);
@@ -69,6 +69,27 @@ test('install precaches only the offline explanation and activates after success
   assert.ok(worker.stores.get('jmt-shell-v1').has('/offline'));
   assert.equal(worker.calls.skipWaiting, 1);
   assert.deepEqual(worker.calls.fetch[0][0], '/offline');
+});
+
+test('install precaches only immutable Next assets referenced by offline library HTML', async () => {
+  const html = '<script src="/_next/static/chunks/offline-library.js"></script><link href="/_next/static/css/offline.css" rel="stylesheet">';
+  const worker = createWorker({
+    fetchImpl: async (url) => url === '/offline'
+      ? { ok: true, type: 'basic', clone() { return this; }, async text() { return html; } }
+      : { ok: true, type: 'basic', clone() { return this; } },
+  });
+  const lifecycle = lifecycleEvent();
+  await worker.dispatch('install', lifecycle.event);
+  await lifecycle.finish();
+
+  const cached = worker.stores.get('jmt-shell-v1');
+  assert.ok(cached.has('/offline'));
+  assert.ok(cached.has('/_next/static/chunks/offline-library.js'));
+  assert.ok(cached.has('/_next/static/css/offline.css'));
+  assert.deepEqual(worker.calls.fetch.slice(1).map((call) => call[0]), [
+    '/_next/static/chunks/offline-library.js',
+    '/_next/static/css/offline.css',
+  ]);
 });
 
 test('failed offline fallback fetch rejects installation instead of activating a broken shell', async () => {

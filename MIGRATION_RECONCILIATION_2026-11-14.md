@@ -40,3 +40,17 @@ Migration `20261111200000_add_assignment_submission_version_history.sql` had alr
 ## Current boundary
 
 This file records observations and a safe plan only. JMT Test remains unchanged. The source branch and PR remain unmerged and undeployed. Auth leaked-password protection remains an outstanding dashboard/configuration item because the connected tools do not expose the required Auth setting.
+
+
+## Additional exact policy-definition check
+
+A follow-up read-only catalog inspection confirmed the partial notebook/virtual-lab state more precisely:
+
+- `virtual lab catalogue scoped read` exists, but the student branch checks `courses.archived_at IS NULL` without requiring `courses.is_published IS TRUE`.
+- `paid students create own lab notebooks` exists, but its enrollment/course predicate checks archive state and omits the parent-course publication condition.
+- `notebook entries scoped update` exists, but the student write branch similarly omits parent-course publication.
+- `practical assignments scoped read` exists, but its student branch checks archive state and omits parent-course publication.
+- `students attach evidence to editable own notebook` exists, but its parent-course predicate checks archive state and omits publication.
+- `private.can_upload_lab_notebook_evidence(text)` exists, but its current definition checks an active paid enrollment and unarchived course only; it does not check parent-course publication or confirm the published lab/subject relationship required by the branch version.
+
+These are **existing but incomplete** effects, not absent objects. The corrective migration must replace their definitions/policies and be verified after application. No policy or function was changed during this inspection.

@@ -309,3 +309,23 @@ test('install rejects redirected Next assets instead of caching unrelated HTML',
   assert.equal(worker.calls.skipWaiting, 0);
   assert.equal(worker.stores.get('jmt-shell-v1').has('/_next/static/chunks/offline-library.js'), false);
 });
+
+test('runtime static asset redirect is returned but never cached under the asset URL', async () => {
+  const redirectedPage = {
+    ok: true,
+    type: 'basic',
+    url: 'https://academy.example/login',
+    clone() { return this; },
+    marker: 'login-html',
+  };
+  const worker = createWorker({ fetchImpl: async () => redirectedPage });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/_next/static/chunks/app.js'),
+    respondWith(value) { response = value; },
+  });
+
+  assert.equal(await response, redirectedPage);
+  assert.equal(worker.calls.fetch.length, 1);
+  assert.equal(worker.stores.get('jmt-shell-v1').size, 0);
+});

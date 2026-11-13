@@ -53,6 +53,11 @@ test('offline library is account-scoped and opens only verified vault content', 
   assert.match(library, /onAuthStateChange/);
   assert.match(library, /nextUserId !== loadedUserId/);
   assert.ok(library.includes('confirmedSession?.user?.id === currentUserId'));
+  assert.match(library, /libraryRequestId = useRef\\(0\\)/);
+  assert.match(library, /const requestId = \\+\\+libraryRequestId\\.current/);
+  assert.match(library, /requestId !== libraryRequestId\\.current/);
+  assert.match(library, /error: sessionError/);
+  assert.match(library, /error: confirmedSessionError/);
   assert.ok(library.includes('confirmedSession?.user?.id !== userId'));
   assert.ok(library.includes('session?.user?.id !== userId'));
   assert.match(library, /listForUser\\(currentUserId\\)/);

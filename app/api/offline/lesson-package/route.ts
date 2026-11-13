@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     const { data: lesson, error: lessonError } = await supabase
       .from('lessons')
-      .select('id,course_id,is_published,offline_allowed,content,updated_at')
+      .select('id,title,course_id,is_published,offline_allowed,content,updated_at')
       .eq('id', lessonId)
       .maybeSingle();
     if (lessonError || !lesson || lesson.is_published !== true || lesson.offline_allowed !== true) return unavailable();
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       now,
     });
 
-    return NextResponse.json(result, { headers: noStore });
+    return NextResponse.json({ ...result, lessonTitle: lesson.title }, { headers: noStore });
   } catch {
     return unavailable();
   }

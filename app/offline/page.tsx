@@ -47,7 +47,8 @@ export default function OfflineLibraryPage() {
 
   useEffect(() => {
     let active = true;
-    let loadedUserId = '';\n    let sessionInitialized = false;
+    let loadedUserId = '';
+    let sessionInitialized = false;
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUserId = session?.user?.id ?? '';

@@ -10,7 +10,7 @@ test('restrictive parent-course publication guards cover all student course-cont
   for (const table of tables) {
     assert.match(sql, new RegExp('CREATE POLICY "published parent course read guard"\\s+ON public\\.' + table + ' AS RESTRICTIVE FOR SELECT TO authenticated'));
   }
-  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 10);
+  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 11);
 });
 
 test('student access requires active student role and a published, unarchived parent course', async () => {

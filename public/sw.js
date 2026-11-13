@@ -18,7 +18,7 @@ self.addEventListener('install', (event) => {
     // immutable Next build assets referenced by its generic HTML shell so
     // its JavaScript can hydrate without a network connection.
     const html = await response.clone().text();
-    const staticAssets = [...new Set(html.match(/\\/_next\\/static\\/[^"'\\s<>]+/g) || [])];
+    const staticAssets = [...new Set(html.match(/\/_next\/static\/[^"'\s<>]+/g) || [])];
     for (const asset of staticAssets) {
       const assetResponse = await fetch(asset, { cache: 'reload' });
       if (!assetResponse.ok || assetResponse.type !== 'basic') {

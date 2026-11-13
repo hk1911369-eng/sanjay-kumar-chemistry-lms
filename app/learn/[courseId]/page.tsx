@@ -1,7 +1,7 @@
 import { PortalLayout } from '@/components/portal-layout';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { LessonResourceAccess } from '@/components/lesson-resource-access';
+import { LessonResourceAccess } from '@/components/lesson-resource-access';\nimport { OfflineLessonDownloadButton } from '@/components/offline-lesson-download-button';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 import {
@@ -39,7 +39,7 @@ export default async function LearningPage({
   const portalRole = profile?.role === 'admin' ? 'admin' : profile?.role === 'teacher' ? 'teacher' : profile?.role === 'staff' ? 'staff' : 'student';
 
   const [{ data: lessons }, { data: progress }, { data: chapters }, { data: bookmarks }] = await Promise.all([
-    supabase.from('lessons').select('id,title,description,content,video_url,position,is_published,chapter_id').eq('course_id', courseId).eq('is_published', true).order('position'),
+    supabase.from('lessons').select('id,title,description,content,video_url,position,is_published,chapter_id,offline_allowed').eq('course_id', courseId).eq('is_published', true).order('position'),
     supabase.from('lesson_progress').select('lesson_id,completed').eq('student_id', user.id),
     supabase.from('chapters').select('id,title,sort_order').eq('course_id', courseId).eq('published', true).order('sort_order'),
     supabase.from('lesson_bookmarks').select('lesson_id').eq('student_id', user.id),
@@ -132,6 +132,8 @@ export default async function LearningPage({
                     <button className="quiet-button">{saved.has(l.id) ? '★ Saved lesson' : '☆ Save lesson'}</button>
                   </form>
                   <span>{done.has(l.id) ? <span className="status-approved">Completed</span> : <span className="status-pending">Not completed</span>}</span>
+                  {!isStaff && l.offline_allowed === true && <OfflineLessonDownloadButton userId={user.id} lessonId={l.id}/>}
+
                   {!done.has(l.id) && <form action={markLessonComplete}>
                     <input type="hidden" name="lesson_id" value={l.id}/>
                     <input type="hidden" name="course_id" value={courseId}/>

@@ -39,3 +39,17 @@ test('lesson editor exposes offline approval only to admins and server action ig
   assert.match(editor, /profile\.role==='admin'&&<label[^>]*>[\s\S]*name="offline_allowed"/);
   assert.match(editor, /is_published,offline_allowed/);
 });
+
+test('offline library is account-scoped and opens only verified vault content', async () => {
+  const library = await readFile(new URL('../app/offline/page.tsx', import.meta.url), 'utf8');
+  const downloadButton = await readFile(new URL('../components/offline-lesson-download-button.tsx', import.meta.url), 'utf8');
+  const vault = await readFile(new URL('../lib/offline/encrypted-vault.mjs', import.meta.url), 'utf8');
+  assert.match(library, /auth\.getSession\(\)/);
+  assert.match(library, /listForUser\(currentUserId\)/);
+  assert.match(library, /openPackage\(/);
+  assert.match(library, /new TextDecoder\('utf-8', \{ fatal: true \}\)/);
+  assert.doesNotMatch(library, /dangerouslySetInnerHTML/);
+  assert.match(downloadButton, /session\.user\.id !== userId/);
+  assert.match(vault, /listPackages\(userId\)/);
+  assert.match(vault, /OFFLINE_VAULT_DB_VERSION = 2/);
+});

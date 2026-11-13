@@ -42,7 +42,7 @@ export default function OfflineLibraryPage() {
   const [lessons, setLessons] = useState<OfflineLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const [opened, setOpened] = useState<{ title: string; content: string } | null>(null);
+  const [opened, setOpened] = useState<{ resourceId: string; title: string; content: string } | null>(null);
   const [busyKey, setBusyKey] = useState('');
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function OfflineLibraryPage() {
         resourceVersion: item.resourceVersion,
       });
       setLessons((current) => current.filter((lesson) => lesson.key !== item.key));
-      if (opened && opened.title === item.title) setOpened(null);
+      if (opened && opened.resourceId === item.resourceId) setOpened(null);
     } catch {
       setMessage('The saved lesson could not be removed from this device.');
     } finally {

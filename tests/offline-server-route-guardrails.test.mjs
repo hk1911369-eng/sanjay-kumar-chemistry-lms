@@ -63,10 +63,10 @@ test('offline library is account-scoped and opens only verified vault content', 
   assert.match(library, /operationGeneration === accountGeneration\.current/);
   assert.ok(library.includes('confirmedSession?.user?.id !== userId'));
   assert.ok(library.includes('session?.user?.id !== userId'));
-  assert.match(library, /listForUser\\(currentUserId\\)/);
-  assert.doesNotMatch(library, /userId\\.slice\\(0,\\s*8\\)/, 'do not expose account identifier fragments in the UI');
+  assert.match(library, /listForUser\(currentUserId\)/);
+  assert.doesNotMatch(library, /userId\.slice\(0,\s*8\)/, 'do not expose account identifier fragments in the UI');
   const removeFlow = library.slice(library.indexOf('async function removeLesson'), library.indexOf('return ('));
-  assert.match(removeFlow, /await createVault\\(\\)\\.remove\\([\\s\\S]*?getSession\\(\\)[\\s\\S]*?confirmedSession\\?\\.user\\?\\.id !== userId/);
+  assert.match(removeFlow, /await createVault\(\)\.remove\([\s\S]*?getSession\(\)[\s\S]*?confirmedSession\?\.user\?\.id !== userId/);
   assert.match(library, /openPackage\(/);
   assert.match(library, /new TextDecoder\('utf-8', \{ fatal: true \}\)/);
   assert.doesNotMatch(library, /dangerouslySetInnerHTML/);

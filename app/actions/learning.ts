@@ -74,14 +74,22 @@ export async function saveLesson(formData: FormData) {
   if (profile?.role !== 'admin' && profile?.role !== 'teacher' && profile?.role !== 'staff') redirect('/portal');
   const { data: assignment } = await supabase.from('course_assignments').select('id').eq('course_id', courseId).eq('teacher_id', user.id).maybeSingle();
   if (profile.role !== 'admin' && !assignment) redirect('/teacher?lesson_error=forbidden');
-  const payload = { course_id: courseId, chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() };
+
+  const basePayload = {
+    course_id: courseId, chapter_id: chapterId, title, description, content,
+    video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString(),
+  };
+  // Offline permission is administrator-controlled. Teachers and staff cannot
+  // change the flag, including by submitting a crafted server-action payload.
+  const payload = profile.role === 'admin'
+    ? { ...basePayload, offline_allowed: formData.get('offline_allowed') === 'on' }
+    : basePayload;
   const result = lessonId
-    ? await supabase.from('lessons').update({ chapter_id: chapterId, title, description, content, video_url: videoUrl || null, is_published: published, updated_at: new Date().toISOString() }).eq('id', lessonId).eq('course_id', courseId)
+    ? await supabase.from('lessons').update(payload).eq('id', lessonId).eq('course_id', courseId)
     : await supabase.from('lessons').insert(payload);
   if (result.error) redirect('/teacher?lesson_error=save');
   redirect('/teacher?lesson_success=1');
 }
-
 export async function markLessonComplete(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

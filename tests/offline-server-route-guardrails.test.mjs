@@ -16,6 +16,7 @@ test('offline package endpoint authenticates and checks current paid enrollment'
     ".from('lessons')",
     'lesson.offline_allowed !== true',
     ".select('id,title,course_id,is_published,offline_allowed,content,updated_at')",
+    'accountId: user.id',
     'lessonTitle: lesson.title',
     ".from('courses')",
     ".from('enrollments')",

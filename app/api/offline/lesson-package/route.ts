@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       now,
     });
 
-    return NextResponse.json({ ...result, lessonTitle: lesson.title }, { headers: noStore });
+    return NextResponse.json({ ...result, accountId: user.id, lessonTitle: lesson.title }, { headers: noStore });
   } catch {
     return unavailable();
   }

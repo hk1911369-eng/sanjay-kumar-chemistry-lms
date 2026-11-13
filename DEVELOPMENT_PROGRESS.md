@@ -79,3 +79,15 @@ The verification bullets above record an earlier development checkpoint. They mu
 - PR #42 remains open and draft. Its current review surface is 1,348 commits, 394 changed files, 34,407 additions and 682 deletions. This is a significant review/scope risk; green CI is not approval to merge.
 - The combined commit-status endpoint reports pending with zero entries; the successful Actions check-run above is the verified CI result.
 - No database migration, Auth setting, Storage object, production resource, PR merge or deployment was changed.
+
+
+## Current exact-head verification — 13 November 2026
+
+- Current PR #42 head: `80254c4d08d42b5d39be88471fdc879bf037d752`.
+- GitHub Actions run `43440477477` passed on that exact SHA: guardrail tests, ESLint, TypeScript, production build, and production dependency audit.
+- Source branch includes parent-course publication/archive read guards for eleven tables, a guarded assignment-grading RPC, quiz/learning/exam access guards, active-student payment approval validation, role-change audit, and monthly-payment approval-time enrollment revalidation. These source migrations have not been applied to JMT Test.
+- Read-only JMT Test review found several of those effects absent and other migration effects already present despite missing ledger versions. The ledger ends at `20261111133701`; do not bulk-replay. A duplicate-policy hazard must be resolved before any migration application.
+- Remaining live gaps include quiz attempt start/submission, lesson/simulation completion, exam-plan creation, active-student payment approval, profile role-change audit, grading RPC, and monthly-payment approval-time recheck.
+- Positive controls: inspected public tables have RLS enabled; no inspected UPDATE policy lacks WITH CHECK; practical analytics is security-invoker; no inspected SECURITY DEFINER function has PUBLIC EXECUTE; anon/authenticated/service_role cannot CREATE in public.
+- Auth leaked-password protection remains an unresolved advisor finding; the connected tools do not expose a read-only Auth configuration setting.
+- PR #42 remains open and draft (1,349 commits, 394 changed files). No database, Auth, Storage, production, merge, or deployment changes were made. Source CI does not replace database role-matrix testing.

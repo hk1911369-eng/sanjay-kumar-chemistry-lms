@@ -817,3 +817,16 @@ These are positive controls, not evidence that all policies are correct. The out
 ## Student course metadata archival gap — 13 November 2026
 
 The live authenticated student course-list policy required `is_published` but omitted `archived_at IS NULL`, unlike the anonymous course policy. The parent-course read migration now adds restrictive guards to both `courses` and `course_subjects`, with explicit active-role branches for students and teaching/admin roles. This extends the source migration to eleven guarded tables. The live database has not been changed; the fix remains pending migration-ledger reconciliation and authorized test application.
+
+
+## Exact-head verification and additional live gaps — 13 November 2026
+
+The exact current PR head is `80254c4d08d42b5d39be88471fdc879bf037d752`. GitHub Actions run [43440477477](https://github.com/hk1911369-eng/sanjay-kumar-chemistry-lms/actions/runs/43440477477) passed on that SHA: guardrail tests, ESLint, TypeScript, production build, and production dependency audit. This does not establish runtime RLS correctness or database integration success.
+
+The read-only JMT Test audit found missing live protections for quiz-attempt start/submission, lesson and simulation completion, exam-plan creation, active-student payment approval, profile-role-change audit, assignment grading, and monthly-payment approval-time enrollment revalidation. The source branch contains migrations for these gaps, but they have not been applied. A new restrictive course-read policy also closes the authenticated-student archived-course metadata gap in source and covers eleven tables.
+
+Migration reconciliation remains a blocker: the live ledger ends at `20261111133701`, while some later migration effects exist without matching ledger entries and others are absent. One earlier migration can fail on replay because its policy already exists. No bulk replay is safe. The NULL-delivery-mode legacy-payment compatibility branch also remains unresolved pending evidence of a reliable historical-cohort marker.
+
+Positive controls verified remain RLS enabled on inspected exposed tables, UPDATE policies with WITH CHECK, a security-invoker practical analytics view, no inspected SECURITY DEFINER function with PUBLIC EXECUTE, and no CREATE privilege on public for anon/authenticated/service_role. Leaked-password protection remains an unresolved Auth advisor finding because no read-only Auth configuration action is available.
+
+No database, Auth, Storage, production, merge, or deployment changes were made. Keep PR #42 draft until migration reconciliation and authenticated PostgreSQL/Storage role-matrix tests are complete.

@@ -154,7 +154,7 @@ with check (
   and (select public.current_role()) = 'student'::public.app_role
   and split_part(storage_path, '/', 1) = (select auth.uid())::text
   and split_part(storage_path, '/', 2) = notebook_id::text
-  and split_part(storage_path, '/', 3) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|png|webp|pdf)$'
+  and split_part(storage_path, '/', 3) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp|pdf)$'
   and array_length(string_to_array(storage_path, '/'), 1) = 3
   and exists (
     select 1

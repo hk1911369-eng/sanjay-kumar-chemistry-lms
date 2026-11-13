@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react';\nimport Link from 'next/link';
 import { createClient } from '@/lib/supabase/browser';
 import { downloadOfflineLesson } from '@/lib/offline/lesson-download.mjs';
 import {
@@ -61,7 +61,7 @@ export function OfflineLessonDownloadButton({
       <button className="quiet-button" type="button" onClick={handleDownload} disabled={busy || complete}>
         {busy ? 'Downloading and verifying…' : complete ? 'Saved offline' : 'Download for offline'}
       </button>
-      {message && <small className={complete ? 'offline-download-success' : 'offline-download-message'} role="status">{message}</small>}
+      {message && <small className={complete ? 'offline-download-success' : 'offline-download-message'} role="status">{message}</small>}\n      {complete && <Link href="/offline">Open offline library</Link>}
     </div>
   );
 }

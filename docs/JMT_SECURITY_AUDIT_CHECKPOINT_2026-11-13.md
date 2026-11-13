@@ -41,12 +41,13 @@ Adds restrictive SELECT policies for:
 - written_exams
 - written_exam_questions
 - course_subjects
+- courses
 
 For student-facing content, the parent course must be published and non-archived. Existing permissive policies continue to enforce paid enrollment, publication/schedule conditions on individual learning items, and assigned-staff scope. Active admins and teaching staff continue through the restrictive guard while remaining constrained by the existing permissive policies. Published course-subject metadata remains publicly readable as intended.
 
 Regression tests: `tests/published-parent-course-content.test.mjs` (4 tests).
 
-The Primary and JMT Test course-content policies previously relied on student enrollment and item-level publication without consistently requiring the parent course itself to remain published. The restrictive policy prevents an old paid enrollment from preserving student access after course unpublishing or archival.
+The Primary and JMT Test course-content policies previously relied on student enrollment and item-level publication without consistently requiring the parent course itself to remain published. The restrictive policies prevent an old paid enrollment from preserving student access to course content or archived course metadata after course unpublishing or archival.
 
 ## Validation
 
@@ -58,7 +59,7 @@ The Primary and JMT Test course-content policies previously relied on student en
 ### Database syntax validation
 
 - The active-teacher function definitions were installed inside a transaction on JMT Test, inspected, and rolled back.
-- The ten restrictive policies were installed inside transactions on both Primary and JMT Test; PostgreSQL accepted all policy definitions.
+- The original ten content policies were installed inside transactions on both Primary and JMT Test; PostgreSQL accepted all policy definitions. The additional `courses` policy was validated from source and live catalog evidence, but was not installed or persisted.
 - Follow-up catalog queries confirmed zero persisted policies named `published parent course read guard` in either project.
 - These were DDL syntax/definition checks, not role-impersonation tests. No student, teacher, staff, or admin JWT was used to exercise actual row visibility.
 
@@ -81,3 +82,12 @@ The source migration `20261109150000_guard_payment_approval_period_and_fees.sql`
 ## Release status
 
 **Not ready to merge or deploy.** PR #42 remains draft. No production or test schema changes were persisted. The successful CI runs validate source/build behavior only; they do not replace live database role-matrix testing.
+
+
+## Follow-up — student course metadata and current CI — 13 November 2026
+
+A live policy check confirmed that authenticated students could see published course rows even when `archived_at` was set: the existing student permissive policy tested `is_published` only. The source migration now adds restrictive guards for both `courses` and `course_subjects`, making the total eleven guarded tables. The student branch on course-subject metadata is explicitly role-scoped; existing permissive policies continue to apply.
+
+The latest source commit is `0a68792cc8de1518c2dc90e2ccd3aced2f781385`. GitHub Actions run `43439956582` passed guardrail tests, ESLint, TypeScript, production build and production dependency audit (zero vulnerabilities reported). The combined status API remains pending with zero entries. PR #42 remains draft and spans 1,348 commits / 394 files; review and release readiness remain open.
+
+No database changes were applied. All new migration effects remain source-only until reconciliation and explicit test-database authorization.

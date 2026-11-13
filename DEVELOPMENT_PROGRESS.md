@@ -69,3 +69,13 @@ The verification bullets above record an earlier development checkpoint. They mu
 - Confirmed CI run `43436664528` passed on exact PR head `291791250f4eb9ff2a868ba19ea740b83cfaf3a5`; check-run conclusion is success. The combined commit-status API still has zero entries and reports pending, so only the Actions check-run is described as passed.
 - Additional live checks: all inspected exposed public tables have RLS enabled; no UPDATE policy lacks WITH CHECK; the practical analytics view is security-invoker and underlying RLS scopes staff to assigned courses; no inspected SECURITY DEFINER function is PUBLIC-executable; public schema CREATE is unavailable to anon/authenticated/service_role.
 - No database or Auth settings changed. The Auth leaked-password-protection advisor finding remains open because no read-only Auth settings action is exposed.
+
+
+## Latest exact-head verification — 13 November 2026
+
+- Pushed combined source/test commit `0a68792cc8de1518c2dc90e2ccd3aced2f781385` to `audit/jmt-master-prompt-follow-through`.
+- CI run `43439956582` passed on that exact SHA: guardrail tests, ESLint, TypeScript, production build and production dependency audit. The audit reported zero production dependency vulnerabilities.
+- The content-read migration now covers eleven tables, including student course metadata and course-subject metadata; the student role branch is explicit in both.
+- PR #42 remains open and draft. Its current review surface is 1,348 commits, 394 changed files, 34,407 additions and 682 deletions. This is a significant review/scope risk; green CI is not approval to merge.
+- The combined commit-status endpoint reports pending with zero entries; the successful Actions check-run above is the verified CI result.
+- No database migration, Auth setting, Storage object, production resource, PR merge or deployment was changed.

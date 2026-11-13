@@ -812,3 +812,8 @@ No database changes were made. Do not bulk replay the newer migrations: reconcil
 Further live catalog review found several important baseline controls already working: RLS is enabled on all ordinary tables in the inspected exposed `public` schema; no UPDATE policy lacks `WITH CHECK`; the lab practical analytics view uses `security_invoker=true` and its underlying review-history/notebook policies scope staff to assigned courses; and no inspected SECURITY DEFINER function has default PUBLIC EXECUTE. The intentionally public course-teacher lookup is explicitly granted to anon/authenticated and is narrowly scoped to published courses. The public schema is not CREATE-writable by anon, authenticated, or service_role.
 
 These are positive controls, not evidence that all policies are correct. The outstanding parent-course publication and payment/grading migration gaps remain. The Auth leaked-password protection advisor finding cannot be independently verified or changed through the currently available read-only connector actions.
+
+
+## Student course metadata archival gap — 13 November 2026
+
+The live authenticated student course-list policy required `is_published` but omitted `archived_at IS NULL`, unlike the anonymous course policy. The parent-course read migration now adds restrictive guards to both `courses` and `course_subjects`, with explicit active-role branches for students and teaching/admin roles. This extends the source migration to eleven guarded tables. The live database has not been changed; the fix remains pending migration-ledger reconciliation and authorized test application.

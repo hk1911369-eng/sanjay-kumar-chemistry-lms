@@ -1006,3 +1006,10 @@ A further catalog pass checked exposed public-schema tables, UPDATE policies, vi
 
 **Interpretation**
 These checks reduce concern about blanket RLS disablement, missing UPDATE postconditions, unsafe public view execution, and default PUBLIC function execution. They do not prove every row-level policy correct, nor do they clear the already documented parent-course publication gaps or payment/grading migration gaps. The leaked-password protection advisor finding remains unresolved because no read-only Auth configuration endpoint was available in the connected tool set.
+
+
+## Student course-catalogue archive boundary — 13 November 2026
+
+A focused live policy check found that the authenticated student branch of the existing `courses visible by role` SELECT policy required `is_published` but did not require `archived_at IS NULL`. The separate anonymous course policy already required both conditions. The same migration now adds a restrictive SELECT guard on `public.courses` and keeps the related `public.course_subjects` guard explicitly role-scoped. The migration covers eleven tables in total; existing permissive policies continue to control each role's row scope. This is source-only: it has not been applied to JMT Test or production.
+
+CI run `43439956582` passed on exact commit `0a68792cc8de1518c2dc90e2ccd3aced2f781385`: guardrail tests, ESLint, TypeScript, production build, and production dependency audit (zero reported vulnerabilities). The PR combined commit-status endpoint still reports pending with zero status entries; the GitHub Actions check-run is the authoritative successful result.

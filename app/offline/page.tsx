@@ -135,6 +135,7 @@ export default function OfflineLibraryPage() {
 
   async function openLesson(item: OfflineLesson) {
     if (!userId || busyKey) return;
+    const requestId = libraryRequestId.current;
     setBusyKey(item.key);
     setMessage('');
     setOpened(null);
@@ -144,8 +145,9 @@ export default function OfflineLibraryPage() {
         resourceId: item.resourceId,
         resourceVersion: item.resourceVersion,
       });
-      const { data: { session } } = await createClient().auth.getSession();
-      if (session?.user?.id !== userId) {
+      const { data: { session }, error: sessionError } = await createClient().auth.getSession();
+      if (sessionError) throw sessionError;
+      if (requestId !== libraryRequestId.current || session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -170,17 +172,19 @@ export default function OfflineLibraryPage() {
     } catch {
       setMessage('The lesson could not be decrypted or verified. No unverified content was opened.');
     } finally {
-      setBusyKey('');
+      if (requestId === libraryRequestId.current) setBusyKey('');
     }
   }
 
   async function removeLesson(item: OfflineLesson) {
     if (!userId || busyKey) return;
+    const requestId = libraryRequestId.current;
     setBusyKey(item.key);
     setMessage('');
     try {
-      const { data: { session } } = await createClient().auth.getSession();
-      if (session?.user?.id !== userId) {
+      const { data: { session }, error: sessionError } = await createClient().auth.getSession();
+      if (sessionError) throw sessionError;
+      if (requestId !== libraryRequestId.current || session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -195,8 +199,9 @@ export default function OfflineLibraryPage() {
       // The account may change while IndexedDB deletion is in flight. The
       // deletion remains scoped to the original user, but never let its
       // completion mutate the newly signed-in account's visible library.
-      const { data: { session: confirmedSession } } = await createClient().auth.getSession();
-      if (confirmedSession?.user?.id !== userId) {
+      const { data: { session: confirmedSession }, error: confirmedSessionError } = await createClient().auth.getSession();
+      if (confirmedSessionError) throw confirmedSessionError;
+      if (requestId !== libraryRequestId.current || confirmedSession?.user?.id !== userId) {
         setUserId(confirmedSession?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -208,7 +213,7 @@ export default function OfflineLibraryPage() {
     } catch {
       setMessage('The saved lesson could not be removed from this device.');
     } finally {
-      setBusyKey('');
+      if (requestId === libraryRequestId.current) setBusyKey('');
     }
   }
 

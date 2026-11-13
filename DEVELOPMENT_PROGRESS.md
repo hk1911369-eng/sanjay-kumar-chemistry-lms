@@ -53,3 +53,13 @@ The verification bullets above record an earlier development checkpoint. They mu
 - These migrations are pushed to the audit branch but have not been applied to JMT Test or production.
 - Latest verified CI at commit 'c3e6c8859d428381b503716de65a7bbec9e925c5' passed the test, lint, TypeScript, build, and production dependency-audit steps. Recheck CI on the next branch head before release decisions.
 - Outstanding: reconcile migration history before applying any migration, add PostgreSQL role-level integration tests, resolve the legacy NULL-mode initial-payment policy using a verified grandfathering rule, and complete the remaining live Auth/Storage/RLS checks.
+
+
+## Latest audit continuation — 13 November 2026
+
+- Rechecked PR #42 against its exact current head, `c5252ad5ff4334ce8a909a4cb3ad6d1483e2cb23`.
+- CI run `43435615640` completed successfully on that exact SHA: guardrail tests, ESLint, TypeScript, production build and production dependency audit all passed.
+- Combined commit-status endpoint still reports `pending` with zero status entries; the successful GitHub Actions check-run is the verified CI result.
+- Reconciled the thirteen 13-November security migrations against live JMT Test catalog state. Several are genuinely absent; others are already represented in schema despite ledger gaps. See `AUDIT_REPORT.md` for the object-by-object reconciliation.
+- No Supabase migration was applied. No Auth, Storage, production, payment, enrollment or profile data was changed.
+- PR #42 remains open and draft. The next safe phase is migration-history reconciliation plus authenticated PostgreSQL integration tests in the isolated test project, only after explicit authorization to mutate that test database.

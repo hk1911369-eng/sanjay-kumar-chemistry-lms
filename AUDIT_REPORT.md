@@ -968,3 +968,27 @@ The audit branch now contains a guarded 'grade_assignment_submission(uuid,numeri
 A follow-up migration, '20261113250000_recheck_admission_paid_at_payment_approval.sql', now adds an approval-time guard for monthly payments. It locks the matching enrollment and requires it to remain active with admission paid; when a delivery mode is recorded, it must still match the enrollment. This addresses the stale-eligibility gap between submission and approval. It has a source-level regression test and is also **not applied** to either database.
 
 The branch's existing active-student approval migration remains separate and still needs to be applied/reconciled in the test environment. The NULL-delivery-mode initial-payment compatibility path remains unresolved because the database has no proven legacy-cohort marker; tightening it without a verified grandfathering rule could reject legitimate historical accounts. No live payment, enrollment, profile, or course rows were changed.
+
+
+## Live schema reconciliation — 13 November 2026
+
+The isolated JMT Test project's migration ledger currently ends at `20261111133701`; the audit branch contains thirteen later security migrations dated 13 November, through `20261113250000`. This is a migration-history gap, but actual catalog inspection shows a mixed state: some effects exist despite missing ledger entries, while several protections are genuinely absent. Do not replay the files as a batch or infer database state from filenames alone.
+
+**Effects verified present despite the ledger gap**
+- The active teacher/staff course-assignment validation trigger exists on `course_assignments`.
+- `public.current_role()` already returns a role only for active profiles.
+- Earlier practice-engine and assignment-history changes were also reconciled as present in the live schema, despite their migration versions not being recorded.
+
+**Branch migrations whose corresponding live protections were not found**
+- `20261113130000`: the live virtual-lab catalogue policy requires a published lab and paid enrollment, but does not require the parent course to be published; the live simulation-completion RPC checks archival state but not course publication.
+- `20261113140000`: live notebook creation/update and evidence-insert policies do not require the parent course to be published. The branch migration adds this requirement while preserving historical notebook reads and staff review.
+- `20261113160000`: no restrictive parent-course read policies were found on the covered content tables. Existing student read policies commonly check `archived_at IS NULL` but omit `courses.is_published IS TRUE`. Because the lesson-material Storage policy's subquery reads `public.lessons` under RLS, this restrictive lesson policy is also the intended indirect parent-publication gate for lesson-material reads; it is not yet live.
+- `20261113180000`: the active-student payment-approval trigger is absent. The existing approval RPC checks admin authority and payment/course/fee conditions, but does not independently require the student profile to remain active at approval time.
+- `20261113190000` and `20261113200000`: the quiz submission trigger is absent, and the live quiz-attempt INSERT policy lacks the parent-course published/unarchived check. The current column-level INSERT grants for exactly `quiz_id`, `student_id`, `answers`, and `started_at` are intentional and match `startQuiz()`; they are not a privilege defect.
+- `20261113210000`: live lesson-completion and simulation-completion RPCs lack the parent-course publication/archive checks added in the branch migration.
+- `20261113220000`: live exam-plan creation checks paid active enrollment and non-archival, but not parent-course publication.
+- `20261113230000`: no profile-role-change audit trigger was found. The existing self-role-escalation guard is present and is a separate control.
+- `20261113240000`: the guarded assignment-grading RPC is not present in JMT Test. Authenticated direct UPDATE grants on grading fields are revoked, so the pushed application RPC fix is not live until its migration is reconciled and applied.
+- `20261113250000`: the monthly-payment approval-time enrollment recheck trigger is not present in JMT Test.
+
+**Safety boundary:** These findings were obtained from catalog, function, policy, trigger, privilege and migration-ledger reads only. No migration was applied; no database rows, Auth settings, Storage objects, production resources, or payment/enrollment records were changed. Before any test-database application, reconcile already-present effects and migration-version records individually, and resolve the duplicate-policy hazard previously identified in the assignment-submission-history migration. Production remains out of scope.

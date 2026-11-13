@@ -797,3 +797,12 @@ Two additional database-enforced remediations have been committed to the audit b
 - Monthly payment approval now has an additional trigger guard that re-locks the matching enrollment and requires active status plus 'admission_fee_paid = true'; a non-NULL delivery mode must still match. This closes the approval-time stale-admission-state gap in branch source, but is not live until its migration is applied.
 
 The source tests assert the SQL guardrails and application call sites; they are not substitutes for PostgreSQL integration tests under authenticated roles. The isolated JMT Test database and production remain unchanged. The NULL-mode initial-payment compatibility exception remains open pending a safe way to identify grandfathered accounts.
+
+
+## Live database reconciliation checkpoint — 13 November 2026
+
+JMT Test's migration ledger ends at `20261111133701`, while the audit branch has thirteen later 13-November migrations. The ledger is not a reliable proxy for the actual schema: the active teacher-assignment trigger and active-profile-aware `current_role()` already exist without matching latest migration versions. Other source protections are genuinely absent from the live catalog, including parent-course publication gates for virtual labs, notebooks, content reads, quiz start/submission, lesson/simulation evidence and exam plans; active-student payment approval; profile role-change auditing; the grading RPC; and monthly approval-time enrollment revalidation. Exact live-vs-branch details and affected objects are recorded in `AUDIT_REPORT.md`.
+
+The live quiz-attempt insert column grants are deliberately limited to the four fields used by the application and are not a defect. The lesson-material Storage read policy's lesson lookup is subject to lesson RLS, so the branch's restrictive lesson read guard is expected to close its parent-course publication gap once safely installed; it does not currently exist in JMT Test.
+
+No database changes were made. Do not bulk replay the newer migrations: reconcile each effect and ledger version first, and preserve the previously identified duplicate-policy migration hazard. The isolated test project is read-only for this audit; production is untouched.

@@ -91,7 +91,7 @@ export default function OfflineLibraryPage() {
           setLessons(items as OfflineLesson[]);
         }
       } catch {
-        if (active) setMessage('Offline storage is unavailable in this browser. Reconnect and try again.');
+        if (active && requestId === libraryRequestId.current) setMessage('Offline storage is unavailable in this browser. Reconnect and try again.');
       } finally {
         if (active && requestId === libraryRequestId.current) setLoading(false);
       }
@@ -108,6 +108,7 @@ export default function OfflineLibraryPage() {
     try {
       const { data: { session }, error: sessionError } = await createClient().auth.getSession();
       if (sessionError) throw sessionError;
+      if (requestId !== libraryRequestId.current) return;
       if (session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);

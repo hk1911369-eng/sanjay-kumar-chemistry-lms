@@ -47,15 +47,28 @@ export default function OfflineLibraryPage() {
 
   useEffect(() => {
     let active = true;
+    let loadedUserId = '';
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUserId = session?.user?.id ?? '';
+      if (loadedUserId && nextUserId !== loadedUserId) {
+        loadedUserId = nextUserId;
+        setUserId(nextUserId);
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed. Refresh the library to load only that account’s saved lessons.');
+      }
+    });
     async function loadLibrary() {
       setLoading(true);
       setMessage('');
       try {
         // getSession reads the locally persisted session, so this can identify
         // the account while offline without making an authorization request.
-        const { data: { session } } = await createClient().auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (!active) return;
         const currentUserId = session?.user?.id ?? '';
+        loadedUserId = currentUserId;
         setUserId(currentUserId);
         if (!currentUserId) {
           setLessons([]);
@@ -71,13 +84,21 @@ export default function OfflineLibraryPage() {
       }
     }
     void loadLibrary();
-    return () => { active = false; };
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   async function refresh() {
     if (!userId) return;
     setLoading(true);
     try {
+      const { data: { session } } = await createClient().auth.getSession();
+      if (session?.user?.id !== userId) {
+        setUserId(session?.user?.id ?? '');
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed. Refresh again to load its offline lessons.');
+        return;
+      }
       const items = await createVault().listForUser(userId);
       setLessons(items as OfflineLesson[]);
       setMessage('');
@@ -99,6 +120,14 @@ export default function OfflineLibraryPage() {
         resourceId: item.resourceId,
         resourceVersion: item.resourceVersion,
       });
+      const { data: { session } } = await createClient().auth.getSession();
+      if (session?.user?.id !== userId) {
+        setUserId(session?.user?.id ?? '');
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed before this lesson could be opened.');
+        return;
+      }
       if (!result.ok) {
         const messages: Record<string, string> = {
           offline_lease_expired: 'This lesson’s offline access has expired. Reconnect to refresh your access.',
@@ -126,6 +155,14 @@ export default function OfflineLibraryPage() {
     setBusyKey(item.key);
     setMessage('');
     try {
+      const { data: { session } } = await createClient().auth.getSession();
+      if (session?.user?.id !== userId) {
+        setUserId(session?.user?.id ?? '');
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed. The saved lesson was not removed.');
+        return;
+      }
       await createVault().remove({
         userId,
         resourceId: item.resourceId,

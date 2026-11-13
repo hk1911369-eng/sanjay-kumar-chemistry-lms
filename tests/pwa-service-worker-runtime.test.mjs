@@ -295,3 +295,17 @@ test('cached Next static assets are served without a network request', async () 
   assert.equal(await response, cachedAsset);
   assert.equal(worker.calls.fetch.length, 0);
 });
+
+test('install rejects redirected Next assets instead of caching unrelated HTML', async () => {
+  const html = '<script src="/_next/static/chunks/offline-library.js"></script>';
+  const worker = createWorker({
+    fetchImpl: async (url) => url === '/offline'
+      ? { ok: true, type: 'basic', url: 'https://academy.example/offline', clone() { return this; }, async text() { return html; } }
+      : { ok: true, type: 'basic', url: 'https://academy.example/login', clone() { return this; } },
+  });
+  const lifecycle = lifecycleEvent();
+  await worker.dispatch('install', lifecycle.event);
+  await assert.rejects(lifecycle.finish(), /resolved outside immutable Next assets/);
+  assert.equal(worker.calls.skipWaiting, 0);
+  assert.equal(worker.stores.get('jmt-shell-v1').has('/_next/static/chunks/offline-library.js'), false);
+});

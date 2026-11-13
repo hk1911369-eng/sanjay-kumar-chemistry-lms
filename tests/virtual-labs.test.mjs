@@ -231,3 +231,15 @@ test('physics catalogue includes the interactive ray optics experiment', async (
   assert.match(rayOptics, /Principal ray construction/);
   assert.match(admin, /Physics · Circuits and ray optics/);
 });
+
+
+test('student catalogue reads and simulation completion require a published parent course', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261113130000_require_published_course_for_virtual_labs.sql', import.meta.url), 'utf8');
+  const catalogue = migration.split('CREATE POLICY "virtual lab catalogue scoped read"')[1].split('CREATE OR REPLACE FUNCTION')[0];
+  const completion = migration.split('CREATE OR REPLACE FUNCTION public.record_simulation_completion')[1];
+  assert.match(catalogue, /c\\.is_published IS TRUE/);
+  assert.match(catalogue, /c\\.archived_at IS NULL/);
+  assert.match(completion, /c\\.is_published IS TRUE/);
+  assert.match(completion, /c\\.archived_at IS NULL/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\\.record_simulation_completion/);
+});

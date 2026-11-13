@@ -10,7 +10,7 @@ test('restrictive parent-course publication guards cover all student course-cont
   for (const table of tables) {
     assert.match(sql, new RegExp('CREATE POLICY "published parent course read guard"\\s+ON public\\.' + table + ' AS RESTRICTIVE FOR SELECT TO authenticated'));
   }
-  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 11);
+  assert.equal((sql.match(/CREATE POLICY "published parent course read guard"/g) ?? []).length, 10);
 });
 
 test('student access requires active student role and a published, unarchived parent course', async () => {
@@ -18,6 +18,7 @@ test('student access requires active student role and a published, unarchived pa
   assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.is_published IS TRUE/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.archived_at IS NULL/g) ?? []).length, 10);
+  assert.match(sql, /ON public\\.courses AS RESTRICTIVE FOR SELECT TO authenticated[\\s\\S]*?AND is_published IS TRUE[\\s\\S]*?AND archived_at IS NULL/);
 });
 
 test('admin and teaching-staff roles remain allowed by the restrictive guard and existing policies retain row scope', async () => {

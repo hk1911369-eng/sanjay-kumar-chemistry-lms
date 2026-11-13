@@ -49,6 +49,11 @@ test('offline library is account-scoped and opens only verified vault content', 
   const downloadButton = await readFile(new URL('../components/offline-lesson-download-button.tsx', import.meta.url), 'utf8');
   const vault = await readFile(new URL('../lib/offline/encrypted-vault.mjs', import.meta.url), 'utf8');
   assert.match(library, /auth\.getSession\(\)/);
+  assert.match(library, /onAuthStateChange/);
+  assert.match(library, /nextUserId !== loadedUserId/);
+  assert.ok(library.includes('confirmedSession?.user?.id === currentUserId'));
+  assert.ok(library.includes('confirmedSession?.user?.id !== userId'));
+  assert.ok(library.includes('session?.user?.id !== userId'));
   assert.match(library, /listForUser\(currentUserId\)/);
   assert.match(library, /openPackage\(/);
   assert.match(library, /new TextDecoder\('utf-8', \{ fatal: true \}\)/);

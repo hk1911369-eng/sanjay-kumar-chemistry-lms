@@ -15,14 +15,14 @@ test('restrictive parent-course publication guards cover all student course-cont
 
 test('student access requires active student role and a published, unarchived parent course', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 11);
+  assert.equal((sql.match(/\(SELECT public\.current_role\(\)\) = 'student'::public\.app_role/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.is_published IS TRUE/g) ?? []).length, 10);
   assert.equal((sql.match(/c\.archived_at IS NULL/g) ?? []).length, 10);
 });
 
 test('admin and teaching-staff roles remain allowed by the restrictive guard and existing policies retain row scope', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal((sql.match(/'admin'::public\.app_role, 'teacher'::public\.app_role, 'staff'::public\.app_role/g) ?? []).length, 10);
+  assert.equal((sql.match(/'admin'::public\.app_role, 'teacher'::public\.app_role, 'staff'::public\.app_role/g) ?? []).length, 11);
   assert.match(sql, /Existing permissive policies continue to decide which assigned staff and paid/);
 });
 

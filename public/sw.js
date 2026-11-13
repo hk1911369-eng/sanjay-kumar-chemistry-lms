@@ -4,11 +4,15 @@
  * are never placed in Cache Storage by this worker.
  */
 const CACHE_PREFIX = 'jmt-shell-';
-const CACHE_NAME = 'jmt-shell-v1';
+const CACHE_NAME = 'jmt-shell-v2';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
+    // A new worker must never mutate the cache used by the currently active
+    // worker. Start with a clean versioned cache so failed installs cannot
+    // leave stale assets that a later retry might accidentally activate.
+    await caches.delete(CACHE_NAME);
     const cache = await caches.open(CACHE_NAME);
     const response = await fetch(OFFLINE_URL, { cache: 'reload' });
     if (!response.ok || response.type !== 'basic') throw new Error('Unable to precache offline fallback');

@@ -84,6 +84,7 @@ export default async function LearningPage({
         <span className="auth-kicker">JMT ACADEMY · LEARNING SPACE</span>
         <h1>{course.title}</h1>
         <p className="muted">{course.description}</p>
+        <Link className="quiet-button" href="/offline">Open offline lessons</Link>
         {query.progress_saved && <p className="form-success">Lesson progress saved.</p>}
         {query.progress_error && <p className="form-error">Progress could not be saved.</p>}
         {discussionError && <p className="form-error">{discussionError === 'rate_limit' ? 'You have posted too many comments. Please wait a minute and try again.' : 'That action could not be completed. Please try again.'}</p>}
@@ -111,8 +112,7 @@ export default async function LearningPage({
                 <span className="auth-kicker">{l.chapter_id ? chapterNames.get(l.chapter_id) ?? 'LESSON' : 'LESSON'} · {l.position}</span>
                 <h2>{l.title}</h2>
                 {l.description && <p>{l.description}</p>}
-                {l.content && <div className="lesson-content">{l.content.split('
-').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
+                {l.content && <div className="lesson-content">{l.content.split('\\n').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
                 {l.video_url && <div className="lesson-video jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video controls playsInline preload="metadata" src={l.video_url}>Your browser does not support video playback.</video></div>}
 
                 {!!lessonResources.length && <section className="lesson-materials">

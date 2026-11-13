@@ -12,7 +12,20 @@ self.addEventListener('install', (event) => {
     const cache = await caches.open(CACHE_NAME);
     const response = await fetch(OFFLINE_URL, { cache: 'reload' });
     if (!response.ok) throw new Error('Unable to precache offline fallback');
-    await cache.put(OFFLINE_URL, response);
+    await cache.put(OFFLINE_URL, response.clone());
+
+    // The offline route is a client-rendered library. Precache only the
+    // immutable Next build assets referenced by its generic HTML shell so
+    // its JavaScript can hydrate without a network connection.
+    const html = await response.clone().text();
+    const staticAssets = [...new Set(html.match(/\\/_next\\/static\\/[^"'\\s<>]+/g) || [])];
+    for (const asset of staticAssets) {
+      const assetResponse = await fetch(asset, { cache: 'reload' });
+      if (!assetResponse.ok || assetResponse.type !== 'basic') {
+        throw new Error('Unable to precache offline library assets');
+      }
+      await cache.put(asset, assetResponse);
+    }
     await self.skipWaiting();
   })());
 });

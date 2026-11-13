@@ -70,6 +70,7 @@ export default function OfflineLibraryPage() {
         if (!active) return;
         const currentUserId = session?.user?.id ?? '';
         loadedUserId = currentUserId;
+        sessionInitialized = true;
         setUserId(currentUserId);
         if (!currentUserId) {
           setLessons([]);

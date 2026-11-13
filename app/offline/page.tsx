@@ -45,6 +45,7 @@ export default function OfflineLibraryPage() {
   const [opened, setOpened] = useState<{ resourceId: string; title: string; content: string } | null>(null);
   const [busyKey, setBusyKey] = useState('');
   const libraryRequestId = useRef(0);
+  const accountGeneration = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -55,10 +56,12 @@ export default function OfflineLibraryPage() {
       const nextUserId = session?.user?.id ?? '';
       if (sessionInitialized && nextUserId !== loadedUserId) {
         libraryRequestId.current += 1;
+        accountGeneration.current += 1;
         loadedUserId = nextUserId;
         setUserId(nextUserId);
         setLessons([]);
         setOpened(null);
+        setBusyKey('');
         setMessage('The signed-in account changed. Refresh the library to load only that account’s saved lessons.');
       }
     });
@@ -135,7 +138,7 @@ export default function OfflineLibraryPage() {
 
   async function openLesson(item: OfflineLesson) {
     if (!userId || busyKey) return;
-    const requestId = libraryRequestId.current;
+    const operationGeneration = accountGeneration.current;
     setBusyKey(item.key);
     setMessage('');
     setOpened(null);
@@ -147,7 +150,7 @@ export default function OfflineLibraryPage() {
       });
       const { data: { session }, error: sessionError } = await createClient().auth.getSession();
       if (sessionError) throw sessionError;
-      if (requestId !== libraryRequestId.current || session?.user?.id !== userId) {
+      if (operationGeneration !== accountGeneration.current || session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -172,19 +175,19 @@ export default function OfflineLibraryPage() {
     } catch {
       setMessage('The lesson could not be decrypted or verified. No unverified content was opened.');
     } finally {
-      if (requestId === libraryRequestId.current) setBusyKey('');
+      if (operationGeneration === accountGeneration.current) setBusyKey('');
     }
   }
 
   async function removeLesson(item: OfflineLesson) {
     if (!userId || busyKey) return;
-    const requestId = libraryRequestId.current;
+    const operationGeneration = accountGeneration.current;
     setBusyKey(item.key);
     setMessage('');
     try {
       const { data: { session }, error: sessionError } = await createClient().auth.getSession();
       if (sessionError) throw sessionError;
-      if (requestId !== libraryRequestId.current || session?.user?.id !== userId) {
+      if (operationGeneration !== accountGeneration.current || session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -201,7 +204,7 @@ export default function OfflineLibraryPage() {
       // completion mutate the newly signed-in account's visible library.
       const { data: { session: confirmedSession }, error: confirmedSessionError } = await createClient().auth.getSession();
       if (confirmedSessionError) throw confirmedSessionError;
-      if (requestId !== libraryRequestId.current || confirmedSession?.user?.id !== userId) {
+      if (operationGeneration !== accountGeneration.current || confirmedSession?.user?.id !== userId) {
         setUserId(confirmedSession?.user?.id ?? '');
         setLessons([]);
         setOpened(null);
@@ -213,7 +216,7 @@ export default function OfflineLibraryPage() {
     } catch {
       setMessage('The saved lesson could not be removed from this device.');
     } finally {
-      if (requestId === libraryRequestId.current) setBusyKey('');
+      if (operationGeneration === accountGeneration.current) setBusyKey('');
     }
   }
 

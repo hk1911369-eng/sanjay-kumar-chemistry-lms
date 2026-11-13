@@ -30,7 +30,7 @@ function serverPayload(overrides = {}) {
     entitlementExpiresAt: '2026-11-30T17:59:59.999Z',
     now: NOW,
   });
-  return { ...result, ...overrides };
+  return { ...result, lessonTitle: 'Atomic Structure', ...overrides };
 }
 
 function setup({ payload = serverPayload(), status = 200, vault = null } = {}) {
@@ -64,7 +64,7 @@ test('downloads server-authorized lesson content into the encrypted vault and co
   });
   assert.equal(result.jobId, 'job-1');
   assert.equal(f.saved.length, 1);
-  assert.equal(f.saved[0].userId, 'student-a');
+  assert.equal(f.saved[0].userId, 'student-a');\n  assert.equal(f.saved[0].title, 'Atomic Structure');
   assert.equal(f.saved[0].chunks[0].bytes instanceof Uint8Array, true);
   assert.match(f.requests[0].url, /lessonId=/);
   assert.equal(f.requests[0].options.credentials, 'same-origin');

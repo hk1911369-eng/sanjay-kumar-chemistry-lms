@@ -286,7 +286,7 @@ test('same-origin Next static assets use cache-first and cache successful networ
 });
 
 test('static asset remains available when Cache Storage rejects a write', async () => {
-  const assetResponse = { ok: true, type: 'basic', clone() { return this; }, marker: 'network-asset' };
+  const assetResponse = { ok: true, type: 'basic', url: 'https://academy.example/_next/static/chunks/app.js', headers: { get: () => 'application/javascript' }, clone() { return this; }, marker: 'network-asset' };
   const worker = createWorker({
     fetchImpl: async () => assetResponse,
     cachePutImpl: async () => { throw new Error('quota exceeded'); },

@@ -7,6 +7,18 @@ const CACHE_PREFIX = 'jmt-shell-';
 const CACHE_NAME = 'jmt-shell-v2';
 const OFFLINE_URL = '/offline';
 
+function isCacheableStaticAsset(response) {
+  if (!response.ok || response.type !== 'basic' || !response.url) return false;
+  const finalUrl = new URL(response.url);
+  if (finalUrl.origin !== self.location.origin || !finalUrl.pathname.startsWith('/_next/static/')) return false;
+  const contentType = response.headers?.get('content-type')?.split(';', 1)[0].trim().toLowerCase() || '';
+  return contentType === 'application/javascript' ||
+    contentType === 'text/javascript' ||
+    contentType === 'text/css' ||
+    contentType.startsWith('font/') ||
+    contentType.startsWith('image/');
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     // A new worker must never mutate the cache used by the currently active
@@ -31,15 +43,8 @@ self.addEventListener('install', (event) => {
     const staticAssets = [...new Set(html.match(/\/_next\/static\/[^"'\s<>]+/g) || [])];
     for (const asset of staticAssets) {
       const assetResponse = await fetch(asset, { cache: 'reload' });
-      if (!assetResponse.ok || assetResponse.type !== 'basic') {
-        throw new Error('Unable to precache offline library assets');
-      }
-      if (assetResponse.url) {
-        const finalAssetUrl = new URL(assetResponse.url);
-        if (finalAssetUrl.origin !== self.location.origin ||
-            !finalAssetUrl.pathname.startsWith('/_next/static/')) {
-          throw new Error('Offline library asset resolved outside immutable Next assets');
-        }
+      if (!isCacheableStaticAsset(assetResponse)) {
+        throw new Error('Offline library response was not a valid static asset');
       }
       await cache.put(asset, assetResponse);
     }
@@ -71,14 +76,10 @@ self.addEventListener('fetch', (event) => {
       const cached = await cache.match(request);
       if (cached) return cached;
       const response = await fetch(request);
-      if (response.ok && response.type === 'basic') {
-        const finalUrl = response.url ? new URL(response.url) : null;
-        const remainsStaticAsset = !finalUrl ||
-          (finalUrl.origin === self.location.origin &&
-            finalUrl.pathname.startsWith('/_next/static/'));
-        // Never store a redirected login or HTML response under a build-asset
-        // key. Cache Storage quota errors must not break the network response.
-        if (remainsStaticAsset) {
+      if (isCacheableStaticAsset(response)) {
+        // Cache only same-origin JavaScript, CSS, font and image responses.
+        // Cache Storage quota errors must not break the network response.
+        {
           try {
             await cache.put(request, response.clone());
           } catch {

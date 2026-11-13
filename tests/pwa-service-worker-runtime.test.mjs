@@ -76,7 +76,7 @@ test('install precaches only immutable Next assets referenced by offline library
   const worker = createWorker({
     fetchImpl: async (url) => url === '/offline'
       ? { ok: true, type: 'basic', url: 'https://academy.example/offline', clone() { return this; }, async text() { return html; } }
-      : { ok: true, type: 'basic', clone() { return this; } },
+      : { ok: true, type: 'basic', url: `https://academy.example${url}`, headers: { get: () => url.endsWith('.css') ? 'text/css' : 'application/javascript' }, clone() { return this; } },
   });
   const lifecycle = lifecycleEvent();
   await worker.dispatch('install', lifecycle.event);
@@ -272,7 +272,7 @@ test('cross-origin requests are left to the browser and are not cached', async (
 });
 
 test('same-origin Next static assets use cache-first and cache successful network responses', async () => {
-  const assetResponse = { ok: true, type: 'basic', clone() { return this; }, marker: 'network-asset' };
+  const assetResponse = { ok: true, type: 'basic', url: 'https://academy.example/_next/static/chunks/app.js', headers: { get: () => 'application/javascript; charset=utf-8' }, clone() { return this; }, marker: 'network-asset' };
   const worker = createWorker({ fetchImpl: async () => assetResponse });
   let response;
   await worker.dispatch('fetch', {
@@ -363,5 +363,25 @@ test('runtime static asset redirect is returned but never cached under the asset
 
   assert.equal(await response, redirectedPage);
   assert.equal(worker.calls.fetch.length, 1);
+  assert.equal(worker.stores.get('jmt-shell-v2').size, 0);
+});
+
+
+test('runtime static URL returning HTML is never cached', async () => {
+  const rewrittenHtml = {
+    ok: true,
+    type: 'basic',
+    url: 'https://academy.example/_next/static/chunks/app.js',
+    headers: { get: () => 'text/html; charset=utf-8' },
+    clone() { return this; },
+    marker: 'rewritten-html',
+  };
+  const worker = createWorker({ fetchImpl: async () => rewrittenHtml });
+  let response;
+  await worker.dispatch('fetch', {
+    request: request('/_next/static/chunks/app.js'),
+    respondWith(value) { response = value; },
+  });
+  assert.equal(await response, rewrittenHtml);
   assert.equal(worker.stores.get('jmt-shell-v2').size, 0);
 });

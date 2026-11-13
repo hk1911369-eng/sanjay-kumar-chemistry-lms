@@ -11,7 +11,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
     const response = await fetch(OFFLINE_URL, { cache: 'reload' });
-    if (!response.ok) throw new Error('Unable to precache offline fallback');
+    if (!response.ok || response.type !== 'basic') throw new Error('Unable to precache offline fallback');
+    if (response.url) {
+      const finalUrl = new URL(response.url);
+      if (finalUrl.origin !== self.location.origin || finalUrl.pathname !== OFFLINE_URL) {
+        throw new Error('Offline fallback resolved to an unexpected page');
+      }
+    }
     await cache.put(OFFLINE_URL, response.clone());
 
     // The offline route is a client-rendered library. Precache only the

@@ -15,7 +15,7 @@ test('restrictive parent-course publication guards cover all student course-cont
 
 test('student content access requires published and unarchived parent courses', async () => {
   const sql = await readFile(new URL(migrationPath, import.meta.url), 'utf8');
-  assert.equal(sql.split("(SELECT public.current_role()) = 'student'::public.app_role").length - 1, 10);
+  assert.equal(sql.split("(SELECT public.current_role()) = 'student'::public.app_role").length - 1, 11);
   assert.equal(sql.split('c.is_published IS TRUE').length - 1, 10);
   assert.equal(sql.split('c.archived_at IS NULL').length - 1, 10);
   assert.ok(sql.includes('ON public.courses AS RESTRICTIVE FOR SELECT TO authenticated'));

@@ -180,12 +180,15 @@ USING (
   (SELECT public.current_role()) IN (
     'admin'::public.app_role, 'teacher'::public.app_role, 'staff'::public.app_role
   )
-  OR EXISTS (
-    SELECT 1
-    FROM public.courses c
-    WHERE c.id = course_subjects.course_id
+  OR (
+    (SELECT public.current_role()) = 'student'::public.app_role
+    AND EXISTS (
+      SELECT 1
+      FROM public.courses c
+      WHERE c.id = course_subjects.course_id
       AND c.is_published IS TRUE
       AND c.archived_at IS NULL
+    )
   )
 );
 

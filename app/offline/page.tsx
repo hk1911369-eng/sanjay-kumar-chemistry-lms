@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/browser';
 import {
@@ -44,6 +44,7 @@ export default function OfflineLibraryPage() {
   const [message, setMessage] = useState('');
   const [opened, setOpened] = useState<{ resourceId: string; title: string; content: string } | null>(null);
   const [busyKey, setBusyKey] = useState('');
+  const libraryRequestId = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -53,6 +54,7 @@ export default function OfflineLibraryPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUserId = session?.user?.id ?? '';
       if (sessionInitialized && nextUserId !== loadedUserId) {
+        libraryRequestId.current += 1;
         loadedUserId = nextUserId;
         setUserId(nextUserId);
         setLessons([]);
@@ -61,13 +63,15 @@ export default function OfflineLibraryPage() {
       }
     });
     async function loadLibrary() {
+      const requestId = ++libraryRequestId.current;
       setLoading(true);
       setMessage('');
       try {
         // getSession reads the locally persisted session, so this can identify
         // the account while offline without making an authorization request.
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!active) return;
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!active || requestId !== libraryRequestId.current) return;
         const currentUserId = session?.user?.id ?? '';
         loadedUserId = currentUserId;
         sessionInitialized = true;
@@ -78,14 +82,15 @@ export default function OfflineLibraryPage() {
           return;
         }
         const items = await createVault().listForUser(currentUserId);
-        const { data: { session: confirmedSession } } = await supabase.auth.getSession();
-        if (active && confirmedSession?.user?.id === currentUserId && loadedUserId === currentUserId) {
+        const { data: { session: confirmedSession }, error: confirmedSessionError } = await supabase.auth.getSession();
+        if (confirmedSessionError) throw confirmedSessionError;
+        if (active && requestId === libraryRequestId.current && confirmedSession?.user?.id === currentUserId && loadedUserId === currentUserId) {
           setLessons(items as OfflineLesson[]);
         }
       } catch {
         if (active) setMessage('Offline storage is unavailable in this browser. Reconnect and try again.');
       } finally {
-        if (active) setLoading(false);
+        if (active && requestId === libraryRequestId.current) setLoading(false);
       }
     }
     void loadLibrary();
@@ -94,9 +99,12 @@ export default function OfflineLibraryPage() {
 
   async function refresh() {
     if (!userId) return;
+    const requestId = ++libraryRequestId.current;
     setLoading(true);
+    setMessage('');
     try {
-      const { data: { session } } = await createClient().auth.getSession();
+      const { data: { session }, error: sessionError } = await createClient().auth.getSession();
+      if (sessionError) throw sessionError;
       if (session?.user?.id !== userId) {
         setUserId(session?.user?.id ?? '');
         setLessons([]);
@@ -105,7 +113,10 @@ export default function OfflineLibraryPage() {
         return;
       }
       const items = await createVault().listForUser(userId);
-      const { data: { session: confirmedSession } } = await createClient().auth.getSession();
+      if (requestId !== libraryRequestId.current) return;
+      const { data: { session: confirmedSession }, error: confirmedSessionError } = await createClient().auth.getSession();
+      if (confirmedSessionError) throw confirmedSessionError;
+      if (requestId !== libraryRequestId.current) return;
       if (confirmedSession?.user?.id !== userId) {
         setUserId(confirmedSession?.user?.id ?? '');
         setLessons([]);
@@ -116,9 +127,9 @@ export default function OfflineLibraryPage() {
       setLessons(items as OfflineLesson[]);
       setMessage('');
     } catch {
-      setMessage('The offline library could not be refreshed.');
+      if (requestId === libraryRequestId.current) setMessage('The offline library could not be refreshed.');
     } finally {
-      setLoading(false);
+      if (requestId === libraryRequestId.current) setLoading(false);
     }
   }
 

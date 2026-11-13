@@ -1,7 +1,8 @@
 import { PortalLayout } from '@/components/portal-layout';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { LessonResourceAccess } from '@/components/lesson-resource-access';\nimport { OfflineLessonDownloadButton } from '@/components/offline-lesson-download-button';
+import { LessonResourceAccess } from '@/components/lesson-resource-access';
+import { OfflineLessonDownloadButton } from '@/components/offline-lesson-download-button';
 import { createClient } from '@/lib/supabase/server';
 import { billingMonthEnd, currentBangladeshBillingPeriod } from '@/lib/pricing';
 import {
@@ -110,7 +111,8 @@ export default async function LearningPage({
                 <span className="auth-kicker">{l.chapter_id ? chapterNames.get(l.chapter_id) ?? 'LESSON' : 'LESSON'} · {l.position}</span>
                 <h2>{l.title}</h2>
                 {l.description && <p>{l.description}</p>}
-                {l.content && <div className="lesson-content">{l.content.split('\n').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
+                {l.content && <div className="lesson-content">{l.content.split('
+').map((line: string, i: number) => <p key={i}>{line}</p>)}</div>}
                 {l.video_url && <div className="lesson-video jmt-video-player"><div className="video-brand"><span>J</span><b>JMT ACADEMY</b><small>OFFICIAL LEARNING PLAYER</small></div><video controls playsInline preload="metadata" src={l.video_url}>Your browser does not support video playback.</video></div>}
 
                 {!!lessonResources.length && <section className="lesson-materials">

@@ -43,6 +43,7 @@ function memoryStorage() {
       chunks.set(record.key, structuredClone(encrypted));
     },
     async getPackage(key) { return structuredClone(packages.get(key) ?? null); },
+    async listPackages(userId) { return structuredClone([...packages.values()].filter((record) => record.userId === userId)); },
     async getChunks(key) { return structuredClone(chunks.get(key) ?? []); },
     async deletePackage(key) { packages.delete(key); chunks.delete(key); },
     async deleteAccount(userId) {
@@ -75,6 +76,47 @@ test('stores only authenticated ciphertext and opens a verified package for its 
   });
   assert.equal(opened.ok, true);
   assert.deepEqual(opened.bytes, f.full);
+});
+
+test('concurrent first downloads reuse one atomic account key across tabs', async () => {
+  const storage = memoryStorage();
+  const originalGetKey = storage.getKey.bind(storage);
+  let reads = 0;
+  let releaseReads;
+  const bothReads = new Promise((resolve) => { releaseReads = resolve; });
+  storage.getKey = async (userId) => {
+    reads += 1;
+    if (reads === 2) releaseReads();
+    await bothReads;
+    return originalGetKey(userId);
+  };
+  storage.putKey = async (userId, key) => {
+    if (storage.keys.has(userId)) throw new Error('ConstraintError');
+    storage.keys.set(userId, key);
+  };
+
+  const vaultA = makeVault(storage);
+  const vaultB = makeVault(storage);
+  const f = fixture();
+  const manifestB = { ...f.manifest, resourceId: 'lesson-43' };
+  await Promise.all([
+    vaultA.savePackage({
+      userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+      entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    }),
+    vaultB.savePackage({
+      userId: 'student-a', manifest: manifestB, chunks: f.chunks,
+      entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    }),
+  ]);
+
+  assert.equal(storage.keys.size, 1);
+  assert.equal((await vaultA.openPackage({
+    userId: 'student-a', resourceId: 'lesson-42', resourceVersion: 3,
+  })).ok, true);
+  assert.equal((await vaultB.openPackage({
+    userId: 'student-a', resourceId: 'lesson-43', resourceVersion: 3,
+  })).ok, true);
 });
 
 test('does not allow another account to open or remove a package', async () => {
@@ -168,4 +210,28 @@ test('does not generate a replacement key when an existing package key is missin
   assert.deepEqual(opened, { ok: false, reason: 'encryption_key_missing' });
   assert.equal(storage.keys.has('student-a'), false);
   assert.equal(storage.packages.size, 1);
+});
+
+test('offline library lists only safe metadata for the requested account', async () => {
+  const storage = memoryStorage();
+  const vault = makeVault(storage);
+  const f = fixture();
+  await vault.savePackage({
+    userId: 'student-a', manifest: f.manifest, chunks: f.chunks,
+    entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    title: 'Atomic Structure',
+  });
+  await vault.savePackage({
+    userId: 'student-b', manifest: { ...f.manifest, resourceId: 'lesson-43' },
+    chunks: f.chunks, entitlementExpiresAt: '2026-11-18T00:00:00.000Z',
+    title: 'Other student lesson',
+  });
+
+  const listed = await vault.listForUser('student-a');
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].title, 'Atomic Structure');
+  assert.equal(listed[0].resourceId, 'lesson-42');
+  assert.equal('manifest' in listed[0], false);
+  assert.equal('bytes' in listed[0], false);
+  assert.deepEqual(await vault.listForUser('student-b').then((items) => items.map((item) => item.title)), ['Other student lesson']);
 });

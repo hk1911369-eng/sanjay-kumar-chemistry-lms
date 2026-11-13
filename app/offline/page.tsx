@@ -78,7 +78,10 @@ export default function OfflineLibraryPage() {
           return;
         }
         const items = await createVault().listForUser(currentUserId);
-        if (active) setLessons(items as OfflineLesson[]);
+        const { data: { session: confirmedSession } } = await supabase.auth.getSession();
+        if (active && confirmedSession?.user?.id === currentUserId && loadedUserId === currentUserId) {
+          setLessons(items as OfflineLesson[]);
+        }
       } catch {
         if (active) setMessage('Offline storage is unavailable in this browser. Reconnect and try again.');
       } finally {
@@ -102,6 +105,14 @@ export default function OfflineLibraryPage() {
         return;
       }
       const items = await createVault().listForUser(userId);
+      const { data: { session: confirmedSession } } = await createClient().auth.getSession();
+      if (confirmedSession?.user?.id !== userId) {
+        setUserId(confirmedSession?.user?.id ?? '');
+        setLessons([]);
+        setOpened(null);
+        setMessage('The signed-in account changed while the library was loading.');
+        return;
+      }
       setLessons(items as OfflineLesson[]);
       setMessage('');
     } catch {

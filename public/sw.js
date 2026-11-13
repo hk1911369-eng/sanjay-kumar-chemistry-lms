@@ -79,12 +79,10 @@ self.addEventListener('fetch', (event) => {
       if (isCacheableStaticAsset(response)) {
         // Cache only same-origin JavaScript, CSS, font and image responses.
         // Cache Storage quota errors must not break the network response.
-        {
-          try {
-            await cache.put(request, response.clone());
-          } catch {
-            // The browser can still use the network response for this request.
-          }
+        try {
+          await cache.put(request, response.clone());
+        } catch {
+          // The browser can still use the network response for this request.
         }
       }
       return response;

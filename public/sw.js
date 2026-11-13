@@ -30,6 +30,13 @@ self.addEventListener('install', (event) => {
       if (!assetResponse.ok || assetResponse.type !== 'basic') {
         throw new Error('Unable to precache offline library assets');
       }
+      if (assetResponse.url) {
+        const finalAssetUrl = new URL(assetResponse.url);
+        if (finalAssetUrl.origin !== self.location.origin ||
+            !finalAssetUrl.pathname.startsWith('/_next/static/')) {
+          throw new Error('Offline library asset resolved outside immutable Next assets');
+        }
+      }
       await cache.put(asset, assetResponse);
     }
     await self.skipWaiting();

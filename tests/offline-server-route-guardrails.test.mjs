@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const routePath = new URL('../app/api/offline/lesson-package/route.ts', import.meta.url);
-const migrationPath = new URL('../supabase/migrations/20261113120000_lesson_offline_permission.sql', import.meta.url);\nconst actionPath = new URL('../app/actions/learning.ts', import.meta.url);\nconst editorPath = new URL('../app/teacher/page.tsx', import.meta.url);
+const migrationPath = new URL('../supabase/migrations/20261113120000_lesson_offline_permission.sql', import.meta.url);
+const actionPath = new URL('../app/actions/learning.ts', import.meta.url);
+const editorPath = new URL('../app/teacher/page.tsx', import.meta.url);
 
 test('offline package endpoint authenticates and checks current paid enrollment', async () => {
   const source = await readFile(routePath, 'utf8');
@@ -12,7 +14,9 @@ test('offline package endpoint authenticates and checks current paid enrollment'
     ".from('profiles')",
     ".select('role,is_active')",
     ".from('lessons')",
-    'lesson.offline_allowed !== true',\n    ".select('id,title,course_id,is_published,offline_allowed,content,updated_at')",\n    'lessonTitle: lesson.title',
+    'lesson.offline_allowed !== true',
+    ".select('id,title,course_id,is_published,offline_allowed,content,updated_at')",
+    'lessonTitle: lesson.title',
     ".from('courses')",
     ".from('enrollments')",
     'resolveOfflineEntitlement',

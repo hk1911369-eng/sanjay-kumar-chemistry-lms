@@ -246,5 +246,5 @@ revoke all on function private.can_upload_lab_notebook_evidence(text) from publi
 grant execute on function private.can_upload_lab_notebook_evidence(text) to authenticated;
 
 -- The existing Storage INSERT policy calls this helper, so its authorization
--- now also requires a published course and published experiment. Existing
--- object reads and deletion of unreferenced uploads are intentionally unchanged.
+-- now also requires a published course and published experiment.
+-- Existing object reads and deletion of unreferenced uploads are intentionally unchanged.

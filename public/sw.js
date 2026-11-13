@@ -68,12 +68,18 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       const response = await fetch(request);
       if (response.ok && response.type === 'basic') {
-        // Cache Storage can fail under quota pressure; never let that break
-        // an otherwise successful online asset response.
-        try {
-          await cache.put(request, response.clone());
-        } catch {
-          // The browser can still use the network response for this request.
+        const finalUrl = response.url ? new URL(response.url) : null;
+        const remainsStaticAsset = !finalUrl ||
+          (finalUrl.origin === self.location.origin &&
+            finalUrl.pathname.startsWith('/_next/static/'));
+        // Never store a redirected login or HTML response under a build-asset
+        // key. Cache Storage quota errors must not break the network response.
+        if (remainsStaticAsset) {
+          try {
+            await cache.put(request, response.clone());
+          } catch {
+            // The browser can still use the network response for this request.
+          }
         }
       }
       return response;

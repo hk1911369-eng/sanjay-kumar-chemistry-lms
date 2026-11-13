@@ -12,7 +12,7 @@ test('offline package endpoint authenticates and checks current paid enrollment'
     ".from('profiles')",
     ".select('role,is_active')",
     ".from('lessons')",
-    'lesson.offline_allowed !== true',
+    'lesson.offline_allowed !== true',\n    ".select('id,title,course_id,is_published,offline_allowed,content,updated_at')",\n    'lessonTitle: lesson.title',
     ".from('courses')",
     ".from('enrollments')",
     'resolveOfflineEntitlement',

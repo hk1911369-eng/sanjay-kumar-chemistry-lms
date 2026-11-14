@@ -26,4 +26,5 @@ test('approval still blocks unpublished courses and future billing periods', asy
   const fn = migration.slice(migration.indexOf('create or replace function public.guard_manual_payment_approval'));
   assert.match(fn, /new\.billing_period > current_period/);
   assert.match(fn, /course_is_published is not true/);
+  assert.match(fn, /course_archived_at is not null/);
 });

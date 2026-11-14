@@ -25,8 +25,8 @@ test('approval still blocks unpublished courses and future billing periods', asy
   const migration = await read('supabase/migrations/20261114150000_honor_manual_payment_fee_snapshots.sql');
   const fn = migration.slice(migration.indexOf('create or replace function public.guard_manual_payment_approval'));
   assert.match(fn, /new\.billing_period > current_period/);
-  assert.match(fn, /course_is_published is not true/);
+  assert.match(fn, /course_row\.is_published is not true/);
   assert.match(fn, /course_row\.archived_at is not null/);
   assert.match(fn, /new\.delivery_mode = any\(course_row\.delivery_modes\)/);
-  assert.doesNotMatch(fn, /course_row\\.(live_price_bdt|recorded_price_bdt|offline_price_bdt|admission_fee_bdt)/);
+  assert.doesNotMatch(fn, /course_row\.(live_price_bdt|recorded_price_bdt|offline_price_bdt|admission_fee_bdt)/);
 });

@@ -9,6 +9,7 @@ set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   course_is_published boolean;
+  course_archived_at timestamptz;
   enrollment_row public.enrollments%rowtype;
   current_period date := date_trunc('month', now() at time zone 'Asia/Dhaka')::date;
 begin
@@ -22,13 +23,13 @@ begin
       using errcode = '22023';
   end if;
 
-  select is_published into course_is_published
+  select is_published, archived_at into course_is_published, course_archived_at
   from public.courses
   where id = new.course_id
   for update;
 
-  if not found or course_is_published is not true then
-    raise exception 'Course is not published; enrollment cannot be activated'
+  if not found or course_is_published is not true or course_archived_at is not null then
+    raise exception 'Course is not available; enrollment cannot be activated'
       using errcode = '22023';
   end if;
 

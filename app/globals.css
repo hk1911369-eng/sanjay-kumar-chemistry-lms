@@ -237,3 +237,7 @@ button,.btn,.auth-submit,.portal-nav-link{touch-action:manipulation}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 .archive-course-form{margin-top:12px;display:flex;justify-content:flex-end}
+
+/* Keep muted text readable on both light cards and the dark footer. */
+.brand small{color:#627189}
+footer .muted{color:#b5c7df}

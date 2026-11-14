@@ -28,4 +28,5 @@ test('approval still blocks unpublished courses and future billing periods', asy
   assert.match(fn, /course_is_published is not true/);
   assert.match(fn, /course_row\.archived_at is not null/);
   assert.match(fn, /new\.delivery_mode = any\(course_row\.delivery_modes\)/);
+  assert.doesNotMatch(fn, /course_row\\.(live_price_bdt|recorded_price_bdt|offline_price_bdt|admission_fee_bdt)/);
 });

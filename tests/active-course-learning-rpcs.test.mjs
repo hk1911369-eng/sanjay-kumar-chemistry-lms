@@ -37,15 +37,15 @@ test('SECURITY DEFINER learning RPCs reject unpublished and archived courses', a
   assert.match(examPlan, /c\.archived_at IS NULL/i);
 });
 
-test('learning RPC grants remain limited to authenticated callers and never anon/public', async () => {
+test('learning RPC execute grants exclude PUBLIC and anon and retain authenticated access', async () => {
   const migration = await read('supabase/migrations/20261114120000_require_active_course_for_learning_rpcs.sql');
-  for (const fn of [
+  for (const signature of [
     'record_lesson_completion(uuid,uuid)',
     'submit_quiz_attempt(uuid,jsonb)',
     'record_simulation_completion(uuid,text,integer)',
     'create_exam_war_room_target(uuid,text,date,integer,numeric)',
   ]) {
-    assert.match(migration, new RegExp('REVOKE ALL ON FUNCTION public\\.' + fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' FROM PUBLIC, anon', 'i'));
-    assert.match(migration, new RegExp('GRANT EXECUTE ON FUNCTION public\\.' + fn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' TO authenticated', 'i'));
+    assert.ok(migration.includes(`REVOKE ALL ON FUNCTION public.${signature} FROM PUBLIC, anon;`));
+    assert.ok(migration.includes(`GRANT EXECUTE ON FUNCTION public.${signature} TO authenticated;`));
   }
 });

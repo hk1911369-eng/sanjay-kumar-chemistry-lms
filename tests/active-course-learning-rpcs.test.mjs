@@ -4,63 +4,41 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('SECURITY DEFINER learning RPCs reject unpublished and archived courses', async () => {
+test('learning RPCs require published course content and active paid enrollment', async () => {
   const migration = await read('supabase/migrations/20261114120000_require_active_course_for_learning_rpcs.sql');
+  const section = (start, end) => migration.slice(migration.indexOf(start), end ? migration.indexOf(end) : undefined);
 
-  const lesson = migration.slice(
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.record_lesson_completion'),
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.submit_quiz_attempt'),
-  );
-  assert.match(lesson, /JOIN public\.courses c ON c\.id = l\.course_id/i);
-  assert.match(lesson, /l\.is_published IS TRUE/i);
-  assert.match(lesson, /c\.is_published IS TRUE/i);
-  assert.match(lesson, /c\.archived_at IS NULL/i);
-  assert.match(lesson, /e\.student_id = v_student_id/i);
-  assert.match(lesson, /e\.status = 'active'/i);
-  assert.match(lesson, /e\.admission_fee_paid IS TRUE/i);
+  const lesson = section('CREATE OR REPLACE FUNCTION public.record_lesson_completion', 'CREATE OR REPLACE FUNCTION public.submit_quiz_attempt');
+  for (const guard of ['JOIN public.courses c ON c.id = l.course_id', 'l.is_published IS TRUE', 'c.is_published IS TRUE', 'c.archived_at IS NULL', 'e.student_id = v_student_id', "e.status = 'active'", 'e.admission_fee_paid IS TRUE']) {
+    assert.ok(lesson.includes(guard), 'lesson guard missing: ' + guard);
+  }
 
-  const quiz = migration.slice(
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.submit_quiz_attempt'),
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.record_simulation_completion'),
-  );
-  assert.match(quiz, /JOIN public\.courses c ON c\.id = q\.course_id/i);
-  assert.match(quiz, /q\.published IS TRUE/i);
-  assert.match(quiz, /c\.is_published IS TRUE/i);
-  assert.match(quiz, /c\.archived_at IS NULL/i);
-  assert.match(quiz, /a\.student_id = v_user/i);
-  assert.match(quiz, /e\.student_id = v_user/i);
-  assert.match(quiz, /e\.status = 'active'/i);
-  assert.match(quiz, /jsonb_each_text\(p_answers\)/i);
-  assert.match(quiz, /v_attempt\.started_at \+ make_interval/i);
+  const quiz = section('CREATE OR REPLACE FUNCTION public.submit_quiz_attempt', 'CREATE OR REPLACE FUNCTION public.record_simulation_completion');
+  for (const guard of ['JOIN public.courses c ON c.id = q.course_id', 'q.published IS TRUE', 'c.is_published IS TRUE', 'c.archived_at IS NULL', 'a.student_id = v_user', 'e.student_id = v_user', "e.status = 'active'", 'jsonb_each_text(p_answers)', 'v_attempt.started_at + make_interval']) {
+    assert.ok(quiz.includes(guard), 'quiz guard missing: ' + guard);
+  }
 
-  const simulation = migration.slice(
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.record_simulation_completion'),
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.create_exam_war_room_target'),
-  );
-  assert.match(simulation, /c\.is_published IS TRUE/i);
-  assert.match(simulation, /c\.archived_at IS NULL/i);
-  assert.match(simulation, /e\.student_id = v_student_id/i);
-  assert.match(simulation, /p_duration_seconds > 7200/i);
+  const simulation = section('CREATE OR REPLACE FUNCTION public.record_simulation_completion', 'CREATE OR REPLACE FUNCTION public.create_exam_war_room_target');
+  for (const guard of ['c.is_published IS TRUE', 'c.archived_at IS NULL', 'e.student_id = v_student_id', 'p_duration_seconds > 7200']) {
+    assert.ok(simulation.includes(guard), 'simulation guard missing: ' + guard);
+  }
 
-  const examPlan = migration.slice(
-    migration.indexOf('CREATE OR REPLACE FUNCTION public.create_exam_war_room_target'),
-  );
-  assert.match(examPlan, /c\.is_published IS TRUE/i);
-  assert.match(examPlan, /c\.archived_at IS NULL/i);
-  assert.match(examPlan, /e\.student_id = v_student_id/i);
-  assert.match(examPlan, /PERFORM 1 FROM public\.profiles WHERE id = v_student_id FOR UPDATE/i);
+  const examPlan = section('CREATE OR REPLACE FUNCTION public.create_exam_war_room_target');
+  for (const guard of ['c.is_published IS TRUE', 'c.archived_at IS NULL', 'e.student_id = v_student_id', 'PERFORM 1 FROM public.profiles WHERE id = v_student_id FOR UPDATE']) {
+    assert.ok(examPlan.includes(guard), 'exam-plan guard missing: ' + guard);
+  }
 });
 
 test('learning RPCs pin search_path and enforce a signed-in student identity', async () => {
   const migration = await read('supabase/migrations/20261114120000_require_active_course_for_learning_rpcs.sql');
-  const functions = migration.split(/CREATE OR REPLACE FUNCTION public\./i).slice(1);
+  const functions = migration.split('CREATE OR REPLACE FUNCTION public.').slice(1);
   assert.equal(functions.length, 4);
   for (const fn of functions) {
-    assert.match(fn, /SECURITY DEFINER/i);
-    assert.match(fn, /SET search_path = pg_catalog, public, pg_temp/i);
-    assert.match(fn, /auth\.uid\(\)/i);
-    assert.match(fn, /current_role\(\)/i);
-    assert.match(fn, /'student'::public\.app_role/i);
+    assert.ok(fn.includes('SECURITY DEFINER'));
+    assert.ok(fn.includes('SET search_path = pg_catalog, public, pg_temp'));
+    assert.ok(fn.includes('auth.uid()'));
+    assert.ok(fn.includes('current_role()'));
+    assert.ok(fn.includes("'student'::public.app_role"));
   }
 });
 

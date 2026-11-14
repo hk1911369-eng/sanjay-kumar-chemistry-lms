@@ -18,6 +18,9 @@ export function CourseCatalogue({courses}:{courses:Course[]}){
   const q=search.trim().toLowerCase();const hay=[c.title,c.description,c.programme_group,...(c.subjects??[])].filter(Boolean).join(' ').toLowerCase();
   return (!q||hay.includes(q))&&(group==='all'||c.programme_group===group)&&(mode==='all'||(c.delivery_modes??[]).includes(mode));
  }),[courses,search,group,mode]);
+ if(courses.length===0){
+  return <div className="course-discovery"><section className="portal-card catalogue-empty-state"><span className="auth-kicker">JMT ACADEMY · UPCOMING PROGRAMMES</span><h2>Our courses are being prepared</h2><p className="muted">There are no programmes published for enrolment yet. Our team is preparing the next batches. Contact the academy for information about upcoming courses and admission dates.</p><div className="jmt-hero-actions"><Link className="btn" href="/contact">Contact the academy</Link><Link className="quiet-button" href="/">Back to home</Link></div></section></div>;
+ }
  return <div className="course-discovery">
   <div className="course-filter-panel">
    <label>Search courses, subjects or topics<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="e.g. Physics, HSC 2027, Biology"/></label>
